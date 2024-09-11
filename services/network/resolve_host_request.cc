@@ -94,6 +94,7 @@ int ResolveHostRequest::Start(
   mojo::Remote<mojom::ResolveHostClient> response_client(
       std::move(pending_response_client));
   if (rv != net::ERR_IO_PENDING) {
+    BRAVE_RESOLVE_HOST_REQUEST_START
     response_client->OnComplete(rv, GetResolveErrorInfo(),
                                 base::OptionalFromPtr(GetAddressResults()),
                                 GetEndpointResultsWithMetadata());

@@ -24,6 +24,7 @@ static_library("version_info") {
     ":generate_version_info",
     "//base",
   ]
+  configs += [ "//brave/build:version" ] deps += [ "//brave/components/version_info" ]
 }
 
 static_library("version_string") {

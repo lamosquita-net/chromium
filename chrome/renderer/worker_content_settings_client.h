@@ -39,6 +39,7 @@ class WorkerContentSettingsClient : public blink::WebContentSettingsClient {
   bool AllowRunningInsecureContent(bool allowed_per_settings,
                                    const blink::WebURL& url) override;
   bool ShouldAutoupgradeMixedContent() override;
+  BRAVE_WORKER_CONTENT_SETTINGS_CLIENT_H
 
  private:
   explicit WorkerContentSettingsClient(

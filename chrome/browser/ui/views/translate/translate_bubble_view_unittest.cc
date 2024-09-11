@@ -187,6 +187,7 @@ class TranslateBubbleViewTest : public ChromeViewsTestBase {
 
  protected:
   void SetUp() override {
+    scoped_feature_list_.InitFromCommandLine("BraveEnableAutoTranslate", "");
     ChromeViewsTestBase::SetUp();
 
     // The bubble needs the parent as an anchor.

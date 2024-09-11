@@ -388,7 +388,13 @@ Extra input files:
     # Read the source (en-US) string from the .grd file.
     grd_handler = GrdHandler(self.string_id_set)
     sax_parser.setContentHandler(grd_handler)
-    sax_parser.parse(grd_file)
+    # A base name is calculated from grd_file so that's why we don't
+    # just change that from chrome/installer/util/BUILD.gn
+    if "chromium_strings" in grd_file:
+      sax_parser.parse("../../chrome/app/brave_strings.grd")
+    else:
+      sax_parser.parse(grd_file)
+
     source_strings = grd_handler.messages
 
     grd_file_path = os.path.dirname(grd_file)
@@ -617,7 +623,7 @@ def main():
         'specific strings were given.')
     valid_brands = [b for b in
       next(iter(mode_specific_strings.values())).keys()]
-    if not brand in valid_brands:
+    if not brand in valid_brands and False:
       parser.error('A brand was specified (' + brand + ') but it is not '
         'a valid brand [' + ', '.join(valid_brands) + '].')
   elif mode_specific_strings:

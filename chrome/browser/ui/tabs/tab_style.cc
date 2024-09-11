@@ -190,6 +190,7 @@ float ChromeRefresh2023TabStyle::GetSelectedTabOpacity() const {
 
 // static
 const TabStyle* TabStyle::Get() {
+  BRAVE_TAB_STYLE_GET
   static TabStyle* const tab_style =
       static_cast<TabStyle*>(new ChromeRefresh2023TabStyle());
 

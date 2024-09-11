@@ -150,6 +150,7 @@ struct NET_EXPORT CookieDeletionInfo {
   // If true, third-party cookie blocking applies to the context that triggered
   // the deletion. In this case, we should only delete partitioned cookies.
   bool partitioned_state_only = false;
+  BRAVE_COOKIE_DELETION_INFO_H
 };
 
 }  // namespace net

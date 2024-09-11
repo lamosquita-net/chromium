@@ -152,6 +152,7 @@ android_library("java") {
     "//third_party/jni_zero:jni_zero_java",
     "//ui/android:ui_java",
   ]
+  sources += brave_components_permissions_java_sources deps += brave_components_permissions_java_deps
   resources_package = "org.chromium.components.permissions"
 }
 

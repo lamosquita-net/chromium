@@ -164,6 +164,7 @@ class RecentTabsSubMenuModelTest : public BrowserWithTestWindowTest {
     helper->VerifyExport(session_sync_service_->GetOpenTabsUIDelegate());
   }
 
+  BRAVE_RECENT_TABS_SUB_MENU_MODEL_TEST
  private:
   raw_ptr<sync_sessions::SessionSyncService, DanglingUntriaged>
       session_sync_service_;

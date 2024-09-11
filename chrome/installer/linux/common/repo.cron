@@ -17,6 +17,9 @@
 # "false" as desired. An empty $DEFAULTS_FILE is the same as setting both values
 # to "false".
 
+# Don't add the Chrome repo (brave/brave-browser#1084)
+exit 0
+
 @@include@@../common/variables.include
 
 @@include@@apt.include

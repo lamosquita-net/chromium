@@ -13,6 +13,7 @@
 #include "base/metrics/histogram_macros.h"
 #include "base/strings/string_util.h"
 #include "base/values.h"
+#include "brave/common/extensions/brave_extensions_api_provider.h"
 #include "chrome/common/chrome_resource_request_blocked_reason.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/common/extensions/chrome_extensions_api_provider.h"
@@ -54,6 +55,7 @@ const char kExtensionBlocklistHttpsUrlPrefix[] =
 ChromeExtensionsClient::ChromeExtensionsClient() {
   AddAPIProvider(std::make_unique<ChromeExtensionsAPIProvider>());
   AddAPIProvider(std::make_unique<CoreExtensionsAPIProvider>());
+  AddAPIProvider(std::make_unique<BraveExtensionsAPIProvider>());
 }
 
 ChromeExtensionsClient::~ChromeExtensionsClient() {

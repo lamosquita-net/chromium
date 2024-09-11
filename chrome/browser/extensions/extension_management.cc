@@ -969,6 +969,7 @@ ExtensionManagementFactory::BuildServiceInstanceForBrowserContext(
     content::BrowserContext* context) const {
   TRACE_EVENT0("browser,startup",
                "ExtensionManagementFactory::BuildServiceInstanceFor");
+  BRAVE_EXTENSION_MANAGEMENT_FACTORY_BUILD_SERVICE_INSTANCE_FOR
   return std::make_unique<ExtensionManagement>(
       Profile::FromBrowserContext(context));
 }

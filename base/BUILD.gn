@@ -4418,6 +4418,7 @@ if (is_android) {
       "android/java/src/org/chromium/base/ValueChangedCallback.java",
       "android/java/src/org/chromium/base/WrappedClassLoader.java",
     ]
+    sources += brave_java_base_sources
 
     if (use_clang_profiling) {
       sources += [
@@ -4884,6 +4885,7 @@ if (is_android) {
       "android/java/src/org/chromium/base/shared_preferences/SharedPreferencesManager.java",
       "android/java/src/org/chromium/base/shared_preferences/StrictPreferenceKeyChecker.java",
     ]
+    sources += brave_base_shared_preferences_java_sources
   }
 
   android_library("base_cached_flags_java") {
@@ -4910,6 +4912,7 @@ if (is_android) {
       "android/java/src/org/chromium/base/cached_flags/ValuesOverridden.java",
       "android/java/src/org/chromium/base/cached_flags/ValuesReturned.java",
     ]
+    sources += brave_base_cached_flags_java_sources
   }
 
   android_aidl("process_launcher_aidl") {

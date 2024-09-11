@@ -52,6 +52,7 @@ ProxyConfigMonitor::ProxyConfigMonitor(Profile* profile) {
             profile->GetPrefs(), g_browser_process->local_state());
   }
 
+  BRAVE_PROXY_CONFIG_MONITOR
   proxy_config_service_ = ProxyServiceFactory::CreateProxyConfigService(
       pref_proxy_config_tracker_.get(), profile);
 

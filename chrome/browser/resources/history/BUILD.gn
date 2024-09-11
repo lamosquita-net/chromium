@@ -83,4 +83,5 @@ build_webui("build") {
       "lazy_load.js",
     ]
   }
+  import("//brave/browser/resources/history/sources.gni") web_component_files += brave_history_web_component_files non_web_component_files += brave_history_non_web_component_files exclude_ts_preprocess_files = brave_history_local_ts_files exclude_html_css_preprocess_files = brave_history_local_html_files preprocess_deps = brave_history_preprocess_extra_deps
 }

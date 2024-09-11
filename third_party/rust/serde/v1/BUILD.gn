@@ -55,6 +55,7 @@ cargo_crate("lib") {
     "serde_derive",
     "std",
   ]
+  features += [ "alloc", "rc" ]
   build_root =
       "//third_party/rust/chromium_crates_io/vendor/serde-1.0.204/build.rs"
   build_sources =

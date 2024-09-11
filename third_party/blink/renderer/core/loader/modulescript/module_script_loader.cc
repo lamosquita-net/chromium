@@ -181,6 +181,7 @@ void ModuleScriptLoader::FetchInternal(
     options.initiator_info.referrer = module_request.ReferrerString();
     options.initiator_info.position = module_request.GetReferrerPosition();
   }
+  BRAVE_MODULE_SCRIPT_LOADER_FETCH_INTERNAL
 
   // Note: |options| should not be modified after here.
   FetchParameters fetch_params(std::move(resource_request), options);

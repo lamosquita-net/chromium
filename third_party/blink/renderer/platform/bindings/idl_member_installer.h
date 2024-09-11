@@ -185,6 +185,7 @@ class PLATFORM_EXPORT IDLMemberInstaller final {
       v8::Local<v8::Object> interface_object,
       v8::Local<v8::Signature> signature,
       base::span<const ExposedConstructConfig> configs);
+  BRAVE_IDL_MEMBER_INSTALLER_H_
 };
 
 }  // namespace bindings

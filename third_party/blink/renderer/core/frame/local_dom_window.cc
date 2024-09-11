@@ -486,6 +486,7 @@ bool LocalDOMWindow::CanExecuteScripts(
     return false;
   }
   bool script_enabled = GetFrame()->ScriptEnabled();
+  BRAVE_LOCAL_DOM_WINDOW_CAN_EXECUTE_SCRIPTS
   if (!script_enabled && reason == kAboutToExecuteScript) {
     WebContentSettingsClient* settings_client =
         GetFrame()->GetContentSettingsClient();

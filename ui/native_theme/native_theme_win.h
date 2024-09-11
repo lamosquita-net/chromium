@@ -86,6 +86,7 @@ class NATIVE_THEME_EXPORT NativeThemeWin : public NativeTheme,
   PreferredContrast CalculatePreferredContrast() const override;
   ColorScheme GetDefaultSystemColorScheme() const override;
 
+  BRAVE_UI_NATIVE_THEME_NATIVE_THEME_WIN_H_
  protected:
   friend class NativeTheme;
   friend class base::NoDestructor<NativeThemeWin>;

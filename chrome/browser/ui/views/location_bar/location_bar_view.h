@@ -121,6 +121,7 @@ class LocationBarView
   int GetBorderRadius() const;
 
   // Initializes the LocationBarView.
+  virtual
   void Init();
 
   // True if this instance has been initialized by calling Init, which can only
@@ -174,6 +175,7 @@ class LocationBarView
 
   // Updates the controller, and, if |contents| is non-null, restores saved
   // state that the tab holds.
+  virtual
   void Update(content::WebContents* contents);
 
   // Clears the location bar's state for |contents|.
@@ -266,6 +268,7 @@ class LocationBarView
   GetContentSettingViewsForTest() {
     return content_setting_views_;
   }
+  BRAVE_LOCATION_BAR_VIEW_H_
 
   void RecordPageInfoMetrics();
 

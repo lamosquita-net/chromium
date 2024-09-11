@@ -310,6 +310,7 @@ void PermissionManager::RequestPermissionsFromCurrentDocument(
     base::OnceCallback<void(const std::vector<PermissionStatus>&)>
         permission_status_callback) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  BRAVE_REQUEST_PERMISSION_FROM_CURRENT_DOCUMENT
   RequestPermissionsInternal(render_frame_host, request_description,
                              std::move(permission_status_callback));
 }
@@ -361,6 +362,7 @@ PermissionManager::GetPermissionResultForCurrentDocument(
       PermissionUtil::PermissionTypeToContentSettingType(permission);
 
   const GURL requesting_origin =
+      BRAVE_GET_PERMISSION_RESULT_FOR_CURRENT_DOCUMENT
       PermissionUtil::GetLastCommittedOriginAsURL(render_frame_host);
   const GURL embedding_origin =
       GetEmbeddingOrigin(render_frame_host, requesting_origin);

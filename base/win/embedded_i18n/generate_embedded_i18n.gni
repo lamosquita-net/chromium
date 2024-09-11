@@ -97,6 +97,10 @@ template("generate_embedded_i18n") {
       output_rc,
     ]
 
+    if (defined(invoker.sources)) {
+      sources = invoker.sources
+    }
+
     args = [
       "--header-file",
       "$output_dir/$output_file_name_base.h",

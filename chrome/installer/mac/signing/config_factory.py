@@ -8,6 +8,8 @@ def get_class():
     # First look up the processed Chromium config.
     from signing.chromium_config import ChromiumCodeSignConfig
     config_class = ChromiumCodeSignConfig
+    from signing_helper import GetBraveSigningConfig
+    config_class = GetBraveSigningConfig(config_class)
 
     # Then search for the internal config for Google Chrome.
     try:

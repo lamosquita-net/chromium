@@ -169,10 +169,12 @@ class WebUIBubbleManagerImpl : public WebUIBubbleManager {
  private:
   // WebUIBubbleManager:
   void MaybeInitPersistentRenderer() override;
+ protected:
   base::WeakPtr<WebUIBubbleDialogView> CreateWebUIBubbleDialog(
       const std::optional<gfx::Rect>& anchor,
       views::BubbleBorder::Arrow arrow) override;
   WebUIContentsWrapper* GetContentsWrapper() override;
+ private:
 
   const raw_ptr<views::View> anchor_view_;
   const raw_ptr<Profile, DanglingUntriaged> profile_;

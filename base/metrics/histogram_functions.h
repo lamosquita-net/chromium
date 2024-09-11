@@ -75,6 +75,7 @@ void UmaHistogramEnumeration(const std::string& name, T sample) {
   static_assert(static_cast<uintmax_t>(T::kMaxValue) <=
                     static_cast<uintmax_t>(INT_MAX) - 1,
                 "Enumeration's kMaxValue is out of range of INT_MAX!");
+  BRAVE_HISTOGRAM_FUNCTIONS_UMA_HISTOGRAM_ENUMERATION_STRING_ARG
   DCHECK_LE(static_cast<uintmax_t>(sample),
             static_cast<uintmax_t>(T::kMaxValue));
   return UmaHistogramExactLinear(name, static_cast<int>(sample),
@@ -89,6 +90,7 @@ void UmaHistogramEnumeration(const char* name, T sample) {
   static_assert(static_cast<uintmax_t>(T::kMaxValue) <=
                     static_cast<uintmax_t>(INT_MAX) - 1,
                 "Enumeration's kMaxValue is out of range of INT_MAX!");
+  BRAVE_HISTOGRAM_FUNCTIONS_UMA_HISTOGRAM_ENUMERATION_CHAR_POINTER_ARG
   DCHECK_LE(static_cast<uintmax_t>(sample),
             static_cast<uintmax_t>(T::kMaxValue));
   return UmaHistogramExactLinear(name, static_cast<int>(sample),

@@ -1633,6 +1633,7 @@ const char* ChromeBrowsingDataRemoverDelegate::GetHistogramSuffix(
       return "WebrtcVideoPerfHistory";
     case TracingDataType::kMediaDeviceSalts:
       return "MediaDeviceSalts";
+    CHROME_BROWSING_DATA_REMOVER_DELEGATE_GET_HISTORY_SUFFIX
   }
 }
 

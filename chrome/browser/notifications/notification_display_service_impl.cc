@@ -123,6 +123,7 @@ NotificationDisplayServiceImpl::NotificationDisplayServiceImpl(Profile* profile)
                              std::make_unique<NearbyNotificationHandler>());
     }
 #endif
+    BRAVE_ADD_BRAVE_ADS_NOTIFICATION_HANDLER;
   }
 
   bridge_delegator_ = std::make_unique<NotificationPlatformBridgeDelegator>(

@@ -77,6 +77,7 @@ class WebsiteSettingsRegistry {
       WebsiteSettingsInfo::ScopingType scoping_type,
       Platforms platforms,
       WebsiteSettingsInfo::IncognitoBehavior incognito_behavior);
+  void UnRegister(ContentSettingsType type) {website_settings_info_.erase(type);}
 
   const_iterator begin() const;
   const_iterator end() const;

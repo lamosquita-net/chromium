@@ -68,6 +68,7 @@ bool ConvertedHitTest(views::View* src, views::View* dst, gfx::Point* point) {
   DCHECK(src);
   DCHECK(dst);
   DCHECK(point);
+  BRAVE_BROWSER_VIEW_LAYOUT_CONVERTED_HIT_TEST
   views::View::ConvertPointToTarget(src, dst, point);
   return dst->HitTestPoint(*point);
 }

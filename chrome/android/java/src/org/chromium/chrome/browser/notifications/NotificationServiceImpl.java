@@ -205,7 +205,7 @@ public class NotificationServiceImpl extends NotificationService.Impl {
                                 .recordIntentHandlerJobStage(
                                         NotificationUmaTracker.IntentHandlerJobStage.DISPATCH_EVENT,
                                         intent.getAction());
-                        if (!NotificationPlatformBridge.dispatchNotificationEvent(intent)) {
+                        if (!BraveNotificationPlatformBridge.dispatchNotificationEvent(intent)) {
                             Log.w(TAG, "Unable to dispatch the notification event to Chrome.");
                         }
 

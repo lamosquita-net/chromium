@@ -420,7 +420,7 @@ class Paths(object):
         Returns:
             Path to the packaging directory.
         """
-        return os.path.join(self.input, '{} Packaging'.format(config.product))
+        return os.path.join(self.input, '{}_Packaging'.format(config.product.replace(' ', '_')))
 
     def replace_work(self, new_work):
         """Creates a new Paths with the same input and output directories, but

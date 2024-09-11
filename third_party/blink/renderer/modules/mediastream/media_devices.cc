@@ -1143,6 +1143,7 @@ void MediaDevices::DevicesEnumerated(
     }
   }
 
+  BRAVE_MEDIA_DEVICES_DEVICES_ENUMERATED
   RecordEnumeratedDevices(result_tracker->GetScriptState(), media_devices);
   result_tracker->Resolve(media_devices);
 }

@@ -350,3 +350,4 @@ class PolicyJson(skeleton_gatherer.SkeletonGatherer):
       }
     else:
       raise Exception('Unknown build')
+from brave_chromium_utils import inline_chromium_src_override; inline_chromium_src_override(globals(), locals())

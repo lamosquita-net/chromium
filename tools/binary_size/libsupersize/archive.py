@@ -1050,6 +1050,7 @@ def _FilterContainerSpecs(container_specs, container_re=None):
   ret = []
   seen_container_names = set()
   for container_spec in container_specs:
+    if container_spec.container_name.find('libwg-go.so') != -1: continue
     container_name = container_spec.container_name
     if container_name in seen_container_names:
       raise ValueError('Duplicate container name: {}'.format(container_name))

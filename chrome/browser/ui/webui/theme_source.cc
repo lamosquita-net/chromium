@@ -138,7 +138,7 @@ void ThemeSource::StartDataRequest(
   int resource_id = -1;
   if (parsed_path == "current-channel-logo") {
     switch (chrome::GetChannel()) {
-#if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+#if BUILDFLAG(GOOGLE_CHROME_BRANDING) || defined(OFFICIAL_BUILD)
       case version_info::Channel::CANARY:
         resource_id = IDR_PRODUCT_LOGO_32_CANARY;
         break;
@@ -160,7 +160,10 @@ void ThemeSource::StartDataRequest(
         [[fallthrough]];
 #endif
       case version_info::Channel::UNKNOWN:
+        resource_id = IDR_PRODUCT_LOGO_32_DEVELOPMENT;
+#if 0
         resource_id = IDR_PRODUCT_LOGO_32;
+#endif
         break;
     }
   } else {

@@ -68,6 +68,7 @@ static_library("android") {
     "//components/navigation_interception",
     "//content/public/browser",
   ]
+  deps += [ "//brave/components/external_intents/android" ]
 }
 
 android_library("unit_device_javatests") {

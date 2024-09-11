@@ -62,6 +62,7 @@ class IconWithBadgeImageSource : public gfx::CanvasImageSource {
   bool paint_blocked_actions_decoration() const {
     return paint_blocked_actions_decoration_;
   }
+  BRAVE_ICON_WITH_BADGE_IMAGE_SOURCE_H_
 
  private:
   // gfx::CanvasImageSource:

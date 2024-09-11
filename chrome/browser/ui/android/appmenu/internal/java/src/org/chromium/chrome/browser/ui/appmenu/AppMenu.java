@@ -307,6 +307,7 @@ class AppMenu implements OnItemClickListener, OnKeyListener, AppMenuClickHandler
                 anchorView,
                 groupDividerResourceId,
                 anchorViewOffset);
+        if (this instanceof BraveAppMenu) ((BraveAppMenu) this).updatePopup(mPopup, isByPermanentButton);
         int[] popupPosition =
                 getPopupPosition(
                         mTempLocation,

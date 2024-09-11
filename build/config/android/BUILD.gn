@@ -53,6 +53,7 @@ config("compiler") {
     # segments to be mapped adjacently, which breakpad relies on.
     "-Wl,-z,max-page-size=$_max_page_size",
   ]
+  ldflags += ["-Wl,--allow-multiple-definition"] # Resolve conflict between libgcc++ and rustup symbols (e.g. __divdi3)
 
   if (current_cpu == "arm64") {
     if (arm_control_flow_integrity == "standard") {

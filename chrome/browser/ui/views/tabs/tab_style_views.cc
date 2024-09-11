@@ -138,6 +138,7 @@ class TabStyleViewsImpl : public TabStyleViews {
   TabStyle::TabSelectionState GetSelectionState() const;
 
  private:
+  BRAVE_GM2_TAB_STYLE_H
   // Gets the bounds for the leading and trailing separators for a tab.
   TabStyle::SeparatorBounds GetSeparatorBounds(float scale) const;
 
@@ -358,6 +359,7 @@ SkPath TabStyleViewsImpl::GetPath(TabStyle::PathType path_type,
   const bool extend_right_to_bottom = shape_modifier & kNoLowerRightArc;
   const bool compact_left_to_bottom =
       !extend_left_to_bottom && (shape_modifier & kCompactLeftArc);
+  extension_corner_radius = 0;
 
   SkPath path;
 
@@ -1042,14 +1044,18 @@ void TabStyleViewsImpl::PaintSeparators(gfx::Canvas* canvas) const {
                                                    SK_AlphaOPAQUE));
   };
 
+  // Even if |separator_radius| becomes 1 native pixel the 'roundedness'
+  // will be approximated with color, although extremely subtle and
+  // likely only on screens >= 2x (i.e. separator width is 2+px)!
+  const int separator_radius =  separator_bounds.leading.width() / 2;
   cc::PaintFlags flags;
   flags.setAntiAlias(true);
   flags.setColor(separator_color(separator_opacities.left));
   canvas->DrawRoundRect(separator_bounds.leading,
-                        tab_style()->GetSeparatorCornerRadius() * scale, flags);
+                        separator_radius, flags);
   flags.setColor(separator_color(separator_opacities.right));
   canvas->DrawRoundRect(separator_bounds.trailing,
-                        tab_style()->GetSeparatorCornerRadius() * scale, flags);
+                        separator_radius, flags);
 }
 
 float TabStyleViewsImpl::GetTopCornerRadiusForWidth(int width) const {

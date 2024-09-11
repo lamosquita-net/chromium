@@ -356,6 +356,7 @@ ContentSettingsType PermissionUtil::PermissionTypeToContentSettingTypeSafe(
       return ContentSettingsType::AUTOMATIC_FULLSCREEN;
     case PermissionType::NUM:
       break;
+    PERMISSION_UTIL_PERMISSION_TYPE_TO_CONTENT_SETTINGS_TYPE
   }
 
   return ContentSettingsType::DEFAULT;

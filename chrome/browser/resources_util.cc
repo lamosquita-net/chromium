@@ -50,6 +50,7 @@ class ThemeMap {
     for (size_t i = 0; i < kUiResourcesSize; ++i) {
       storage.emplace_back(kUiResources[i].path, kUiResources[i].id);
     }
+    BRAVE_RESOURCES_UTIL
 #if BUILDFLAG(IS_CHROMEOS_ASH)
     for (size_t i = 0; i < kUiChromeosResourcesSize; ++i) {
       storage.emplace_back(kUiChromeosResources[i].path,

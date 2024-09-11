@@ -648,6 +648,7 @@ bool EventTarget::AddEventListenerInternal(
       event_type, listener, options, &registered_listener);
   if (added) {
     CHECK(registered_listener);
+    BRAVE_EVENT_TARGET_ADD_EVENT_LISTENER_INTERNAL
     if (options->hasSignal()) {
       // Instead of passing the entire |options| here, which could create a
       // circular reference due to |options| holding a Member<AbortSignal>, just
@@ -832,6 +833,7 @@ bool EventTarget::RemoveEventListenerInternal(
                                     &registered_listener)) {
     return false;
   }
+  BRAVE_EVENT_TARGET_REMOVE_EVENT_LISTENER_INTERNAL
 
   CHECK(registered_listener);
   RemovedEventListener(event_type, *registered_listener);

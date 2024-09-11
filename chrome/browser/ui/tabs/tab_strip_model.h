@@ -662,6 +662,7 @@ class TabStripModel : public TabGroupController {
   tabs::TabModel* GetTabForWebContents(
       const content::WebContents* contents) const;
 
+  TAB_STRIP_MODEL_H_
  private:
   FRIEND_TEST_ALL_PREFIXES(TabStripModelTest, GetIndicesClosedByCommand);
 

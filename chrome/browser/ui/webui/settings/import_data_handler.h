@@ -37,6 +37,7 @@ class ImportDataHandler : public SettingsPageUIHandler,
   void OnJavascriptAllowed() override {}
   void OnJavascriptDisallowed() override;
 
+  BRAVE_IMPORT_DATA_HANDLER_H
  private:
   void StartImport(const importer::SourceProfile& source_profile,
                    uint16_t imported_items);

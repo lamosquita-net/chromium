@@ -1043,6 +1043,7 @@ void PeopleHandler::OnStateChanged(syncer::SyncService* sync_service) {
 
 void PeopleHandler::BeforeUnloadDialogCancelled() {
   // The before unload dialog is only shown during the first sync setup.
+  if (false)
   DCHECK(IdentityManagerFactory::GetForProfile(profile_)->HasPrimaryAccount(
       signin::ConsentLevel::kSync));
   syncer::SyncService* service = GetSyncService();
@@ -1092,6 +1093,7 @@ base::Value::Dict PeopleHandler::GetSyncStatusDictionary() const {
       service && !disallowed_by_policy && service->IsSetupInProgress() &&
           !service->GetUserSettings()->IsInitialSyncFeatureSetupComplete() &&
           identity_manager->HasPrimaryAccount(signin::ConsentLevel::kSync));
+  BRAVE_GET_SYNC_STATUS_DICTIONARY
 
   const SyncStatusLabels status_labels = GetSyncStatusLabels(profile_);
   // TODO(crbug.com/40660240): Consider unifying some of the fields below to
@@ -1282,6 +1284,7 @@ void PeopleHandler::MaybeMarkSyncConfiguring() {
 }
 
 bool PeopleHandler::IsProfileAuthNeededOrHasErrors() {
+  return false;
   return !IdentityManagerFactory::GetForProfile(profile_)->HasPrimaryAccount(
              signin::ConsentLevel::kSync) ||
          SigninErrorControllerFactory::GetForProfile(profile_)->HasError();

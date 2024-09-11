@@ -209,6 +209,7 @@ class ModelTypeWorker : public UpdateHandler,
 
   static constexpr size_t kMaxPendingInvalidations = 10u;
 
+ BRAVE_MODEL_TYPE_WORKER_H_
  private:
   struct UnknownEncryptionKeyInfo {
     // Not increased if the cryptographer knows it's in a pending state

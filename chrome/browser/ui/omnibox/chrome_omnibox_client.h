@@ -23,7 +23,7 @@ class GURL;
 class LocationBar;
 class Profile;
 
-class ChromeOmniboxClient final : public OmniboxClient {
+class ChromeOmniboxClient : public OmniboxClient {
  public:
   ChromeOmniboxClient(LocationBar* location_bar,
                       Browser* browser,

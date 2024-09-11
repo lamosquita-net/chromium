@@ -109,4 +109,5 @@ build_webui("build") {
     optimize_webui_host = "extensions"
     optimize_webui_in_files = [ "extensions.js" ]
   }
+  import("//brave/browser/resources/extensions/sources.gni") web_component_files += brave_extensions_web_component_files non_web_component_files += brave_extensions_non_web_component_files exclude_ts_preprocess_files = brave_extensions_local_ts_files exclude_html_css_preprocess_files = brave_extensions_local_html_files preprocess_deps = brave_extensions_preprocess_extra_deps
 }

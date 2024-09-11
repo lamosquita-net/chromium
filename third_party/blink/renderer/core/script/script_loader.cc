@@ -720,6 +720,7 @@ PendingScript* ScriptLoader::PrepareScript(
                              parser_state, credentials_mode, referrer_policy,
                              fetch_priority_hint, render_blocking_behavior,
                              RejectCoepUnsafeNone(false));
+  BRAVE_SCRIPT_LOADER_PREPARE_SCRIPT
 
   // <spec step="28">Let settings object be el's node document's relevant
   // settings object.</spec>

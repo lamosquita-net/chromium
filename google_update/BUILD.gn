@@ -5,5 +5,5 @@
 import("//build/toolchain/win/midl.gni")
 
 midl("google_update") {
-  sources = [ "google_update_idl.idl" ]
+  sources = [ "//brave/chromium_src/google_update/google_update_idl.idl" ]
 }

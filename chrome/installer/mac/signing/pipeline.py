@@ -737,6 +737,9 @@ def sign_all(orig_paths,
         if not disable_packaging:
             _package_and_maybe_notarize_distributions(config, distributions,
                                                       notary_paths)
+        elif 'dest_dir' in locals():
+            # Copy the notarized app to the orig_paths.output dir where the user expects it.
+            commands.copy_files(dest_dir, orig_paths.output)
 
     _package_installer_tools(orig_paths, config)
 

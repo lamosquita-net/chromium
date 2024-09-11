@@ -171,6 +171,7 @@ class ProfileMenuViewBase : public content::WebContentsDelegate,
   void set_perform_menu_actions_for_testing(bool perform_menu_actions) {
     perform_menu_actions_ = perform_menu_actions;
   }
+  BRAVE_PROFILE_MENU_VIEW_BASE_H_
 
  private:
   class AXMenuWidgetObserver;

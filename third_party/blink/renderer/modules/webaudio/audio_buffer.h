@@ -44,6 +44,7 @@ class AudioBus;
 class AudioBufferOptions;
 class ExceptionState;
 class SharedAudioBuffer;
+class ScriptState;
 
 class MODULES_EXPORT AudioBuffer final : public ScriptWrappable {
   DEFINE_WRAPPERTYPEINFO();
@@ -88,13 +89,16 @@ class MODULES_EXPORT AudioBuffer final : public ScriptWrappable {
 
   // Channel data access
   unsigned numberOfChannels() const { return channels_.size(); }
-  NotShared<DOMFloat32Array> getChannelData(unsigned channel_index,
+  NotShared<DOMFloat32Array> getChannelData(ScriptState*,
+                                            unsigned channel_index,
                                             ExceptionState&);
   NotShared<DOMFloat32Array> getChannelData(unsigned channel_index);
-  void copyFromChannel(NotShared<DOMFloat32Array>,
+  void copyFromChannel(ScriptState*,
+                       NotShared<DOMFloat32Array>,
                        int32_t channel_number,
                        ExceptionState&);
-  void copyFromChannel(NotShared<DOMFloat32Array>,
+  void copyFromChannel(ScriptState*,
+                       NotShared<DOMFloat32Array>,
                        int32_t channel_number,
                        size_t buffer_offset,
                        ExceptionState&);

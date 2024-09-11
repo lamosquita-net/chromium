@@ -23,9 +23,10 @@ enum SortOrder {
   kLastOpened = 2,
   kAlphabetical = 3,
   kReverseAlphabetical = 4,
+  kCustom = 5,
 
   // Must be last. May add new values before this one.
-  kCount = 5,
+  kCount = 6,
 };
 
 // Used to indicate the order bookmarks are sorted in the side panel.

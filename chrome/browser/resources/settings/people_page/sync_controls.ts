@@ -117,7 +117,7 @@ export class SettingsSyncControlsElement extends
 
     const router = Router.getInstance();
     if (router.getCurrentRoute() ===
-        (router.getRoutes() as {SYNC_ADVANCED: Route}).SYNC_ADVANCED) {
+        (router.getRoutes() as {BRAVE_SYNC_SETUP: Route}).BRAVE_SYNC_SETUP) {
       this.browserProxy_.didNavigateToSyncPage();
     }
   }

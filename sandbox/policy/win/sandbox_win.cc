@@ -704,6 +704,7 @@ ResultCode LaunchWithoutSandbox(
     base::Process* process) {
   base::LaunchOptions options;
   options.handles_to_inherit = handles_to_inherit;
+  BRAVE_START_SANDBOXED_PROCESS
   // Network process runs in a job even when unsandboxed. This is to ensure it
   // does not outlive the browser, which could happen if there is a lot of I/O
   // on process shutdown, in which case TerminateProcess can fail. See

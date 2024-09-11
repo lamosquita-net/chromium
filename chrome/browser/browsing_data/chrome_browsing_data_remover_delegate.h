@@ -95,6 +95,7 @@ class ChromeBrowsingDataRemoverDelegate
   void OverrideDomainReliabilityClearerForTesting(
       DomainReliabilityClearer clearer);
 
+  BRAVE_CHROME_BROWSING_DATA_REMOVER_DELEGATE_H
  private:
   using WebRtcEventLogManager = webrtc_event_logging::WebRtcEventLogManager;
 
@@ -150,8 +151,9 @@ class ChromeBrowsingDataRemoverDelegate
     kMediaDeviceSalts = 45,
     // See also kDisableAutoSigninForProfilePasswords.
     kDisableAutoSigninForAccountPasswords = 46,
+    kIPFSCache = 47,
 
-    kMaxValue = kDisableAutoSigninForAccountPasswords,
+    kMaxValue = kIPFSCache,
   };
   // LINT.ThenChange(//tools/metrics/histograms/metadata/history/enums.xml:ChromeBrowsingDataRemoverTasks)
 

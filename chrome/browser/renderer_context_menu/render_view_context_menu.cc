@@ -2413,6 +2413,7 @@ void RenderViewContextMenu::AppendSearchProvider() {
   if (!selection_navigation_url_.is_valid()) {
     return;
   }
+  BRAVE_APPEND_SEARCH_PROVIDER
 
   std::u16string printable_selection_text = PrintableSelectionText();
   EscapeAmpersands(&printable_selection_text);

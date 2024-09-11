@@ -23,6 +23,7 @@ AnalyserHandler::AnalyserHandler(AudioNode& node, float sample_rate)
     : AudioHandler(kNodeTypeAnalyser, node, sample_rate),
       analyser_(
           node.context()->GetDeferredTaskHandler().RenderQuantumFrames()) {
+  BRAVE_ANALYSERHANDLER_CONSTRUCTOR
   AddInput();
   channel_count_ = kDefaultNumberOfInputChannels;
   AddOutput(kDefaultNumberOfOutputChannels);

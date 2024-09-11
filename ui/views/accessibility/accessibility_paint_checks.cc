@@ -33,6 +33,7 @@ void RunAccessibilityPaintChecks(View* view) {
   // some additional fields are processed and set there.
   ui::AXNodeData node_data;
   view->GetViewAccessibility().GetAccessibleNodeData(&node_data);
+  node_data.SetNameExplicitlyEmpty();
 
   // No checks for unfocusable items yet.
   if (!node_data.HasState(ax::mojom::State::kFocusable))

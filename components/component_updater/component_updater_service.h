@@ -205,6 +205,7 @@ class ComponentUpdateService {
   friend class screen_ai::ScreenAIDownloaderNonChromeOS;
   friend class speech::SodaInstallerImpl;
   friend class ::ComponentsHandler;
+  BRAVE_COMPONENT_UPDATER_SERVICE_H_
   FRIEND_TEST_ALL_PREFIXES(ComponentInstallerTest, RegisterComponent);
   FRIEND_TEST_ALL_PREFIXES(ComponentUpdaterTest, ComponentDetails);
   FRIEND_TEST_ALL_PREFIXES(ComponentUpdaterTest, UpdatesDisabled);
@@ -220,6 +221,7 @@ class OnDemandUpdater {
   enum class Priority { BACKGROUND = 0, FOREGROUND = 1 };
 
   virtual ~OnDemandUpdater() = default;
+  BRAVE_COMPONENT_UPDATER_SERVICE_H_ON_DEMAND_UPDATER
 
  private:
   friend class OnDemandTester;

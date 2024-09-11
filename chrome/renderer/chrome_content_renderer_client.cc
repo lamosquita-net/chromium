@@ -599,7 +599,7 @@ void ChromeContentRendererClient::RenderFrameCreated(
       ChromeExtensionsRendererClient::GetInstance()->extension_dispatcher());
 #endif
   content_settings::ContentSettingsAgentImpl* content_settings =
-      new content_settings::ContentSettingsAgentImpl(
+      new content_settings::BraveContentSettingsAgentImpl(
           render_frame, should_allow_for_content_settings,
           std::move(content_settings_delegate));
   if (chrome_observer_.get()) {
@@ -764,7 +764,9 @@ void ChromeContentRendererClient::RenderFrameCreated(
 #endif  // BUILDFLAG(HAS_SPELLCHECK_PANEL)
 #endif
 #if BUILDFLAG(ENABLE_FEED_V2)
+#if BUILDFLAG(IS_ANDROID)
   base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
+#endif
   if (command_line->HasSwitch(feed::switches::kEnableRssLinkReader) &&
       render_frame->IsMainFrame()) {
     new feed::RssLinkReader(render_frame, registry);
@@ -780,6 +782,7 @@ void ChromeContentRendererClient::RenderFrameCreated(
   }
 #endif
 
+  BRAVE_RENDER_FRAME_CREATED
   if (render_frame->IsMainFrame()) {
     new commerce::CommerceWebExtractor(render_frame, registry);
   }

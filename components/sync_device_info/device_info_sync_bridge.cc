@@ -296,6 +296,7 @@ std::unique_ptr<DeviceInfoSpecifics> MakeLocalDeviceSpecifics(
         GetSpecificsFieldNumberFromModelType(data_type));
   }
 
+  BRAVE_MAKE_LOCAL_DEVICE_SPECIFICS
   return specifics;
 }
 
@@ -486,6 +487,7 @@ std::optional<ModelError> DeviceInfoSyncBridge::ApplyIncrementalSyncChanges(
   for (const std::unique_ptr<EntityChange>& change : entity_changes) {
     const std::string guid = change->storage_key();
 
+    BRAVE_DEVICE_INFO_SYNC_BRIDGE_APPLY_SYNC_CHANGES_SKIP_NEXT_IF
     // Reupload local device if it was deleted from the server.
     if (local_cache_guid_ == guid &&
         change->type() == EntityChange::ACTION_DELETE) {
@@ -496,7 +498,7 @@ std::optional<ModelError> DeviceInfoSyncBridge::ApplyIncrementalSyncChanges(
     // Ignore any remote changes that have a cache guid that is or was this
     // local device.
     if (device_info_prefs_->IsRecentLocalCacheGuid(guid)) {
-      continue;
+      if (change->type() != EntityChange::ACTION_DELETE) continue;
     }
 
     if (change->type() == EntityChange::ACTION_DELETE) {
@@ -778,6 +780,7 @@ void DeviceInfoSyncBridge::OnReadAllMetadata(
     return;
   }
 
+  BRAVE_ON_READ_ALL_METADATA_CLEAR_PROGRESS_TOKEN
   // In the regular case for sync being disabled, wait for MergeFullSyncData()
   // before initializing the LocalDeviceInfoProvider.
   if (!syncer::IsInitialSyncDone(
@@ -1013,6 +1016,7 @@ DeviceInfoSyncBridge::CountActiveDevicesByType() const {
 void DeviceInfoSyncBridge::ExpireOldEntries() {
   CHECK(store_);
   TRACE_EVENT0("sync", "DeviceInfoSyncBridge::ExpireOldEntries");
+  BRAVE_SKIP_EXPIRE_OLD_ENTRIES
   const base::Time expiration_threshold =
       base::Time::Now() - kExpirationThreshold;
   std::unordered_set<std::string> cache_guids_to_expire;

@@ -187,6 +187,7 @@ PermissionDialogDelegate* PermissionDialogDelegate::CreateForTesting(
 void PermissionDialogDelegate::Accept(JNIEnv* env,
                                       const JavaParamRef<jobject>& obj) {
   CHECK(permission_prompt_);
+  BRAVE_PERMISSION_DIALOG_DELEGATE_ACCEPT
   permission_prompt_->Accept();
 }
 
@@ -200,6 +201,7 @@ void PermissionDialogDelegate::AcceptThisTime(
 void PermissionDialogDelegate::Cancel(JNIEnv* env,
                                       const JavaParamRef<jobject>& obj) {
   CHECK(permission_prompt_);
+  BRAVE_PERMISSION_DIALOG_DELEGATE_CANCEL
   permission_prompt_->Deny();
 }
 

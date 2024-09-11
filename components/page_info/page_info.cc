@@ -1237,6 +1237,7 @@ void PageInfo::PopulatePermissionInfo(PermissionInfo& permission_info,
 // applies to permissions listed in |kPermissionType|.
 bool PageInfo::ShouldShowPermission(
     const PageInfo::PermissionInfo& info) const {
+  BRAVE_PAGE_INFO_SHOULD_SHOW_PERMISSION
   // Note |ContentSettingsType::ADS| will show up regardless of its default
   // value when it has been activated on the current origin.
   if (info.type == ContentSettingsType::ADS) {

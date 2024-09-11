@@ -70,6 +70,7 @@ class ExternalProcessImporterBridge : public ImporterBridge {
   std::u16string GetLocalizedString(int message_id) override;
   // End ImporterBridge implementation.
 
+  BRAVE_EXTERNAL_PROCESS_IMPORTER_BRIDGE_H_
  private:
   ~ExternalProcessImporterBridge() override;
 

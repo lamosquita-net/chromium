@@ -150,6 +150,7 @@ RequestTypeForUma GetUmaValueForRequestType(RequestType request_type) {
 #endif
     case RequestType::kIdentityProvider:
       return RequestTypeForUma::PERMISSION_IDENTITY_PROVIDER;
+    BRAVE_GET_UMA_VALUE_FOR_REQUEST_TYPE
   }
 }
 
@@ -175,6 +176,7 @@ RequestTypeForUma GetUmaValueForRequests(
     return RequestTypeForUma::MULTIPLE_KEYBOARD_AND_POINTER_LOCK;
   }
 #endif
+  BRAVE_GET_UMA_VALUE_FOR_REQUESTS
   return RequestTypeForUma::UNKNOWN;
 }
 

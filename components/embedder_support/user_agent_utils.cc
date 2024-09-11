@@ -190,6 +190,7 @@ const blink::UserAgentBrandList GetUserAgentBrandList(
 #if !BUILDFLAG(CHROMIUM_BRANDING)
   brand = version_info::GetProductName();
 #endif
+  BRAVE_GET_USER_AGENT_BRAND_LIST
   std::optional<std::string> maybe_brand_override =
       base::GetFieldTrialParamValueByFeature(features::kGreaseUACH,
                                              "brand_override");
@@ -203,7 +204,7 @@ const blink::UserAgentBrandList GetUserAgentBrandList(
 
   std::string brand_version =
       output_version_type == blink::UserAgentBrandVersionType::kFullVersion
-          ? full_version
+          ? BRAVE_BRAND_VERSION_OVERRIDE_FOR_FULL_BRAND_VERSION_TYPE
           : major_version;
 
   return GenerateBrandVersionList(major_version_number, brand, brand_version,

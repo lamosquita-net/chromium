@@ -98,4 +98,5 @@ cargo_crate("lib") {
     "printing",
     "proc-macro",
   ]
+  features += [ "extra-traits", "visit", "visit-mut" ]
 }

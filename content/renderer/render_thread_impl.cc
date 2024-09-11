@@ -904,6 +904,7 @@ void RenderThreadImpl::InitializeRenderer(
 }
 
 void RenderThreadImpl::RegisterSchemes() {
+  REGISTER_BRAVE_SCHEMES_DISPLAY_ISOLATED_AND_NO_JS
   // chrome:
   WebString chrome_scheme(WebString::FromASCII(kChromeUIScheme));
   WebSecurityPolicy::RegisterURLSchemeAsDisplayIsolated(chrome_scheme);

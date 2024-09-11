@@ -99,6 +99,7 @@ class COMPONENT_EXPORT(NETWORK_CPP_NETWORK_PARAM)
     return host_port_pair.port();
   }
 
+  BRAVE_STRUCT_TRAITS_HOST_PORT_PAIR
   static bool Read(network::mojom::HostPortPairDataView data,
                    net::HostPortPair* out);
 };

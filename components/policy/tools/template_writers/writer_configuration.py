@@ -137,3 +137,4 @@ def GetConfigurationForBuild(defines):
     config['mac_bundle_id'] = defines['mac_bundle_id']
   config['android_webview_restriction_prefix'] = 'com.android.browser:'
   return config
+from brave_chromium_utils import inline_chromium_src_override; inline_chromium_src_override(globals(), locals())

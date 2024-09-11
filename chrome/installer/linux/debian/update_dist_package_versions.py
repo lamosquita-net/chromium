@@ -38,6 +38,7 @@ PACKAGE_FILTER = {
     "libatspi2.0-0",
     "libc6",
     "libcairo2",
+    "libcairo-gobject2",
     "libcups2",
     "libdbus-1-3",
     "libdrm2",
@@ -70,6 +71,7 @@ PACKAGE_FILTER = {
     "libxshmfence1",
     "libxss1",
     "libxtst6",
+    "zlib1g",
 }
 
 

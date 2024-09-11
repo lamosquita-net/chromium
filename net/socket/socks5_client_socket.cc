@@ -227,6 +227,9 @@ int SOCKS5ClientSocket::DoLoop(int last_io_result) {
         net_log_.EndEventWithNetErrorCode(NetLogEventType::SOCKS5_GREET_READ,
                                           rv);
         break;
+      case STATE_AUTH:
+        rv = DoAuth(rv);
+        break;
       case STATE_HANDSHAKE_WRITE:
         DCHECK_EQ(OK, rv);
         net_log_.BeginEvent(NetLogEventType::SOCKS5_HANDSHAKE_WRITE);
@@ -256,8 +259,6 @@ int SOCKS5ClientSocket::DoLoop(int last_io_result) {
   return rv;
 }
 
-const char kSOCKS5GreetWriteData[] = { 0x05, 0x01, 0x00 };  // no authentication
-
 int SOCKS5ClientSocket::DoGreetWrite() {
   // Since we only have 1 byte to send the hostname length in, if the
   // URL has a hostname longer than 255 characters we can't send it.
@@ -267,8 +268,12 @@ int SOCKS5ClientSocket::DoGreetWrite() {
   }
 
   if (buffer_.empty()) {
-    buffer_ =
-        std::string(kSOCKS5GreetWriteData, std::size(kSOCKS5GreetWriteData));
+    const char greeting[] = {
+      0x05,			// SOCKS version
+      0x01,			// number of authentication methods
+      static_cast<char>(auth_method()),
+    };
+    buffer_ = std::string(greeting, sizeof(greeting));
     bytes_sent_ = 0;
   }
 
@@ -327,14 +332,14 @@ int SOCKS5ClientSocket::DoGreetReadComplete(int result) {
                                    "version", buffer_[0]);
     return ERR_SOCKS_CONNECTION_FAILED;
   }
-  if (buffer_[1] != 0x00) {
+  if (buffer_[1] != auth_method()) {
     net_log_.AddEventWithIntParams(NetLogEventType::SOCKS_UNEXPECTED_AUTH,
                                    "method", buffer_[1]);
     return ERR_SOCKS_CONNECTION_FAILED;
   }
 
   buffer_.clear();
-  next_state_ = STATE_HANDSHAKE_WRITE;
+  next_state_ = STATE_AUTH;
   return OK;
 }
 

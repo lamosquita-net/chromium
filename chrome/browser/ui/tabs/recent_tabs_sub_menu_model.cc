@@ -444,6 +444,7 @@ void RecentTabsSubMenuModel::BuildTabsFromOtherDevices() {
     DCHECK(!session->GetSessionName().empty());
     std::unique_ptr<ui::SimpleMenuModel> device_menu_model =
         CreateOtherDeviceSubMenu(session, tabs_in_session);
+    BRAVE_RECENT_TABS_SUB_MENU_MODEL_BUILD_TABS_FROM_OTHER_DEVICES
     const int command_id = GetAndIncrementNextMenuID();
     AddSubMenu(command_id, base::UTF8ToUTF16(session->GetSessionName()),
                device_menu_model.get());

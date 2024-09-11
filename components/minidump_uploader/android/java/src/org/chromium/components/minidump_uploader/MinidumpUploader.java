@@ -26,7 +26,7 @@ import java.util.zip.GZIPOutputStream;
  */
 public class MinidumpUploader {
     /* package */
-    static final String CRASH_URL_STRING = "https://clients2.google.com/cr/report";
+    static final String CRASH_URL_STRING = "https://cr.brave.com";
     /* package */
     static final String CONTENT_TYPE_TMPL = "multipart/form-data; boundary=%s";
 

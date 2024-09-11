@@ -31,7 +31,7 @@ class MenuRunner;
 }
 
 // AppMenu adapts the AppMenuModel to view's menu related classes.
-class AppMenu final : public views::MenuDelegate,
+class AppMenu : public views::MenuDelegate,
                       public bookmarks::BaseBookmarkModelObserver,
                       public GlobalErrorObserver {
  public:

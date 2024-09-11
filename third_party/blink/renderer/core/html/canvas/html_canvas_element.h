@@ -316,6 +316,7 @@ class CORE_EXPORT HTMLCanvasElement final
 
   bool ShouldDisableAccelerationBecauseOfReadback() const;
 
+  BRAVE_HTML_CANVAS_ELEMENT_H_
  protected:
   void DidMoveToNewDocument(Document& old_document) override;
   void DidRecalcStyle(const StyleRecalcChange change) override;

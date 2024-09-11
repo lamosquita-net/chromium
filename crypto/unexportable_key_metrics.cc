@@ -30,6 +30,7 @@ enum class KeyType {
 };
 
 const SignatureVerifier::SignatureAlgorithm kAllAlgorithms[] = {
+    BRAVE_ALL_ALGORITHMS
     SignatureVerifier::SignatureAlgorithm::ECDSA_SHA256,
     SignatureVerifier::SignatureAlgorithm::RSA_PKCS1_SHA256,
 };
@@ -139,6 +140,7 @@ internal::TPMSupport MeasureVirtualTpmOperations() {
   if (algo) {
     switch (*algo) {
       case SignatureVerifier::SignatureAlgorithm::ECDSA_SHA256:
+      BRAVE_MEASURE_VIRTUAL_TMP_OPERATIONS
         supported_virtual_algo = internal::TPMSupport::kECDSA;
         break;
       case SignatureVerifier::SignatureAlgorithm::RSA_PKCS1_SHA256:
@@ -218,6 +220,7 @@ void MeasureTpmOperationsInternal(UnexportableKeyProvider::Config config) {
   if (algo) {
     switch (*algo) {
       case SignatureVerifier::SignatureAlgorithm::ECDSA_SHA256:
+      BRAVE_MEASURE_TMP_OPERATIONS_INTERNAL
         supported_algo = internal::TPMSupport::kECDSA;
         break;
       case SignatureVerifier::SignatureAlgorithm::RSA_PKCS1_SHA256:

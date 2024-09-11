@@ -274,6 +274,7 @@ bool RequestIsSubframeSubresource(Frame* frame) {
 // static
 bool MixedContentChecker::IsMixedContent(const SecurityOrigin* security_origin,
                                          const KURL& url) {
+  BRAVE_MIXED_CONTENT_CHECKER_IS_MIXED_CONTENT
   return IsMixedContent(
       security_origin->GetOriginOrPrecursorOriginIfOpaque()->Protocol(), url);
 }

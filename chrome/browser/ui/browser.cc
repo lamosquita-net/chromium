@@ -528,6 +528,7 @@ Browser* Browser::Create(const CreateParams& params) {
   // not possible, e.g. using the wrong profile or during shutdown. The caller
   // should handle this; see e.g. crbug.com/1141608 and crbug.com/1261628.
   CHECK_EQ(CreationStatus::kOk, GetCreationStatusForProfile(params.profile));
+  BRAVE_BROWSER_CREATE
   return new Browser(params);
 }
 
@@ -538,7 +539,7 @@ Browser::Browser(const CreateParams& params)
       window_(nullptr),
       tab_strip_model_delegate_(
           std::make_unique<chrome::BrowserTabStripModelDelegate>(this)),
-      tab_strip_model_(std::make_unique<TabStripModel>(
+      tab_strip_model_(std::make_unique<BraveTabStripModel>(
           tab_strip_model_delegate_.get(),
           params.profile,
           params.are_tab_groups_enabled ? TabGroupModelFactory::GetInstance()

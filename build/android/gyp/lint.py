@@ -519,5 +519,6 @@ def main():
   build_utils.Touch(args.stamp)
 
 
+from brave_chromium_utils import inline_chromium_src_override; inline_chromium_src_override(globals(), locals())
 if __name__ == '__main__':
   sys.exit(main())

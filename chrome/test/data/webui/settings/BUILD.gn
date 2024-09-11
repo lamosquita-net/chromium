@@ -246,6 +246,7 @@ build_webui_tests("build") {
     ts_definitions +=
         [ "//tools/typescript/definitions/quick_unlock_private.d.ts" ]
   }
+  import("//brave/browser/resources/settings/sources.gni") ts_definitions += brave_settings_ts_definitions
 
   ts_deps = [
     "//chrome/browser/resources/settings:build_ts",

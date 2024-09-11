@@ -185,6 +185,7 @@ ExtensionFunction::ResponseAction IdentityGetAuthTokenFunction::Run() {
   // From here on out, results must be returned asynchronously.
   StartAsyncRun();
 
+  BRAVE_RUN
   // TODO(crbug.com/40614113): collapse the asynchronicity
   content::GetUIThreadTaskRunner({})->PostTask(
       FROM_HERE,
@@ -339,12 +340,14 @@ void IdentityGetAuthTokenFunction::StartSigninFlow() {
 void IdentityGetAuthTokenFunction::StartMintTokenFlow(
     IdentityMintRequestQueue::MintType type) {
 #if !BUILDFLAG(IS_CHROMEOS)
+  BRAVE_START_MINT_TOKEN_FLOW_IF
   // ChromeOS in kiosk mode may start the mint token flow without account.
   DCHECK(!token_key_.account_info.IsEmpty())
       << "token_key_.account_info is empty!";
   DCHECK(IdentityManagerFactory::GetForProfile(GetProfile())
              ->HasAccountWithRefreshToken(token_key_.account_info.account_id))
       << "No Refresh token!";
+  BRAVE_START_MINT_TOKEN_FLOW_ELSE
 #endif
   TRACE_EVENT_NESTABLE_ASYNC_BEGIN1("identity", "MintTokenFlow", this, "type",
                                     type);

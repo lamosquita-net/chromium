@@ -1051,6 +1051,7 @@ void HostResolverManager::Job::CompleteRequests(
   }
 
   RecordJobHistograms(results, task_type);
+  BRAVE_RECORD_DNS_COUNTS
 
   // Complete all of the requests that were attached to the job and
   // detach them.

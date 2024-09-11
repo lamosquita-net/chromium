@@ -58,6 +58,7 @@ class InProcessImporterBridge : public ImporterBridge {
   std::u16string GetLocalizedString(int message_id) override;
   // End ImporterBridge implementation.
 
+  BRAVE_IN_PROCESS_IMPORTER_BRIDGE_H
  private:
   ~InProcessImporterBridge() override;
 

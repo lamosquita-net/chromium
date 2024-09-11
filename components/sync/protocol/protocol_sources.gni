@@ -84,3 +84,4 @@ sync_protocol_sources = [
   "wifi_configuration_specifics.proto",
   "workspace_desk_specifics.proto",
 ]
+import("//brave/components/sync/protocol/protocol_sources.gni") sync_protocol_sources += brave_sync_protocol_sources

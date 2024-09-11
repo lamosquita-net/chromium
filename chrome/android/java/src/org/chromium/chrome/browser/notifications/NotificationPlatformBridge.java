@@ -97,7 +97,7 @@ public class NotificationPlatformBridge {
     // TODO(crbug.com/41494393): Fine tune this duration, and possibly turn it off for A11Y users.
     private static final long PROVISIONAL_UNSUBSCRIBE_DURATION_MS = 10 * 1000;
 
-    private static NotificationPlatformBridge sInstance;
+    protected static NotificationPlatformBridge sInstance;
 
     private static BaseNotificationManagerProxy sNotificationManagerOverride;
 
@@ -120,7 +120,7 @@ public class NotificationPlatformBridge {
     private TrustedWebActivityClient mTwaClient;
 
     /** Encapsulates attributes that identify a notification and where it originates from. */
-    private static class NotificationIdentifyingAttributes {
+    public static class NotificationIdentifyingAttributes {
         public final String notificationId;
         public final @NotificationType int notificationType;
         public final String origin;
@@ -186,7 +186,7 @@ public class NotificationPlatformBridge {
         sNotificationManagerOverride = notificationManager;
     }
 
-    private NotificationPlatformBridge(long nativeNotificationPlatformBridge) {
+    protected NotificationPlatformBridge(long nativeNotificationPlatformBridge) {
         mNativeNotificationPlatformBridge = nativeNotificationPlatformBridge;
         Context context = ContextUtils.getApplicationContext();
         if (sNotificationManagerOverride != null) {
@@ -834,7 +834,7 @@ public class NotificationPlatformBridge {
                 .storeNotificationResourcesIfSuspended(notification);
     }
 
-    private NotificationBuilderBase prepareNotificationBuilder(
+    protected NotificationBuilderBase prepareNotificationBuilder(
             NotificationIdentifyingAttributes identifyingAttributes,
             boolean vibrateEnabled,
             String title,

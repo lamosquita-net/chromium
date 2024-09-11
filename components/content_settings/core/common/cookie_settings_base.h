@@ -76,7 +76,7 @@ class CookieSettingsBase {
   CookieSettingsBase(const CookieSettingsBase&) = delete;
   CookieSettingsBase& operator=(const CookieSettingsBase&) = delete;
 
-  virtual ~CookieSettingsBase() = default;
+  virtual ~CookieSettingsBase();
 
   // Enum for measuring the mechanism for re-enabling third-party cookies when
   // applying 3PCD experiment. These values are persisted to logs. Entries

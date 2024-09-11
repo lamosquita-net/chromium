@@ -157,6 +157,7 @@ class Location(object):
         # Canonicalize the paths heuristically.
         if filepath is not None:
             index = filepath.find(self._blink_path_prefix)
+            if filepath.find(posixpath.sep + posixpath.join('brave', 'third_party', 'blink', 'renderer', '')) >= 0: index = -1
             if index >= 0:
                 filepath = filepath[index + 1:]
 

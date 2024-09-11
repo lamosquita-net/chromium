@@ -18,7 +18,7 @@ import type {BrowserColorVariant} from '//resources/mojo/ui/base/mojom/themes.mo
 import {ThemeColorPickerBrowserProxy} from './browser_proxy.js';
 import {EMPTY_COLOR} from './color_utils.js';
 import type {Color, SelectedColor} from './color_utils.js';
-import {ColorType, DARK_BASELINE_BLUE_COLOR, DARK_BASELINE_GREY_COLOR, LIGHT_BASELINE_BLUE_COLOR, LIGHT_BASELINE_GREY_COLOR} from './color_utils.js';
+import {ColorType, DARK_DEFAULT_COLOR, DARK_BASELINE_GREY_COLOR, LIGHT_DEFAULT_COLOR, LIGHT_BASELINE_GREY_COLOR} from './color_utils.js';
 import type {ThemeColorElement} from './theme_color.js';
 import {getCss} from './theme_color_picker.css.js';
 import {getHtml} from './theme_color_picker.html.js';
@@ -137,8 +137,8 @@ export class ThemeColorPickerElement extends ThemeColorPickerElementBase {
 
   private computeDefaultColor_(): Color {
     assert(this.theme_);
-      return this.theme_.isDarkMode ? DARK_BASELINE_BLUE_COLOR :
-                                      LIGHT_BASELINE_BLUE_COLOR;
+      return this.theme_.isDarkMode ? DARK_DEFAULT_COLOR :
+                                      LIGHT_DEFAULT_COLOR;
   }
 
   private computeGreyDefaultColor_(): Color {

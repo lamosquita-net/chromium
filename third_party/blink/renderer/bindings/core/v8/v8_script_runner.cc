@@ -310,7 +310,7 @@ int GetMicrotasksScopeDepth(v8::Isolate* isolate,
 
 }  // namespace
 
-v8::MaybeLocal<v8::Script> V8ScriptRunner::CompileScript(
+v8::MaybeLocal<v8::Script> V8ScriptRunner::CompileScript_ChromiumImpl(
     ScriptState* script_state,
     const ClassicScript& classic_script,
     v8::ScriptOrigin origin,
@@ -356,7 +356,7 @@ v8::MaybeLocal<v8::Script> V8ScriptRunner::CompileScript(
   return script;
 }
 
-v8::MaybeLocal<v8::Module> V8ScriptRunner::CompileModule(
+v8::MaybeLocal<v8::Module> V8ScriptRunner::CompileModule_ChromiumImpl(
     v8::Isolate* isolate,
     const ModuleScriptCreationParams& params,
     const TextPosition& start_position,

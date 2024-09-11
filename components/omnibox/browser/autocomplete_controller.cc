@@ -1137,6 +1137,7 @@ void AutocompleteController::InitializeAsyncProviders(int provider_types) {
   if (provider_types & AutocompleteProvider::TYPE_SEARCH) {
     search_provider_ = new SearchProvider(provider_client_.get(), this);
     providers_.push_back(search_provider_.get());
+      BRAVE_AUTOCOMPLETE_CONTROLLER_AUTOCOMPLETE_CONTROLLER
   }
   // Providers run in the order they're added.  Add `HistoryURLProvider` after
   // `SearchProvider` because:
@@ -1344,6 +1345,7 @@ void AutocompleteController::UpdateResult(UpdateType update_type) {
     StartStopTimer();
   }
 
+  BRAVE_AUTOCOMPLETE_CONTROLLER_UPDATE_RESULT
   PostProcessMatches();
 
   bool default_match_changed = CheckWhetherDefaultMatchChanged(

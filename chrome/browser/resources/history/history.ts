@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import './brave_overrides/index.js';
 import './app.js';
 
 export {BrowserProxyImpl as ShoppingBrowserProxyImpl} from 'chrome://resources/cr_components/commerce/browser_proxy.js';

@@ -66,7 +66,7 @@ class ProxyConfigMonitor : public net::ProxyConfigService::Observer,
   // they're received, to allow tests to wait until all pending proxy
   // configuration changes have been applied.
   void FlushForTesting();
-
+  BRAVE_PROXY_CONFIG_MONITOR_H
  private:
   // net::ProxyConfigService::Observer implementation:
   void OnProxyConfigChanged(

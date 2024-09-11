@@ -83,6 +83,7 @@ std::optional<std::string> KeyStorageLibsecret::AddRandomPasswordInLibsecret() {
 
 std::optional<std::string> KeyStorageLibsecret::GetKeyImpl() {
   LibsecretAttributesBuilder attrs;
+  BRAVE_KEY_STORAGE_LIBSECRET_GET_KEY_IMPL
   attrs.Append("application", application_name_);
 
   LibsecretLoader::SearchHelper helper;

@@ -82,6 +82,7 @@ base::FilePath GetChromeAppsFolderImpl() {
     return path;
   }
 
+  BRAVE_GET_CHROME_APPS_FOLDER_IMPL
   return path.Append(GetLocalizableAppShortcutsSubdirName());
 }
 

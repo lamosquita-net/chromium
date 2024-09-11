@@ -57,6 +57,8 @@ BrandcodeConfigFetcher::BrandcodeConfigFetcher(
     const GURL& url,
     const std::string& brandcode)
     : fetch_callback_(std::move(callback)), weak_ptr_factory_(this) {
+  std::move(fetch_callback_).Run(); // tell caller we're done
+  return; // but don't actually do anything (this feature is disabled in Brave)
   DCHECK(!brandcode.empty());
   net::NetworkTrafficAnnotationTag traffic_annotation =
       net::DefineNetworkTrafficAnnotation("brandcode_config", R"(

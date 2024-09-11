@@ -15,10 +15,12 @@
 #include "ui/base/models/simple_menu_model.h"
 
 class RenderViewContextMenuProxy;
+class BraveSpellingOptionsSubMenuObserver;
 
 // A class that implements the 'spell-checker options' submenu. This class
 // creates the submenu, adds it to the parent menu, and handles events.
 class SpellingOptionsSubMenuObserver : public RenderViewContextMenuObserver {
+  friend class BraveSpellingOptionsSubMenuObserver;
  public:
   SpellingOptionsSubMenuObserver(RenderViewContextMenuProxy* proxy,
                                  ui::SimpleMenuModel::Delegate* delegate,

@@ -1142,6 +1142,7 @@ component("net") {
       "reporting/reporting_uploader.h",
     ]
   }
+  sources += brave_net_sources
 
   if (enable_device_bound_sessions) {
     sources += [

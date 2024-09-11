@@ -78,7 +78,7 @@ class WebSocketHandshakeThrottle;
 // This is an implementation of WebSocketChannel. This is created on the main
 // thread for Document, or on the worker thread for WorkerGlobalScope. All
 // functions must be called on the execution context's thread.
-class MODULES_EXPORT WebSocketChannelImpl final
+class MODULES_EXPORT WebSocketChannelImpl
     : public WebSocketChannel,
       public network::mojom::blink::WebSocketHandshakeClient,
       public network::mojom::blink::WebSocketClient {
@@ -365,6 +365,7 @@ class MODULES_EXPORT WebSocketChannelImpl final
   void OnConnectionError(const base::Location& set_from,
                          uint32_t custom_reason,
                          const std::string& description);
+  virtual /* Explicit via patch, because Dispose() used everywhere in Blink. */
   void Dispose();
 
   const Member<WebSocketChannelClient> client_;

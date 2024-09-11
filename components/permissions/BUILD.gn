@@ -5,7 +5,7 @@
 import("//device/vr/buildflags/buildflags.gni")
 import("//services/device/public/cpp/geolocation/buildflags.gni")
 
-source_set("permissions_common") {
+component("permissions_common") {
   sources = [
     "constants.cc",
     "constants.h",
@@ -163,6 +163,7 @@ source_set("permissions") {
   if (!is_android) {
     deps += [ "//components/guest_view/browser" ]
   }
+  import("//brave/components/permissions/sources.gni") sources += brave_components_permissions_sources deps += brave_components_permissions_deps
   if (is_android) {
     sources += [
       "android/android_permission_util.cc",

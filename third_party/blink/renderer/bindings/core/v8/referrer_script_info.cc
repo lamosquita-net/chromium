@@ -56,6 +56,7 @@ bool ReferrerScriptInfo::IsDefaultValue(
   return GetStoredBaseUrl(*this, script_origin_resource_name).IsNull() &&
          credentials_mode_ == network::mojom::CredentialsMode::kSameOrigin &&
          nonce_.empty() && parser_state_ == kNotParserInserted &&
+         BRAVE_REFERRER_SCRIPT_INFO_IS_DEFAULT_VALUE &&
          referrer_policy_ == network::mojom::ReferrerPolicy::kDefault;
 }
 

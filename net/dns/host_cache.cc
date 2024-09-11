@@ -495,6 +495,7 @@ HostCache::Entry HostCache::Entry::CopyWithDefaultPort(uint16_t port) const {
       hostname = HostPortPair(hostname.host(), port);
     }
   }
+  BRAVE_COPY_WITH_DEFAULT_PORT
 
   return copy;
 }

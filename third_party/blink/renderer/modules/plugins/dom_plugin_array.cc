@@ -194,6 +194,7 @@ void DOMPluginArray::UpdatePluginData() {
     }
     return;
   }
+  BRAVE_DOM_PLUGINS_UPDATE_PLUGIN_DATA__RESET_PLUGIN_DATA
   PluginData* data = GetPluginData();
   if (!data) {
     dom_plugins_.clear();
@@ -215,6 +216,7 @@ void DOMPluginArray::UpdatePluginData() {
       }
     }
   }
+  BRAVE_DOM_PLUGINS_UPDATE_PLUGIN_DATA__FARBLE_PLUGIN_DATA
 }
 
 void DOMPluginArray::ContextDestroyed() {

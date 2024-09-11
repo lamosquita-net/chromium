@@ -52,7 +52,7 @@ import org.chromium.ui.text.NoUnderlineClickableSpan;
 import org.chromium.ui.text.SpanApplier;
 
 /** Fragment to keep track of the all the privacy related preferences. */
-public class PrivacySettings extends ChromeBaseSettingsFragment
+public class PrivacySettings extends org.chromium.chrome.browser.settings.BravePreferenceFragment
         implements Preference.OnPreferenceChangeListener, FragmentSettingsLauncher {
     private static final String PREF_CAN_MAKE_PAYMENT = "can_make_payment";
     private static final String PREF_PRELOAD_PAGES = "preload_pages";
@@ -409,6 +409,7 @@ public class PrivacySettings extends ChromeBaseSettingsFragment
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         menu.clear();
+        super.onCreateOptionsMenu(menu, inflater);
         MenuItem help =
                 menu.add(Menu.NONE, R.id.menu_id_targeted_help, Menu.NONE, R.string.menu_help);
         help.setIcon(
@@ -423,7 +424,7 @@ public class PrivacySettings extends ChromeBaseSettingsFragment
                     .show(getActivity(), getString(R.string.help_context_privacy), null);
             return true;
         }
-        return false;
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

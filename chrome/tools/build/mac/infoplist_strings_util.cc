@@ -150,6 +150,7 @@ int main(int argc, char* const argv[]) {
     // Fetch the strings.
     std::string name = LoadStringFromDataPack(branded_data_pack.get(), cur_lang,
                                               name_id, name_id_str);
+    name = BRAVE_PRODUCT_STRING;
     std::string copyright_format = LoadStringFromDataPack(
         branded_data_pack.get(), cur_lang, IDS_ABOUT_VERSION_COPYRIGHT,
         "IDS_ABOUT_VERSION_COPYRIGHT");

@@ -19,6 +19,7 @@ android_library("java") {
     "java/src/org/chromium/chrome/browser/tab_ui/TabUiThemeUtils.java",
     "java/src/org/chromium/chrome/browser/tab_ui/ThumbnailProvider.java",
   ]
+  sources += brave_tab_ui_sources
   deps = [
     ":java_resources",
     "//base:base_cached_flags_java",

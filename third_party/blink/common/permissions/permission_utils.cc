@@ -28,6 +28,7 @@ mojom::PermissionStatus ToPermissionStatus(const std::string& status) {
 
 std::string GetPermissionString(PermissionType permission) {
   switch (permission) {
+    PERMISSION_UTIL_GET_PERMISSION_STRING
     case PermissionType::GEOLOCATION:
       return "Geolocation";
     case PermissionType::NOTIFICATIONS:

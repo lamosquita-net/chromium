@@ -22,7 +22,7 @@ class BrowserActions {
   explicit BrowserActions(Browser& browser);
   BrowserActions(const BrowserActions&) = delete;
   BrowserActions& operator=(const BrowserActions&) = delete;
-  ~BrowserActions();
+  virtual ~BrowserActions();
 
   static std::u16string GetCleanTitleAndTooltipText(std::u16string string);
 

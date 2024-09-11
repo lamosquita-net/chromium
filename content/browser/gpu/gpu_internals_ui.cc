@@ -818,6 +818,7 @@ base::Value::Dict GpuMessageHandler::GetClientInfo() {
            std::string("Skia/" STRINGIZE(SK_MILESTONE) " " SKIA_COMMIT_HASH));
   dict.Set("revision_identifier", GPU_LISTS_VERSION);
 
+  BRAVE_GPU_MESSAGE_HANDLER_ON_REQUEST_CLIENT_INFO
   return dict;
 }
 

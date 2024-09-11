@@ -51,7 +51,7 @@ build_webui("build") {
             target_gen_dir) ]
 
   webui_context_type = "untrusted"
-  optimize = optimize_webui
+  optimize = false
   if (optimize) {
     optimize_webui_host =
         "chrome-untrusted://read-anything-side-panel.top-chrome"

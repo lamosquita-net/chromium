@@ -215,6 +215,7 @@ build_webui("build") {
   ts_composite = true
   ts_deps = [ "../js:build_ts" ]
   if (include_polymer) {
+    ts_deps += ["//brave/ui/webui/resources:build_ts"]
     ts_deps += [
       "//third_party/lit/v3_0:build_ts",
       "//third_party/polymer/v3_0:library",

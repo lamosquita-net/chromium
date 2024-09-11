@@ -14,6 +14,7 @@ foreach(excluded_file,
           "resources/js/load_time_data.js",
           "resources/ash/common/load_time_data.m.js",
           "resources/mwc/lit/index.js",
+          "resources/brave/leo.bundle.js",
         ]) {
   # Exclude both the chrome://resources form and the scheme-relative form.
   BUNDLE_JS_EXCLUDES += [

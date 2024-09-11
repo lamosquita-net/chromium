@@ -89,3 +89,4 @@ try:
   import json_comment_eater
 finally:
   sys.path.pop(0)
+from brave_chromium_utils import inline_chromium_src_override; inline_chromium_src_override(globals(), locals())

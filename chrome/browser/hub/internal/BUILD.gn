@@ -43,6 +43,7 @@ android_library("java") {
     "android/java/src/org/chromium/chrome/browser/hub/TranslateHubLayoutAnimationFactory.java",
     "android/java/src/org/chromium/chrome/browser/hub/TranslateHubLayoutAnimationFactoryImpl.java",
   ]
+  sources += brave_browser_hub_internal_java_sources
   deps = [
     ":java_resources",
     "//base:base_java",

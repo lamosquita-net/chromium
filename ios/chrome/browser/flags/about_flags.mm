@@ -990,6 +990,7 @@ const FeatureEntry::FeatureVariation kContextualPanelEntrypointArmVariations[] =
 //
 // When adding a new choice, add it to the end of the list.
 const flags_ui::FeatureEntry kFeatureEntries[] = {
+    BRAVE_ABOUT_FLAGS_FEATURE_ENTRIES
     {"in-product-help-demo-mode-choice",
      flag_descriptions::kInProductHelpDemoModeName,
      flag_descriptions::kInProductHelpDemoModeDescription, flags_ui::kOsIos,

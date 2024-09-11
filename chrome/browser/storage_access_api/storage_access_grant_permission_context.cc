@@ -436,6 +436,7 @@ void StorageAccessGrantPermissionContext::CheckForAutoGrantOrAutoDenial(
         break;
     }
   }
+  BRAVE_STORAGE_ACCESS_GRANT_PERMISSION_CONTEXT_CHECK_FOR_AUTO_GRANT_OR_AUTO_DENIAL  // NOLINT
 
   // Get all of our implicit grants and see which ones apply to our
   // |requesting_origin|.

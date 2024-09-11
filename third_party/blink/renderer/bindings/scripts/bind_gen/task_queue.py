@@ -43,6 +43,7 @@ class TaskQueue(object):
                 # TODO(crbug.com/1190269) - we can't use more than 56
                 # cores on Windows or Python3 may hang.
                 self._pool_size = min(self._pool_size, 56)
+            from brave_task_queue_helper import limit_pool_size; limit_pool_size(self)
             self._pool = multiprocessing.Pool(self._pool_size,
                                               package_initializer().init)
         self._requested_tasks = []  # List of _Task

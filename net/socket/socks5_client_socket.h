@@ -75,11 +75,14 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
   int GetLocalAddress(IPEndPoint* address) const override;
 
  private:
+  friend class SOCKS5ClientSocketAuth;
   enum State {
     STATE_GREET_WRITE,
     STATE_GREET_WRITE_COMPLETE,
     STATE_GREET_READ,
     STATE_GREET_READ_COMPLETE,
+    STATE_AUTH,
+    STATE_AUTH_COMPLETE,
     STATE_HANDSHAKE_WRITE,
     STATE_HANDSHAKE_WRITE_COMPLETE,
     STATE_HANDSHAKE_READ,
@@ -114,6 +117,13 @@ class NET_EXPORT_PRIVATE SOCKS5ClientSocket : public StreamSocket {
   int DoGreetReadComplete(int result);
   int DoGreetWrite();
   int DoGreetWriteComplete(int result);
+  int DoAuth(int result);
+
+  // Authentication hooks.
+  virtual uint8_t auth_method();
+  virtual int Authenticate(int result,
+                           NetLogWithSource& net_log,
+                           CompletionRepeatingCallback& callback);
 
   // Writes the SOCKS handshake buffer into |handshake|
   // and return OK on success.

@@ -179,3 +179,4 @@ def loads(data, file_name, map_binary_to_string=False):
   if file_name.endswith(".pdl"):
     return parse(data, file_name, map_binary_to_string)
   return json.loads(data)
+from brave_chromium_utils import inline_chromium_src_override; inline_chromium_src_override(globals(), locals())

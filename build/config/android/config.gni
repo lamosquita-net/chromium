@@ -32,6 +32,7 @@ robolectric_toolchain = "//build/toolchain/android:robolectric_$host_cpu"
 # toolchain, this GNI file may be read and processed from within Chrome OS
 # toolchains. Checking |is_android| here would therefore be too restrictive.
 if (is_android || is_chromeos) {
+  import("//brave/build/android/config.gni")
   import("//build/config/android/channel.gni")
   import("//build/config/clang/clang.gni")
   import("//build/config/dcheck_always_on.gni")

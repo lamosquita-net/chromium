@@ -58,6 +58,7 @@ bool MatchesStorageKey(const std::set<url::Origin>& origins,
         storage_key.origin() == origin) {
       return is_delete_list;
     }
+    BRAVE_MATCHES_STORAGE_KEY
   }
 
   switch (match_mode) {
@@ -81,6 +82,7 @@ bool MatchesStorageKey(const std::set<url::Origin>& origins,
       return is_delete_list ==
              base::Contains(registerable_domains, registerable_domain);
     }
+    BRAVE_MATCHES_STORAGE_KEY_SWITCH
   }
 
   return !is_delete_list;

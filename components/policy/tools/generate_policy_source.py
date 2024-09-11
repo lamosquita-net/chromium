@@ -1668,5 +1668,6 @@ def _WriteAppRestrictions(policies, policy_atomic_groups, target_platform, f,
   f.write('</restrictions>')
 
 
+from brave_chromium_utils import inline_chromium_src_override; inline_chromium_src_override(globals(), locals())
 if __name__ == '__main__':
   sys.exit(main())

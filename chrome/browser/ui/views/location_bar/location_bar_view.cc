@@ -717,6 +717,7 @@ void LocationBarView::Layout(PassKey) {
   // Indentation add padding when the permission chip is visible and replacing
   // the LHS icon.
   int text_overriding_permission_chip_indent = 0;
+  BRAVE_LAYOUT_LEADING_DECORATIONS
   if (should_indent) {
     icon_left += icon_indent;
     text_left += text_indent;
@@ -804,6 +805,7 @@ void LocationBarView::Layout(PassKey) {
     }
   };
 
+  BRAVE_LAYOUT_RIGHT_MOST_TRAILING_DECORATIONS
   add_trailing_decoration(page_action_icon_container_,
                           /*intra_item_padding=*/0);
   for (ContentSettingImageView* view : base::Reversed(content_setting_views_)) {
@@ -817,6 +819,7 @@ void LocationBarView::Layout(PassKey) {
   }
 
   add_trailing_decoration(clear_all_button_, /*intra_item_padding=*/0);
+  BRAVE_LAYOUT_LEFT_MOST_TRAILING_DECORATIONS
 
   // Perform layout.
   int entry_width = width();

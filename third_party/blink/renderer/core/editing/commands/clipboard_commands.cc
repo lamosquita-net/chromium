@@ -341,6 +341,7 @@ bool ClipboardCommands::ExecuteCopy(LocalFrame& frame,
       frame.Selection().IsHidden())
     return true;
 
+  BRAVE_CLIPBOARD_COMMANDS_CHECK_SOURCE
   if (EnclosingTextControl(
           frame.Selection().ComputeVisibleSelectionInDOMTree().Start())) {
     frame.GetSystemClipboard()->WritePlainText(frame.SelectedTextForClipboard(),

@@ -93,7 +93,7 @@ std::unique_ptr<KeyedService> BuildSyncService(web::BrowserState* context) {
   init_params.debug_identifier = browser_state->GetBrowserStateName();
 
   auto sync_service =
-      std::make_unique<syncer::SyncServiceImpl>(std::move(init_params));
+      BRAVE_BUILD_SERVICE_INSTANCE_FOR
   sync_service->Initialize();
 
   // TODO(crbug.com/40250371): Remove the workaround below once

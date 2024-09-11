@@ -787,6 +787,7 @@ def _ParseOptions():
                       action='store_true',
                       dest='verbose',
                       default=False)
+    parser.add_option('--skip_signing', action='store_true', default=False)
 
     options, _ = parser.parse_args()
     if not options.build_dir:
@@ -817,6 +818,7 @@ def _ParseOptions():
 
     return options
 
+from brave_chromium_utils import inline_chromium_src_override; inline_chromium_src_override(globals(), locals())
 
 if '__main__' == __name__:
     options = _ParseOptions()

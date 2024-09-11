@@ -10,6 +10,7 @@ if (is_clang) {
 }
 
 visibility = [ "//third_party/blink/*" ]
+visibility += brave_blink_renderer_modules_visibility
 
 # arguments --------------------------------------------------------------------
 

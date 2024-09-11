@@ -4737,7 +4737,7 @@ FrameTree* WebContentsImpl::CreateNewWindow(
 
   // Save the window for later if we're not suppressing the opener (since it
   // will be shown immediately).
-  if (!params.opener_suppressed) {
+  if (!params.opener_suppressed && !params.no_javascript_access) {
     if (!is_guest) {
       WebContentsView* new_view = new_contents_impl->view_.get();
 

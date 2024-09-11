@@ -153,6 +153,7 @@ class CONTENT_EXPORT BrowserMainLoop {
   void RunMainMessageLoop();
 
   // Performs the pre-shutdown steps.
+  virtual
   void PreShutdown();
 
   // Performs the shutdown sequence, starting with PostMainMessageLoopRun

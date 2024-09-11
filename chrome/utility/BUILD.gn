@@ -76,6 +76,8 @@ static_library("utility") {
     "//ui/base:buildflags",
   ]
 
+  import("//brave/utility/sources.gni") sources += brave_utility_sources deps += brave_utility_deps public_deps += brave_utility_public_deps
+
   if (is_win) {
     deps += [
       "//components/services/quarantine",

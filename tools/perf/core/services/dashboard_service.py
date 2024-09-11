@@ -12,7 +12,7 @@ import six.moves.urllib.parse  # pylint: disable=import-error
 
 from core.services import request
 
-SERVICE_URL = 'https://chromeperf.appspot.com'
+SERVICE_URL = 'https://brave-perf-dashboard.appspot.com'
 
 
 def Request(endpoint, **kwargs):

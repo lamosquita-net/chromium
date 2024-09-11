@@ -261,3 +261,4 @@ class WebviewStartupSystemHealthBenchmark(perf_benchmark.PerfBenchmark):
   @classmethod
   def Name(cls):
     return 'system_health.webview_startup'
+from brave_chromium_utils import inline_chromium_src_override; inline_chromium_src_override(globals(), locals())

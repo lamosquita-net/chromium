@@ -51,6 +51,7 @@ class IOSChromeNetworkDelegate : public net::NetworkDelegateImpl {
                                         PrefService* pref_service);
 
  private:
+  BRAVE_IOS_CHROME_NETWORK_DELEGATE_H
   // NetworkDelegate implementation.
   int OnBeforeURLRequest(net::URLRequest* request,
                          net::CompletionOnceCallback callback,

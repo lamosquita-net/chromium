@@ -84,6 +84,7 @@ class ExternalProcessImporterClient
       const std::vector<ImporterAutofillFormDataEntry>&
           autofill_form_data_entry_group) override;
 
+  BRAVE_EXTERNAL_PROCESS_IMPORTER_CLIENT_H
  protected:
   ~ExternalProcessImporterClient() override;
 

@@ -179,6 +179,7 @@ static_library("sandbox") {
     "ntdll.lib",
     "userenv.lib",
   ]
+  import("//brave/sandbox/win/sources.gni") sources += brave_sandbox_win_sandbox_sources
 }
 
 test("sbox_integration_tests") {

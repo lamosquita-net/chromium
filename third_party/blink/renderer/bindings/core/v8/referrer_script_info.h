@@ -39,7 +39,7 @@ class CORE_EXPORT ReferrerScriptInfo {
                            options.CredentialsMode(),
                            options.Nonce(),
                            options.ParserState(),
-                           options.GetReferrerPolicy()) {}
+                           options.GetReferrerPolicy()) { BRAVE_REFERRER_SCRIPT_INFO_CONSTRUCTOR }
 
   static ReferrerScriptInfo FromV8HostDefinedOptions(
       v8::Local<v8::Context>,

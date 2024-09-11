@@ -360,6 +360,7 @@ bool ContentSettingsAgentImpl::IsAllowlistedForContentSettings() const {
   const WebDocument& document = render_frame()->GetWebFrame()->GetDocument();
   WebSecurityOrigin origin = document.GetSecurityOrigin();
   WebURL document_url = document.Url();
+  BRAVE_CONTENT_SETTINGS_AGENT_IMPL_IS_WHITELISTED_FOR_CONTENT_SETTINGS
   if (document_url.GetString() == content::kUnreachableWebDataURL)
     return true;
 

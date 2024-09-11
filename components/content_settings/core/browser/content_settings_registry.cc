@@ -813,6 +813,7 @@ void ContentSettingsRegistry::Init() {
            WebsiteSettingsRegistry::DESKTOP,
            ContentSettingsInfo::DONT_INHERIT_IN_INCOGNITO,
            ContentSettingsInfo::EXCEPTIONS_ON_SECURE_ORIGINS_ONLY);
+  BRAVE_INIT
 }
 
 void ContentSettingsRegistry::Register(

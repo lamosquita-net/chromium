@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import './brave_overrides/index.js';
 import './password_manager_app.js';
 
 export {SettingsPrefsElement} from '/shared/settings/prefs/prefs.js';

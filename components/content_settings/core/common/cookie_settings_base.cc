@@ -542,6 +542,7 @@ CookieSettingsBase::DecideAccess(
     return BlockAllCookies{};
   }
 
+  BRAVE_COOKIE_SETTINGS_BASE_DECIDE_ACCESS
   if (!is_third_party_request) {
     return AllowAllCookies{ThirdPartyCookieAllowMechanism::kNone};
   }
@@ -716,6 +717,7 @@ CookieSettingsBase::GetCookieSettingInternal(
     CHECK(is_third_party_request, base::NotFatalUntil::M128);
     CHECK(global_setting_or_embedder_blocks_third_party_cookies,
           base::NotFatalUntil::M128);
+    BRAVE_COOKIE_SETTINGS_BASE_GET_COOKIES_SETTINGS_INTERNAL_IS_EXPLICIT_SETTING
     CHECK(!is_explicit_setting, base::NotFatalUntil::M128);
 
     FireStorageAccessHistogram(StorageAccessResult::ACCESS_BLOCKED);

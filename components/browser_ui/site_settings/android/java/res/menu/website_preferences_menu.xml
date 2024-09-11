@@ -11,4 +11,5 @@ found in the LICENSE file.
           android:title="@string/search"
           app:showAsAction="always"
           app:actionViewClass="androidx.appcompat.widget.SearchView" />
+    <item android:id="@+id/close_menu_id" android:icon="@drawable/btn_close" android:title="@string/settings_exit" app:showAsAction="ifRoom" app:iconTint="@color/default_icon_color_tint_list" />
 </menu>

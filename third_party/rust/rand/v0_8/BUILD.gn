@@ -73,5 +73,5 @@ cargo_crate("lib") {
     "std_rng",
   ]
 
-  testonly = true
+  features += [ "small_rng" ]
 }

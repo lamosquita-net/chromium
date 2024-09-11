@@ -64,6 +64,7 @@ source_set("mixers") {
     "//ui/color:color",
     "//ui/color:mixers",
   ]
+  sources += brave_browser_ui_color_mixers_sources deps += brave_browser_ui_color_mixers_deps
 
   if (is_chromeos) {
     sources += [ "chromeos/native_chrome_color_mixer_chromeos.cc" ]

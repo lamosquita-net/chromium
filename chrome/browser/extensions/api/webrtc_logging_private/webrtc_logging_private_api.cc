@@ -89,6 +89,7 @@ content::RenderProcessHost* WebrtcLoggingPrivateFunction::RphFromRequest(
     const api::webrtc_logging_private::RequestInfo& request,
     const std::string& security_origin,
     std::string* error) {
+  BRAVE_DISABLE_RPH_FROM_REQUEST //feature disabled in Brave
   // There are 2 ways these API functions can get called.
   //
   //  1. From an allowlisted component extension on behalf of a page with the

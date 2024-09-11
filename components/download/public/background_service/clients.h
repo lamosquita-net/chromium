@@ -48,6 +48,7 @@ enum class DownloadClient {
 
   // New clients should be added above here.
   BOUNDARY = 8,
+  BRAVE_DOWNLOAD_CLIENT
 };
 
 // Get a string that represents a particular client. Used in histograms and

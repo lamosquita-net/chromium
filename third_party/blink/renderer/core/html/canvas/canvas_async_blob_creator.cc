@@ -220,6 +220,7 @@ CanvasAsyncBlobCreator::CanvasAsyncBlobCreator(
         src_data_.reset(info, src_data_.addr(), src_data_.rowBytes());
       }
     }
+    BRAVE_CANVAS_ASYNC_BLOB_CREATOR
   }
 
   idle_task_status_ = kIdleTaskNotSupported;

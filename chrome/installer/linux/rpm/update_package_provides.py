@@ -34,6 +34,7 @@ LIBRARY_FILTER = {
     "libatspi.so.0",
     "libc.so",
     "libcairo.so",
+    "libcairo-gobject.so.2",
     "libcups.so",
     "libdbus-1.so",
     "libdl.so",
@@ -52,7 +53,10 @@ LIBRARY_FILTER = {
     "libnssutil3.so",
     "libpango-1.0.so",
     "libpangocairo-1.0.so",
+    "libplc4.so",
+    "libplds4.so",
     "libpthread.so",
+    "libresolv.so.2",
     "librt.so",
     "libsmime3.so",
     "libstdc++.so",
@@ -61,6 +65,7 @@ LIBRARY_FILTER = {
     "libxcb.so",
     "libxkbcommon.so.0",
     "libxshmfence.so.1",
+    "libz.so.1",
     "rtld(GNU_HASH)",
 }
 

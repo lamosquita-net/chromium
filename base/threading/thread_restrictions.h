@@ -753,6 +753,7 @@ class BASE_EXPORT [[maybe_unused, nodiscard]] ScopedAllowBaseSyncPrimitives {
   ScopedAllowBaseSyncPrimitives& operator=(
       const ScopedAllowBaseSyncPrimitives&) = delete;
 
+  BRAVE_SCOPED_ALLOW_BASE_SYNC_PRIMITIVES_H
  private:
   // This can only be instantiated by friends. Use
   // ScopedAllowBaseSyncPrimitivesForTesting in unit tests to avoid the friend

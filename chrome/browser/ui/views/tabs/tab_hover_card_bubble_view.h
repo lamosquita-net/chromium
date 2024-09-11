@@ -87,6 +87,7 @@ class TabHoverCardBubbleView : public views::BubbleDialogDelegateView {
   // available, or `std::nullopt` to disable crossfades entirely.
   static std::optional<double> GetPreviewImageCrossfadeStart();
 
+  BRAVE_TAB_HOVER_CARD_BUBBLE_VIEW_H_
  private:
   FRIEND_TEST_ALL_PREFIXES(TabHoverCardFadeFooterInteractiveUiTest,
                            BackgroundTabHoverCardContentsHaveCorrectDimensions);

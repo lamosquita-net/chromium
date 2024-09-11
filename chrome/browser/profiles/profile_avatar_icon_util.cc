@@ -317,7 +317,7 @@ constexpr size_t kDefaultAvatarIconsCount = 1;
 #elif BUILDFLAG(IS_CHROMEOS_ASH)
 constexpr size_t kDefaultAvatarIconsCount = 27;
 #else
-constexpr size_t kDefaultAvatarIconsCount = 56;
+constexpr size_t kDefaultAvatarIconsCount = 56 + kBraveDefaultAvatarIconsCount;
 #endif
 
 #if !BUILDFLAG(IS_ANDROID)
@@ -423,6 +423,7 @@ size_t GetPlaceholderAvatarIndex() {
 
 size_t GetModernAvatarIconStartIndex() {
 #if !BUILDFLAG(IS_CHROMEOS_ASH) && !BUILDFLAG(IS_ANDROID)
+  BRAVE_GET_MODERN_AVATAR_ICON_START_INDEX
   return GetPlaceholderAvatarIndex() + 1;
 #else
   // Only use the placeholder avatar on ChromeOS and Android.
@@ -456,6 +457,7 @@ std::string GetPlaceholderAvatarIconUrl() {
 
 const IconResourceInfo* GetDefaultAvatarIconResourceInfo(size_t index) {
   CHECK_LT(index, kDefaultAvatarIconsCount);
+  BRAVE_GET_DEFAULT_AVATAR_ICON_RESOURCE_INFO
   static const IconResourceInfo resource_info[kDefaultAvatarIconsCount] = {
   // Old avatar icons:
 #if !BUILDFLAG(IS_ANDROID)
@@ -764,6 +766,7 @@ base::Value::List GetIconsAndLabelsForProfileAvatarSelector(
         selected_avatar_idx == GetPlaceholderAvatarIndex());
     avatars.Insert(avatars.begin(),
                    base::Value(std::move(generic_avatar_info)));
+    BRAVE_GET_ICONS_AND_LABELS_FOR_PROFILE_AVATAR_SELECTOR_NOT_SIGNED_IN
     return avatars;
   }
 

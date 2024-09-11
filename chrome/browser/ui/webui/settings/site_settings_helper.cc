@@ -232,6 +232,7 @@ const ContentSettingsTypeNameEntry kContentSettingsTypeGroupNames[] = {
     {ContentSettingsType::TOP_LEVEL_TPCD_ORIGIN_TRIAL, nullptr},
     {ContentSettingsType::DISPLAY_MEDIA_SYSTEM_AUDIO, nullptr},
     {ContentSettingsType::STORAGE_ACCESS_HEADER_ORIGIN_TRIAL, nullptr},
+    BRAVE_CONTENT_SETTINGS_TYPE_GROUP_NAMES_LIST
 };
 
 static_assert(
@@ -476,6 +477,7 @@ bool HasRegisteredGroupName(ContentSettingsType type) {
 }
 
 ContentSettingsType ContentSettingsTypeFromGroupName(std::string_view name) {
+  BRAVE_SITE_SETTINGS_HELPER_CONTENT_SETTINGS_TYPE_FROM_GROUP_NAME
   for (const auto& entry : kContentSettingsTypeGroupNames) {
     // Content setting types that aren't represented in the settings UI
     // will have `nullptr` as their `name`. However, converting `nullptr`
@@ -490,6 +492,7 @@ ContentSettingsType ContentSettingsTypeFromGroupName(std::string_view name) {
 }
 
 std::string_view ContentSettingsTypeToGroupName(ContentSettingsType type) {
+  BRAVE_SITE_SETTINGS_HELPER_CONTENT_SETTINGS_TYPE_TO_GROUP_NAME
   for (const auto& entry : kContentSettingsTypeGroupNames) {
     if (type == entry.type) {
       // Content setting types that aren't represented in the settings UI

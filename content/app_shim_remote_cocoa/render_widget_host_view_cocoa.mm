@@ -1964,6 +1964,7 @@ void ExtractUnderlines(NSAttributedString* string,
 }
 
 - (id)accessibilityParent {
+  BRAVE_ACCESSIBILITY_PARENT
   if (_accessibilityParent)
     return NSAccessibilityUnignoredAncestor(_accessibilityParent);
   return [super accessibilityParent];

@@ -418,6 +418,7 @@ CookieDeletionInfo DeletionFilterToInfo(mojom::CookieDeletionFilterPtr filter) {
   delete_info.name = std::move(filter->cookie_name);
   delete_info.url = std::move(filter->url);
   delete_info.host = std::move(filter->host_name);
+  BRAVE_DELETIONFILTERTOINFO
 
   switch (filter->session_control) {
     case mojom::CookieDeletionSessionControl::IGNORE_CONTROL:

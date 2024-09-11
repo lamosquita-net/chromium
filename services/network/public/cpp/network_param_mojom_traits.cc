@@ -56,6 +56,7 @@ bool StructTraits<network::mojom::HostPortPairDataView, net::HostPortPair>::
     return false;
   }
   *out = net::HostPortPair(std::move(host), data.port());
+  BRAVE_STRUCT_TRAITS_HOST_PORT_PAIR_READ
   return true;
 }
 

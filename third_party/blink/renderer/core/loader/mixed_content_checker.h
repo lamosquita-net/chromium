@@ -100,7 +100,6 @@ class CORE_EXPORT MixedContentChecker final {
   static bool IsWebSocketAllowed(WorkerFetchContext&, const KURL&);
 
   static bool IsMixedContent(const SecurityOrigin*, const KURL&);
-  static bool IsMixedContent(const String& origin_protocol, const KURL&);
   static bool IsMixedContent(const FetchClientSettingsObject&, const KURL&);
   static bool IsMixedFormAction(
       LocalFrame*,

@@ -277,5 +277,6 @@ def main(argv):
       json.dump(manifest_data, manifest_file)
 
 
+from brave_chromium_utils import inline_chromium_src_override; inline_chromium_src_override(globals(), locals())
 if __name__ == '__main__':
   main(sys.argv[1:])

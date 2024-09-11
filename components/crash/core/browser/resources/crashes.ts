@@ -160,7 +160,7 @@ function updateCrashList({
         crashLink.href = `https://goto.google.com/crash/${crash.id}`;
         crashLink.target = '_blank';
         crashLink.textContent = crash.id;
-        uploadIdValue.appendChild(crashLink);
+        // uploadIdValue.appendChild(crashLink); // feature disabled in Brave
       } else {
         uploadIdValue.textContent = crash.id;
       }

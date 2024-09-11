@@ -45,6 +45,7 @@ case $CHANNEL in
     PRIORITY=0
     ;;
 esac
+PRIORITY="`expr $PRIORITY + 1`"
 
 update-alternatives --install /usr/bin/x-www-browser x-www-browser \
   /usr/bin/@@USR_BIN_SYMLINK_NAME@@ $PRIORITY

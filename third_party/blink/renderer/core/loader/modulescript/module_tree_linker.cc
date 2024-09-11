@@ -449,6 +449,7 @@ void ModuleTreeLinker::FetchDescendants(const ModuleScript* module_script) {
         module_script->FetchOptions().GetReferrerPolicy(),
         mojom::blink::FetchPriorityHint::kAuto,
         RenderBlockingBehavior::kNonBlocking);
+    BRAVE_MODULE_TREE_LINKER_FETCH_DESCENDANTS
     // <spec step="8">... perform the internal module script graph fetching
     // procedure given moduleRequest, fetch client settings object, destination,
     // options, module script's settings object, visited set, and module

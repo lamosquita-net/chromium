@@ -50,7 +50,7 @@ public class HomepageManager
     private final ObserverList<HomepageStateListener> mHomepageStateListeners;
     private SettingsLauncher mSettingsLauncher;
 
-    private HomepageManager() {
+    HomepageManager() {
         mSharedPreferencesManager = ChromeSharedPreferences.getInstance();
         mHomepageStateListeners = new ObserverList<>();
         HomepagePolicyManager.getInstance().addListener(this);

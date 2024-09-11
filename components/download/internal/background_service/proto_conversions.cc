@@ -79,6 +79,7 @@ protodb::DownloadClient ProtoConversions::DownloadClientToProto(
       return protodb::DownloadClient::BRUSCHETTA;
     case DownloadClient::BOUNDARY:
       return protodb::DownloadClient::BOUNDARY;
+    BRAVE_DOWNLOAD_CLIENT_TO_PROTO
   }
 
   NOTREACHED_IN_MIGRATION();
@@ -112,6 +113,7 @@ DownloadClient ProtoConversions::DownloadClientFromProto(
       return DownloadClient::BRUSCHETTA;
     case protodb::DownloadClient::BOUNDARY:
       return DownloadClient::BOUNDARY;
+    BRAVE_DOWNLOAD_CLIENT_FROM_PROTO
   }
 
   NOTREACHED_IN_MIGRATION();

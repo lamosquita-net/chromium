@@ -292,6 +292,7 @@ base::Time CanonicalCookie::ValidateAndAdjustExpiryDate(
     // * network_handler.cc::MakeCookieFromProtocolValues
     fixed_creation_date = base::Time::Now();
   }
+  BRAVE_CANONICAL_COOKIE_VALIDATE_AND_ADJUST_EXPIRY_DATE
   base::Time maximum_expiry_date;
   if (!cookie_util::IsTimeLimitedInsecureCookiesEnabled() ||
       scheme == net::CookieSourceScheme::kSecure) {

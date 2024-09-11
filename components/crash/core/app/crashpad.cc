@@ -92,6 +92,7 @@ bool InitializeCrashpadImpl(bool initial_client,
     DCHECK(browser_process || process_type == "Chrome Installer" ||
            process_type == "notification-helper" ||
            process_type == "platform-experience-helper" ||
+           BRAVE_INITIALIZE_CRASHPAD_IMPL_PROCESS_TYPE
            process_type == "GCPW Installer" || process_type == "GCPW DLL");
 #elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
     DCHECK(browser_process);

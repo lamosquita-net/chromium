@@ -179,9 +179,11 @@ int SOCKSConnectJob::DoSOCKSConnect() {
 
   // Add a SOCKS connection on top of the tcp socket.
   if (socks_params_->is_socks_v5()) {
-    socket_ = std::make_unique<SOCKS5ClientSocket>(
-        transport_connect_job_->PassSocket(), socks_params_->destination(),
-        socks_params_->traffic_annotation());
+    socket_ = std::make_unique<SOCKS5ClientSocketAuth>(
+        transport_connect_job_->PassSocket(),
+        socks_params_->destination(),
+        socks_params_->traffic_annotation(),
+        socks_params_->transport_params()->destination());
   } else {
     auto socks_socket = std::make_unique<SOCKSClientSocket>(
         transport_connect_job_->PassSocket(), socks_params_->destination(),

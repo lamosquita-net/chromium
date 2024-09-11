@@ -14,6 +14,9 @@
 # setting "repo_add_once" to "true" or "false" as desired. An empty
 # $DEFAULTS_FILE is the same as setting the value to "false".
 
+# Don't add the Chrome repo (brave/brave-browser#1967)
+exit 0
+
 @@include@@../common/variables.include
 
 @@include@@rpm.include

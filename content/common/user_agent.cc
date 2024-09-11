@@ -385,6 +385,7 @@ std::string GetAndroidOSInfo(
 
   // Send information about the device.
   bool semicolon_inserted = false;
+  BRAVE_GET_ANDROID_OS_INFO
   if (include_android_model == IncludeAndroidModel::Include) {
     std::string android_device_name = BuildModelInfo();
     if (!android_device_name.empty()) {

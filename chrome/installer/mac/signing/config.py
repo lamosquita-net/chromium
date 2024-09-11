@@ -231,4 +231,4 @@ class CodeSignConfig(object):
     @property
     def packaging_dir(self):
         """Returns the path to the packaging and installer tools."""
-        return '{.product} Packaging'.format(self)
+        return '{}_Packaging'.format(self.product.replace(' ', '_'))

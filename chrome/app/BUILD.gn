@@ -106,6 +106,7 @@ grit("generated_resources") {
   if (is_android) {
     outputs += android_generated_java_resources
   }
+  deps = [ "//brave/app:brave_generated_resources_grit" ]
 }
 
 if (is_android) {

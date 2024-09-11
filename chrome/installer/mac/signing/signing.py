@@ -23,7 +23,7 @@ class InvalidAppGeometryException(ValueError):
 class Invoker(invoker.Base):
 
     def codesign(self, config, product, path, replace_existing_signature=False):
-        command = ['codesign', '--sign', config.identity]
+        command = ['codesign', '--force', '--sign', config.identity]
         if replace_existing_signature:
             command.append('--force')
         if config.notarize.should_notarize():

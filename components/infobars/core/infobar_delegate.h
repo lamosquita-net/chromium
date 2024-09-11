@@ -186,6 +186,7 @@ class InfoBarDelegate {
     ENABLE_LINK_CAPTURING_INFOBAR_DELEGATE = 119,
     DEV_TOOLS_SHARED_PROCESS_DELEGATE = 120,
     ENHANCED_SAFE_BROWSING_INFOBAR_DELEGATE = 121,
+    BRAVE_INFOBAR_DELEGATE_IDENTIFIERS
   };
 
   // Describes navigation events, used to decide whether infobars should be

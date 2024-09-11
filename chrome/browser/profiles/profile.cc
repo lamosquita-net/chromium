@@ -111,6 +111,7 @@ bool Profile::OTRProfileID::AllowsBrowserWindows() const {
   // DevTools::BrowserContext, MediaRouter::Presentation, and
   // CaptivePortal::Signin are exceptions to this ban.
   if (*this == PrimaryID() ||
+      BRAVE_ALLOWS_BROWSER_WINDOWS
       base::StartsWith(profile_id_, kDevToolsOTRProfileIDPrefix,
                        base::CompareCase::SENSITIVE) ||
       base::StartsWith(profile_id_, kMediaRouterOTRProfileIDPrefix,

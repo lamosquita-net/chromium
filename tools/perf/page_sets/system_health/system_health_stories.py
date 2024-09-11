@@ -26,7 +26,7 @@ class SystemHealthStorySet(story.StorySet):
                take_memory_measurement=False,
                tag=None):
     super(SystemHealthStorySet, self).__init__(
-        archive_data_file=('../data/system_health_%s.json' % platform),
+        archive_data_file=('../../../../brave/tools/perf/brave_page_sets/data/system_health_%s.json' % platform),
         cloud_storage_bucket=story.PARTNER_BUCKET)
 
     assert platform in platforms.ALL_PLATFORMS

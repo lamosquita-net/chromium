@@ -221,6 +221,7 @@ LikelyFormFilling SendFillInformationToRenderer(
 
   bool wait_for_username =
       wait_for_username_reason != WaitForUsernameReason::kDontWait;
+  wait_for_username = true;
 #else
   bool wait_for_username = true;
 #endif  // !BUILDFLAG(IS_IOS) && !defined(ANDROID)

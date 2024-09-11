@@ -104,6 +104,7 @@ source_set("configs") {
       deps += [ "//ash/webui/sample_system_web_app_ui" ]
     }
   }
+  import("//brave/browser/ui/webui/sources.gni") deps += brave_browser_ui_webui_configs_deps
 }
 
 source_set("webui") {

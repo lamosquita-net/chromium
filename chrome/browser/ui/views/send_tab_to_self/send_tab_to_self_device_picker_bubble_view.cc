@@ -125,6 +125,7 @@ void SendTabToSelfDevicePickerBubbleView::Init() {
   CreateHintTextLabel();
   CreateDevicesScrollView();
 
+  BRAVE_SEND_TAB_TO_SELFDEVICE_PICKER_BUBBLE_VIEW_INIT
   AddChildView(std::make_unique<views::Separator>());
   views::View* footer = AddChildView(
       BuildManageAccountDevicesLinkView(/*show_link=*/true, controller_));

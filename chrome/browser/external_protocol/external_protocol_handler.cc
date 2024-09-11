@@ -396,7 +396,7 @@ ExternalProtocolHandler::BlockState ExternalProtocolHandler::GetBlockState(
   if (scheme == "mailto") {
     base::UmaHistogramEnumeration(kBlockStateMetric,
                                   BlockStateMetric::kAllowedDefaultMail);
-    return DONT_BLOCK;
+    return UNKNOWN;
   }
 
   PrefService* profile_prefs = profile->GetPrefs();

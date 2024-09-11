@@ -50,6 +50,7 @@ class NewTabButton : public views::ImageButton,
   void AddLayerToRegion(ui::Layer* new_layer,
                         views::LayerRegion region) override;
   void RemoveLayerFromRegions(ui::Layer* old_layer) override;
+  BRAVE_NEW_TAB_BUTTON_H_
 
  protected:
   virtual void PaintIcon(gfx::Canvas* canvas);

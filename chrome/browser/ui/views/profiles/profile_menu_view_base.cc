@@ -603,6 +603,7 @@ void ProfileMenuViewBase::BuildProfileBackgroundContainer(
     identity_info_color_callback_ = base::BindRepeating(
         &ProfileMenuViewBase::BuildIdentityInfoColorCallback,
         base::Unretained(this));
+    BRAVE_PROFILE_MENU_VIEW_BASE_SET_BACKGROUND
   } else {
     DCHECK_EQ(SK_ColorTRANSPARENT, background_color);
     profile_background_container_->SetBackground(

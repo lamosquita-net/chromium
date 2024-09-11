@@ -568,6 +568,7 @@ struct CreateNewWindowParams {
   // Whether the opener will be suppressed in the new window, in which case
   // scripting the new window is not allowed.
   bool opener_suppressed;
+  bool no_javascript_access;
 
   // Whether new window is created for a form submission.
   bool is_form_submission;

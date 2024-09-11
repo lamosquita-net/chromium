@@ -28,6 +28,7 @@ std::string BackgroundDownloadClientToString(DownloadClient client) {
       return "OptimizationGuidePredictionModels";
     case DownloadClient::BRUSCHETTA:
       return "Bruschetta";
+    BRAVE_BACKGROUND_DOWNLOAD_CLIENT_TO_STRING
     case DownloadClient::BOUNDARY:
       break;
   }

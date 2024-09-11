@@ -452,6 +452,7 @@ void FrameFetchContext::AddClientHintsIfNecessary(
 
   // Check if |url| is allowed to run JavaScript. If not, client hints are not
   // attached to the requests that initiate on the render side.
+  BRAVE_FRAME_FETCH_CONTEXT_ADD_CLIENT_HINTS_IF_NECESSARY
   if (!GetFrame()->ScriptEnabled()) {
     return;
   }

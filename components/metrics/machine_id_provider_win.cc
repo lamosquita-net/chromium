@@ -20,7 +20,7 @@ namespace metrics {
 
 // static
 bool MachineIdProvider::HasId() {
-  return true;
+  return !IsMachineIdDisabled();
 }
 
 // On windows, the machine id is based on the serial number of the drive Chrome

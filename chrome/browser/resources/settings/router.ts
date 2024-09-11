@@ -118,6 +118,7 @@ export interface SettingsRoutes {
   IMPORT_DATA: Route;
   SIGN_OUT: Route;
   // </if>
+  GET_STARTED: Route; SHIELDS: Route; SOCIAL_BLOCKING: Route; EXTENSIONS: Route; EXTENSIONS_V2: Route; BRAVE_SYNC: Route; BRAVE_SYNC_SETUP: Route; BRAVE_WALLET: Route; BRAVE_WEB3: Route; BRAVE_NEW_TAB: Route; THEMES: Route;
 }
 
 /** Class for navigable routes. */

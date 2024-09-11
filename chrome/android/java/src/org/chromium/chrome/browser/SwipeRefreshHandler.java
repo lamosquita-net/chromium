@@ -99,7 +99,7 @@ public class SwipeRefreshHandler extends TabWebContentsUserData
      *
      * @param tab The Tab where the swipe occurs.
      */
-    private SwipeRefreshHandler(Tab tab) {
+    public SwipeRefreshHandler(Tab tab) {
         super(tab);
         mTab = tab;
         mTabObserver =

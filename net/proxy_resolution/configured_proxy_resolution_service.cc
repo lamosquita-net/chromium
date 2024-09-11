@@ -988,6 +988,7 @@ int ConfiguredProxyResolutionService::ResolveProxy(
   // Check if the request can be completed right away. (This is the case when
   // using a direct connection for example).
   int rv = TryToCompleteSynchronously(url, result);
+  BRAVE_CONFIGURED_PROXY_RESOLUTION_SERVICE_RESOLVE_PROXY
   if (rv != ERR_IO_PENDING) {
     rv = DidFinishResolvingProxy(url, network_anonymization_key, method, result,
                                  rv, net_log);

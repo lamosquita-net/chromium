@@ -120,6 +120,7 @@ void ThemeColorPickerHandler::GetChromeColors(
     bool is_dark_mode,
     GetChromeColorsCallback callback) {
   std::vector<theme_color_picker::mojom::ChromeColorPtr> colors;
+  BRAVE_THEME_COLOR_PICKER_HANDLER_GET_CHROME_COLORS
   for (const auto& color_info : kDynamicCustomizeChromeColors) {
     colors.push_back(CreateDynamicChromeColor(color_info, is_dark_mode));
   }

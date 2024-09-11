@@ -30,6 +30,7 @@
   V(kSideSearch, kActionSidePanelShowSideSearch, "SideSearch")                \
   V(kLens, kActionSidePanelShowLens, "Lens")                                  \
   V(kAssistant, kActionSidePanelShowAssistant, "Assistant")                   \
+  V(kPlaylist, kActionSidePanelShowPlaylist, "Playlist") V(kChatUI, kActionSidePanelShowChatUI, "ChatUI") \
   V(kAboutThisSite, kActionSidePanelShowAboutThisSite, "AboutThisSite")       \
   V(kCustomizeChrome, kActionSidePanelShowCustomizeChrome, "CustomizeChrome") \
   V(kSearchCompanion, kActionSidePanelShowSearchCompanion, "Companion")       \

@@ -58,7 +58,7 @@ import org.chromium.chrome.browser.ui.signin.SigninUtils;
 import org.chromium.chrome.browser.ui.signin.SignoutButtonPreference;
 import org.chromium.chrome.browser.ui.signin.history_sync.HistorySyncHelper;
 import org.chromium.chrome.browser.ui.theme.ChromeSemanticColorUtils;
-import org.chromium.components.browser_ui.settings.ChromeBaseCheckBoxPreference;
+import org.chromium.components.browser_ui.settings.brave_tricks.checkbox_to_switch.ChromeBaseCheckBoxPreference;
 import org.chromium.components.browser_ui.settings.ChromeBasePreference;
 import org.chromium.components.browser_ui.settings.ChromeSwitchPreference;
 import org.chromium.components.browser_ui.settings.FragmentSettingsLauncher;
@@ -631,7 +631,7 @@ public class ManageSyncSettings extends ChromeBaseSettingsFragment
                                                 ? ConsentLevel.SIGNIN
                                                 : ConsentLevel.SYNC));
         // May happen if account is removed from the device while this screen is shown.
-        if (signedInAccountName == null) {
+        if (false) {
             if (getActivity() != null) getActivity().finish();
             return;
         }

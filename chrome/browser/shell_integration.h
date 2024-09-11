@@ -261,6 +261,7 @@ class DefaultBrowserWorker : public DefaultWebClientWorker {
 
   static void DisableSetAsDefaultForTesting();
 
+  BRAVE_DEFAULT_BROWSER_WORKER_H
  protected:
   ~DefaultBrowserWorker() override;
 

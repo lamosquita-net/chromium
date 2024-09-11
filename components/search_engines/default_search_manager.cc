@@ -358,6 +358,7 @@ void DefaultSearchManager::LoadDefaultSearchEngineFromPrefs() {
   // Check if default search preference is overriden by extension.
   if (pref->IsExtensionControlled()) {
     extension_default_search_ = std::move(turl_data);
+  LOADDEFAULTSEARCHENGINEFROMPREFS_BRAVE
   } else {
     prefs_default_search_ = std::move(turl_data);
     MergePrefsDataWithPrepopulated();

@@ -1958,8 +1958,8 @@ void DownloadItemImpl::OnDownloadCompleting() {
                      base::Unretained(download_file_.get()),
                      GetTargetFilePath(),
                      delegate_->GetApplicationClientIdForFileScanning(),
-                     delegate_->IsOffTheRecord() ? GURL() : GetURL(),
-                     delegate_->IsOffTheRecord() ? GURL() : GetReferrerUrl(),
+                     GURL(),  // Never leak download URLs in metadata.
+                     GURL(),  // See brave-browser#2766.
                      std::move(quarantine), std::move(rename_callback)));
 }
 

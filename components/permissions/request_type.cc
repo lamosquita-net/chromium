@@ -451,6 +451,7 @@ const char* PermissionKeyForRequestType(permissions::RequestType request_type) {
 #endif
     case permissions::RequestType::kIdentityProvider:
       return "identity_provider";
+    BRAVE_PERMISSION_KEY_FOR_REQUEST_TYPE
   }
 
   return nullptr;

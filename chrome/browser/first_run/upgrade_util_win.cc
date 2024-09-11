@@ -54,7 +54,7 @@
 #include "third_party/abseil-cpp/absl/cleanup/cleanup.h"
 #include "ui/base/ui_base_switches.h"
 
-#if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+#if BUILDFLAG(GOOGLE_CHROME_BRANDING) || defined(OFFICIAL_BUILD)
 #include "chrome/updater/app/server/win/updater_legacy_idl.h"
 #endif
 
@@ -67,7 +67,7 @@ bool GetNewerChromeFile(base::FilePath* path) {
   return true;
 }
 
-#if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+#if BUILDFLAG(GOOGLE_CHROME_BRANDING) || defined(OFFICIAL_BUILD)
 // Holds the result of the IPC to CoCreate the process launcher.
 struct CreateProcessLauncherResult
     : public base::RefCountedThreadSafe<CreateProcessLauncherResult> {
@@ -180,7 +180,7 @@ Microsoft::WRL::ComPtr<IUnknown> CreateProcessLauncher() {
 #endif  // BUILDFLAG(GOOGLE_CHROME_BRANDING)
 
 bool InvokeGoogleUpdateForRename() {
-#if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+#if BUILDFLAG(GOOGLE_CHROME_BRANDING) || defined(OFFICIAL_BUILD)
   // This has been identified as very slow on some startups. Detailed trace
   // events below try to shine a light on each steps. crbug.com/1252004
   TRACE_EVENT0("startup", "upgrade_util::InvokeGoogleUpdateForRename");

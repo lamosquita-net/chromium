@@ -57,6 +57,7 @@ template("json_to_struct") {
     }
 
     sources = get_target_outputs(":$action_name")
+    if (defined(invoker.additional_sources)) { sources += invoker.additional_sources }
 
     deps = [ ":$action_name" ]
 

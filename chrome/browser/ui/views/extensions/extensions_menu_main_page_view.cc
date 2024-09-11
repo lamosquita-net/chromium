@@ -727,6 +727,7 @@ void ExtensionsMenuMainPageView::CreateAndInsertMenuItem(
     ExtensionMenuItemView::SitePermissionsButtonAccess
         site_permissions_button_access,
     int index) {
+  BRAVE_EXTENSION_MENU_MAIN_PAGE_VIEW_CREATE_AND_INSERT_MENU_ITEM
   // base::Unretained() below is safe because `menu_handler_` lifetime is
   // tied to this view lifetime by the extensions menu coordinator.
   auto item = std::make_unique<ExtensionMenuItemView>(

@@ -16,6 +16,7 @@ import {PolymerElement} from 'chrome://resources/polymer/v3_0/polymer/polymer_bu
 import type {ExtensionsItemElement, ItemDelegate} from './item.js';
 import {getTemplate} from './item_list.html.js';
 import {getMv2ExperimentStage, Mv2ExperimentStage} from './mv2_deprecation_util.js';
+import './brave_item_list_more_items.js'
 
 type Filter = (info: chrome.developerPrivate.ExtensionInfo) => boolean;
 

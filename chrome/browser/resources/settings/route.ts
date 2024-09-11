@@ -9,6 +9,7 @@ import {pageVisibility} from './page_visibility.js';
 import type {SettingsRoutes} from './router.js';
 import {Route, Router} from './router.js';
 
+import addBraveRoutes from './brave_routes.js'
 /**
  * Add all of the child routes that originate from the privacy route,
  * regardless of whether the privacy section under basic or advanced.
@@ -311,6 +312,7 @@ function createRoutes(): SettingsRoutes {
     }
     // </if>
   }
+  addBraveRoutes(r);
   return r as unknown as SettingsRoutes;
 }
 

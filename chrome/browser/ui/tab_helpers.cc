@@ -837,4 +837,5 @@ void TabHelpers::AttachTabHelpers(WebContents* web_contents) {
 
   // This is common code for all of us. PLEASE DO YOUR PART to keep it tidy and
   // organized.
+  BRAVE_TAB_HELPERS
 }

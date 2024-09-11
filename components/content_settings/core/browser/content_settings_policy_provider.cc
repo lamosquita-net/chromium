@@ -39,6 +39,7 @@ struct PrefsForManagedContentSettingsMapEntry {
 
 constexpr PrefsForManagedContentSettingsMapEntry
     kPrefsForManagedContentSettingsMap[] = {
+        BRAVE_MANAGED_CONTENT_SETTINGS
         {prefs::kManagedAutomaticFullscreenAllowedForUrls,
          ContentSettingsType::AUTOMATIC_FULLSCREEN, CONTENT_SETTING_ALLOW},
         {prefs::kManagedAutomaticFullscreenBlockedForUrls,
@@ -133,6 +134,7 @@ constexpr PrefsForManagedContentSettingsMapEntry
 };
 
 constexpr const char* kManagedPrefs[] = {
+    BRAVE_MANAGED_PREFS
     prefs::kManagedAutomaticFullscreenAllowedForUrls,
     prefs::kManagedAutomaticFullscreenBlockedForUrls,
     prefs::kManagedAutoSelectCertificateForUrls,

@@ -211,7 +211,7 @@ bool ExtensionCreator::CreateCrx(
     result = crx_file::CreateCrxWithVerifiedContentsInHeader(
         crx_path, zip_path, private_key, compressed_verified_contents.value());
   } else {
-    result = crx_file::Create(crx_path, zip_path, private_key);
+    BRAVE_CREATE_CRX(crx_path, zip_path, private_key);
   }
   switch (result) {
     case crx_file::CreatorResult::OK:

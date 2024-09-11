@@ -278,6 +278,7 @@ fn generate_for_third_party(args: GenCommandArgs, paths: &paths::ChromiumPaths) 
     // Remove any excluded dep entries.
     dependencies
         .retain(|dep| !config.resolve.remove_crates.iter().any(|r| **r == dep.package_name));
+    dependencies.retain(|dep| !dep.is_local );
 
     // Remove dev dependencies since tests aren't run.
     dependencies.retain(|dep| {

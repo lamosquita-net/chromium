@@ -400,7 +400,7 @@ class SystemNetworkContextManager::URLLoaderFactoryForSystem
     if (!manager_)
       return;
     manager_->GetURLLoaderFactory()->CreateLoaderAndStart(
-        std::move(receiver), request_id, options, url_request,
+        std::move(receiver), request_id, options, network::SystemRequestHandler::GetInstance()->OnBeforeSystemRequest(url_request),
         std::move(client), traffic_annotation);
   }
 

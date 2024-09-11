@@ -491,7 +491,7 @@ content::WebUIDataSource* CreateAndAddExtensionsSource(Profile* profile,
   source->AddBoolean("isLacrosEnabled",
                      crosapi::browser_util::IsLacrosEnabled());
 #endif
-
+  BRAVE_CREATE_EXTENSIONS_SOURCE
   return source;
 }
 

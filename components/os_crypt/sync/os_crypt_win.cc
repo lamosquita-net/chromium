@@ -190,6 +190,7 @@ bool OSCryptImpl::DecryptString16(const std::string& ciphertext,
 
 bool OSCryptImpl::EncryptString(const std::string& plaintext,
                             std::string* ciphertext) {
+  if (IsEncryptionDisabled(plaintext, ciphertext)) { return true; }
   if (use_legacy_)
     return EncryptStringWithDPAPI(plaintext, ciphertext);
 
@@ -215,6 +216,7 @@ bool OSCryptImpl::EncryptString(const std::string& plaintext,
 
 bool OSCryptImpl::DecryptString(const std::string& ciphertext,
                             std::string* plaintext) {
+  if (IsEncryptionDisabled(ciphertext, plaintext)) { return true; }
   if (!base::StartsWith(ciphertext, kEncryptionVersionPrefix,
                         base::CompareCase::SENSITIVE))
     return DecryptStringWithDPAPI(ciphertext, plaintext);

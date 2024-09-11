@@ -1804,6 +1804,7 @@
       // In-development features for the File System Access API.
       name: "FileSystemAccessAPIExperimental",
       status: "experimental",
+      base_feature: "none",
     },
     {
       // The FileSystemHandle.getCloudIdentifiers() method (see
@@ -1819,6 +1820,7 @@
       // Non-OPFS File System Access API.
       name: "FileSystemAccessLocal",
       status: {"Android": "test", "default": "stable"},
+      base_feature: "none",
     },
     {
       name: "FileSystemAccessLockingScheme",
@@ -2648,6 +2650,7 @@
     {
       name: "MiddleClickAutoscroll",
       status: "test",
+      base_feature: "none",
     },
     {
       name: "MobileLayoutTheme",
@@ -3679,6 +3682,7 @@
     {
       name: "Serial",
       status: {"Android": "", "default": "stable"},
+      base_feature: "none",
     },
     {
       name: "SerializeViewTransitionStateInSPA",

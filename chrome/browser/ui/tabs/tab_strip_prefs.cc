@@ -19,6 +19,7 @@ std::optional<bool> g_tab_search_trailing_tabstrip_at_startup = std::nullopt;
 namespace tabs {
 
 bool GetDefaultTabSearchRightAligned() {
+  BRAVE_GET_DEFAULT_TAB_SEARCH_RIGHT_ALIGNED
   // These platforms are all left aligned, the others should be right.
 #if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_WIN)
   return false;

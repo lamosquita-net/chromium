@@ -108,6 +108,7 @@ source_set("dns") {
     "test_dns_config_service.cc",
     "test_dns_config_service.h",
   ]
+  sources += brave_net_dns_sources
 
   if (is_win) {
     sources += [

@@ -53,7 +53,7 @@ class View;
 // registry's active_entry() then global registry's. These values are reset when
 // the side panel is closed and |last_active_global_entry_id_| is used to
 // determine what entry is seen when the panel is reopened.
-class SidePanelCoordinator final : public SidePanelRegistryObserver,
+class SidePanelCoordinator : public SidePanelRegistryObserver,
                                    public TabStripModelObserver,
                                    public views::ViewObserver,
                                    public PinnedToolbarActionsModel::Observer,

@@ -63,12 +63,14 @@ std::string AddRandomPasswordToKeychain(const AppleKeychain& keychain,
 
 // static
 KeychainPassword::KeychainNameType& KeychainPassword::GetServiceName() {
+  BRAVE_GET_SERVICE_NAME
   static KeychainNameContainerType service_name(kDefaultServiceName);
   return *service_name;
 }
 
 // static
 KeychainPassword::KeychainNameType& KeychainPassword::GetAccountName() {
+  BRAVE_GET_ACCOUNT_NAME
   static KeychainNameContainerType account_name(kDefaultAccountName);
   return *account_name;
 }

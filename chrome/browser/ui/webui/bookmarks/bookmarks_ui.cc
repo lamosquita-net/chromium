@@ -128,6 +128,7 @@ content::WebUIDataSource* CreateAndAddBookmarksUIHTMLSource(Profile* profile) {
   for (const auto& str : kStrings)
     AddLocalizedString(source, str.name, str.id);
 
+  BRAVE_CREATE_BOOKMARKS_UI_HTML_SOURCE
   return source;
 }
 

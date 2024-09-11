@@ -158,6 +158,9 @@ class CONTENT_EXPORT BrowserMainParts {
   virtual void OnFirstIdle() {}
   virtual void PostMainMessageLoopRun() {}
   virtual void PostDestroyThreads() {}
+
+  // Called when shutdown is about to begin.
+  virtual void PreShutdown() {}
 };
 
 }  // namespace content

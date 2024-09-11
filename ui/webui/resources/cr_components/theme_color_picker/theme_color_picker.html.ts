@@ -25,19 +25,6 @@ export function getHtml(this: ThemeColorPickerElement) {
       tabindex="${this.tabIndex_(this.isDefaultColorSelected_)}"
       @click="${this.onDefaultColorClick_}">
   </cr-theme-color>
-  <cr-theme-color
-      id="greyDefaultColor"
-      .backgroundColor="${this.greyDefaultColor_.background}"
-      .baseColor="${this.greyDefaultColor_.base}"
-      .foregroundColor="${this.greyDefaultColor_.foreground}"
-      title="${this.i18n('greyDefaultColorName')}"
-      aria-label="${this.i18n('greyDefaultColorName')}"
-      role="radio"
-      ?checked="${this.isGreyDefaultColorSelected_}"
-      aria-checked="${this.isGreyDefaultColorSelected_}"
-      tabindex="${this.tabIndex_(this.isGreyDefaultColorSelected_)}"
-      @click="${this.onGreyDefaultColorClick_}">
-  </cr-theme-color>
   ${this.colors_.map((item, index) => html`
     <cr-theme-color
         class="chrome-color"

@@ -426,7 +426,7 @@ export class BookmarksCommandManagerElement extends
         chrome.bookmarkManagerPrivate.export();
         break;
       case Command.HELP_CENTER:
-        window.open('https://support.google.com/chrome/?p=bookmarks');
+        window.open('https://community.brave.com', undefined, 'noreferrer');
         break;
       default:
         assertNotReached();

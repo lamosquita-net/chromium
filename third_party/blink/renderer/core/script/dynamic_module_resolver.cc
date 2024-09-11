@@ -288,6 +288,7 @@ void DynamicModuleResolver::ResolveDynamically(
       referrer_info.CredentialsMode(), referrer_info.GetReferrerPolicy(),
       mojom::blink::FetchPriorityHint::kAuto,
       RenderBlockingBehavior::kNonBlocking);
+  BRAVE_DYNAMIC_MODULE_RESOLVER_RESOLVE_DYNAMICALLY
 
   // <spec label="fetch-an-import()-module-script-graph" step="3">Fetch a single
   // module script given url, settings object, "script", options, settings

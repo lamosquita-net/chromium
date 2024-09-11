@@ -197,6 +197,7 @@ AccountConsistencyModeManager::ComputeAccountConsistencyMethod(
     Profile* profile) {
   DCHECK(ShouldBuildServiceForProfile(profile));
 
+BRAVE_COMPUTE_ACCOUNT_CONSISTENCY_METHOD
 #if BUILDFLAG(IS_CHROMEOS_ASH)
   if (!ash::IsAccountManagerAvailable(profile))
     return AccountConsistencyMethod::kDisabled;

@@ -412,10 +412,12 @@ public class ToolbarTablet extends ToolbarLayout
             mOfflineDownloader.downloadPage(getContext(), getToolbarDataProvider().getTab());
             RecordUserAction.record("MobileToolbarDownloadPage");
         }
+        BraveToolbarLayout.class.cast(this).onClickImpl(v);
     }
 
     @Override
     public boolean onLongClick(View v) {
+        if (BraveToolbarLayout.class.cast(this).onLongClickImpl(v)) return true;
         String description = null;
         Context context = getContext();
         Resources resources = context.getResources();
@@ -552,6 +554,7 @@ public class ToolbarTablet extends ToolbarLayout
         mLocationBar.getTabletCoordinator().tintBackground(textBoxColor);
         mLocationBar.updateVisualsForState();
         setToolbarHairlineColor(color);
+        super.onThemeColorChanged(color, shouldAnimate);
 
         // Notify the StatusBarColorController of the toolbar color change. This is to match the
         // status bar's color with the toolbar color when the tab strip is hidden on a tablet.

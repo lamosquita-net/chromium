@@ -28,6 +28,7 @@ class _Generator(object):
         util_cc_helper.UtilCCHelper(self._type_helper))
     self._generate_error_messages = namespace.compiler_options.get(
         'generate_error_messages', False)
+    self._none_as_absent_optional = namespace.compiler_options.get('none_as_absent_optional', False)
 
   def Generate(self):
     """Generates a Code object with the .cc for a single namespace.
@@ -410,7 +411,7 @@ class _Generator(object):
     c.Append('const base::Value* %(value_var)s = %(src)s.Find("%(key)s");')
     if prop.optional:
       (c.Sblock(
-          'if (%(value_var)s) {')
+          'if ({var}{none_check}) {{'.format(var=value_var, none_check=('' if not self._none_as_absent_optional else ' && !{var}->is_none()'.format(var=value_var))))
         .Concat(self._GeneratePopulatePropertyFromValue(
             prop, '(*%s)' % value_var, dst, 'false')))
       underlying_type = self._type_helper.FollowRef(prop.type_)

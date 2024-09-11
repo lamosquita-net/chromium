@@ -165,6 +165,7 @@ const FontData* FontFallbackList::GetFontData(
       font_selector_->ReportFontLookupByUniqueOrFamilyName(
           curr_family->FamilyName(), font_description,
           DynamicTo<SimpleFontData>(result));
+      BRAVE_GET_FONT_DATA
     }
     if (result) {
       font_selector_->ReportSuccessfulFontFamilyMatch(

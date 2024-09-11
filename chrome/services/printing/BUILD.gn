@@ -29,6 +29,7 @@ source_set("lib") {
     "//mojo/public/cpp/bindings",
     "//printing/buildflags",
   ]
+  import("//brave/services/printing/sources.gni") sources += brave_services_printing_sources deps += brave_services_printing_deps
 
   if (is_chromeos) {
     sources += [

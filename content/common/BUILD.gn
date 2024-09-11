@@ -69,6 +69,7 @@ source_set("common") {
   visibility = [
     "//content/*",
     "//tools/ipc_fuzzer/message_replay:ipc_fuzzer_replay",
+    "//brave/content/*",
   ]
 
   sources = [

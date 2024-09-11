@@ -66,6 +66,7 @@ namespace {
 content::WebUIDataSource* CreateAndAddDownloadsUIHTMLSource(Profile* profile) {
   content::WebUIDataSource* source = content::WebUIDataSource::CreateAndAdd(
       profile, chrome::kChromeUIDownloadsHost);
+  BRAVE_CREATE_DOWNLOADS_UI_HTML_SOURCE
   webui::SetupWebUIDataSource(
       source, base::make_span(kDownloadsResources, kDownloadsResourcesSize),
       IDR_DOWNLOADS_DOWNLOADS_HTML);

@@ -65,6 +65,7 @@ bool ComputeLockPendingUserGestureRequired(const Document& document) {
 // static
 AutoplayPolicy::Type AutoplayPolicy::GetAutoplayPolicyForDocument(
     const Document& document) {
+  BRAVE_GET_AUTOPLAY_POLICY_FOR_DOCUMENT
   if (!document.GetSettings())
     return Type::kNoUserGestureRequired;
 
@@ -333,6 +334,7 @@ void AutoplayPolicy::TryUnlockingUserGesture() {
 bool AutoplayPolicy::IsGestureNeededForPlayback() const {
   if (!IsLockedPendingUserGesture())
     return false;
+  BRAVE_AUTOPLAY_POLICY_IS_GESTURE_NEEDED_FOR_PLAYBACK
 
   // We want to allow muted video to autoplay if the element is allowed to
   // autoplay muted.

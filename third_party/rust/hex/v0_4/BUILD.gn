@@ -39,5 +39,4 @@ cargo_crate("lib") {
     "std",
   ]
 
-  testonly = true
 }

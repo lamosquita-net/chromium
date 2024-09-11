@@ -41,6 +41,7 @@ template("chrome_repack_locales") {
       "${root_gen_dir}/ui/strings/ax_strings_",
       "${root_gen_dir}/ui/strings/ui_strings_",
     ]
+    source_patterns += brave_locale_source_patterns
     if (!defined(deps)) {
       deps = []
     }
@@ -64,6 +65,7 @@ template("chrome_repack_locales") {
       "//ui/strings:ax_strings",
       "//ui/strings:ui_strings",
     ]
+    deps += brave_locale_deps
     if (defined(invoker.deps)) {
       deps += invoker.deps
     }

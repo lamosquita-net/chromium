@@ -22,6 +22,7 @@ found in the LICENSE file.
             android:visibility="invisible"
             android:contentDescription="@string/accessibility_toolbar_btn_delete_url" />
 
+<org.chromium.ui.widget.ChromeImageButton android:id="@+id/qr_button" style="@style/LocationBarActionButton" android:src="@drawable/ic_qr_code_18" android:visibility="invisible" android:contentDescription="@string/scan_qr_code" />
         <org.chromium.ui.widget.ChromeImageButton
             android:id="@+id/mic_button"
             style="@style/LocationBarActionButton"

@@ -136,7 +136,7 @@ found in the LICENSE file.
         android:gravity="center_vertical"
         android:orientation="horizontal" />
 
-
+    <include layout="@layout/brave_custom_tabs_toolbar" android:layout_height="wrap_content" android:layout_width="match_parent" />
     <org.chromium.chrome.browser.toolbar.menu_button.MenuButton
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical|end"

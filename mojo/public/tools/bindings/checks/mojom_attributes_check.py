@@ -7,6 +7,7 @@ import mojom.generate.check as check
 import mojom.generate.module as module
 
 _COMMON_ATTRIBUTES = {
+    'BraveAdd', 'BraveExtend',
     'EnableIf',
     'EnableIfNot',
 }

@@ -4186,6 +4186,7 @@ const FeatureEntry::FeatureVariation
 //
 // When adding a new choice, add it to the end of the list.
 const FeatureEntry kFeatureEntries[] = {
+    BRAVE_ABOUT_FLAGS_FEATURE_ENTRIES
 // Include generated flags for flag unexpiry; see //docs/flag_expiry.md and
 // //tools/flags/generate_unexpire_flags.py.
 #include "build/chromeos_buildflags.h"
@@ -12132,6 +12133,7 @@ void GetStorage(Profile* profile, GetStorageCallback callback) {
 
 bool ShouldSkipConditionalFeatureEntry(const flags_ui::FlagsStorage* storage,
                                        const FeatureEntry& entry) {
+  BRAVE_SHOULD_SKIP_CONDITIONAL_FEATURE_ENTRY
 #if BUILDFLAG(IS_CHROMEOS_ASH)
   version_info::Channel channel = chrome::GetChannel();
   // enable-projector-server-side-speech-recognition is only available if

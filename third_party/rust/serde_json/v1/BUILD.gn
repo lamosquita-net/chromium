@@ -78,5 +78,4 @@ cargo_crate("lib") {
     "//third_party/rust/chromium_crates_io/vendor/serde_json-1.0.120/build.rs",
   ]
 
-  testonly = true
 }

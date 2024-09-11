@@ -159,6 +159,8 @@ bool HTTPTransportWin::ExecuteSynchronously(std::string* response_body) {
     return false;
   }
 
+  BraveSetSessionOptions(session.get());
+
   int timeout_in_ms = static_cast<int>(timeout() * 1000);
   if (!WinHttpSetTimeouts(session.get(),
                           timeout_in_ms,

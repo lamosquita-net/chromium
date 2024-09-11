@@ -591,6 +591,7 @@ GURL PermissionRequestManager::GetRequestingOrigin() const {
   GURL origin = requests_.front()->requesting_origin();
   if (DCHECK_IS_ON()) {
     for (permissions::PermissionRequest* request : requests_) {
+      BRAVE_PERMISSION_REQUEST_MANAGER_GET_REQUESTING_ORIGIN
       DCHECK_EQ(origin, request->requesting_origin());
     }
   }

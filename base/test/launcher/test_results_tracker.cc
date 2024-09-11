@@ -150,6 +150,7 @@ TestResultsTracker::~TestResultsTracker() {
                    : ""),
               result.GetTestCaseName().c_str());
       if (result.status != TestResult::TEST_SUCCESS) {
+        TEST_RESULTS_TRACKER_ADD_FAILURE_DETAILS
         // The actual failure message is not propagated up to here, as it's too
         // much work to escape it properly, and in case of failure, almost
         // always one needs to look into full log anyway.

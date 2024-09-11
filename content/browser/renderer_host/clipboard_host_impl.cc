@@ -545,6 +545,7 @@ void ClipboardHostImpl::WriteText(const std::u16string& text) {
   ClipboardPasteData data;
   data.text = text;
   ++pending_writes_;
+  BRAVE_CLIPBOARD_HOST_IMPL_SANITIZE
   GetContentClient()->browser()->IsClipboardCopyAllowedByPolicy(
       CreateClipboardEndpoint(),
       {

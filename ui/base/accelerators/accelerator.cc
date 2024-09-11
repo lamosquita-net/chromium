@@ -389,6 +389,7 @@ std::u16string Accelerator::KeyCodeToName() const {
 
 std::u16string Accelerator::ApplyLongFormModifiers(
     const std::u16string& shortcut) const {
+  BRAVE_UI_BASE_ACCELERATOR_APPLY_LONG_FORM_MODIFIERS_
   std::u16string result = shortcut;
 
   if (IsShiftDown())

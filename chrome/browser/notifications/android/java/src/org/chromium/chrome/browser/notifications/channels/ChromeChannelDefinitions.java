@@ -78,6 +78,7 @@ public class ChromeChannelDefinitions extends ChannelDefinitions {
         ChannelId.BROWSER,
         ChannelId.DOWNLOADS,
         ChannelId.INCOGNITO,
+        BraveChannelDefinitions.ChannelId.BRAVE_ADS, BraveChannelDefinitions.ChannelId.BRAVE_ADS_BACKGROUND,
         ChannelId.MEDIA_PLAYBACK,
         ChannelId.SCREEN_CAPTURE,
         ChannelId.CONTENT_SUGGESTIONS,
@@ -132,7 +133,8 @@ public class ChromeChannelDefinitions extends ChannelDefinitions {
         String USB = "usb";
     }
 
-    @StringDef({ChannelGroupId.GENERAL, ChannelGroupId.SITES})
+    @StringDef({BraveChannelDefinitions.ChannelGroupId.BRAVE_ADS, ChannelGroupId.GENERAL,
+            ChannelGroupId.SITES})
     @Retention(RetentionPolicy.SOURCE)
     public @interface ChannelGroupId {
         String SITES = "sites";
@@ -160,6 +162,7 @@ public class ChromeChannelDefinitions extends ChannelDefinitions {
             Map<String, PredefinedChannel> map = new HashMap<>();
             Set<String> startup = new HashSet<>();
 
+            BraveChannelDefinitions.addBraveChannels(map, startup);
             map.put(
                     ChannelId.BROWSER,
                     PredefinedChannel.create(
@@ -391,6 +394,7 @@ public class ChromeChannelDefinitions extends ChannelDefinitions {
 
         static {
             Map<String, PredefinedChannelGroup> map = new HashMap<>();
+            BraveChannelDefinitions.addBraveChannelGroups(map);
             map.put(
                     ChannelGroupId.GENERAL,
                     new PredefinedChannelGroup(

@@ -102,6 +102,7 @@ class NotificationPlatformBridgeAndroid : public NotificationPlatformBridge {
   static void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry);
 
  private:
+  friend class BraveNotificationPlatformBridgeHelperAndroid;
   // Contains information necessary in order to enable closing notifications
   // that were not created by this instance of the manager. This list may not
   // contain the notifications that have not been interacted with since the last

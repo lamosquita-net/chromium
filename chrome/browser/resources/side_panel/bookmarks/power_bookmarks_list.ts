@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import '../strings.m.js';
+import './brave_overrides/index.js';
 import './commerce/shopping_list.js';
 import './icons.html.js';
 import './power_bookmarks_context_menu.js';
@@ -176,7 +177,8 @@ export class PowerBookmarksListElement extends PolymerElement {
                sortOrder: SortOrder.kReverseAlphabetical,
                label: loadTimeData.getString('sortReverseAlphabetically'),
                lowerLabel: loadTimeData.getString('sortReverseAlphabetically'),
-             }],
+             },
+             { sortOrder: SortOrder.kCustom, label: loadTimeData.getString('sortCustom'), lowerLabel: loadTimeData.getString('sortCustomLower'), }],
       },
 
       editing_: {

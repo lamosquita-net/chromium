@@ -22,6 +22,7 @@ mojom("mojom") {
     "//url/mojom:url_mojom_gurl",
   ]
 
+  import("//brave/services/printing/public/mojom/sources.gni") sources += brave_services_printing_public_mojom_sources public_deps += brave_services_printing_public_mojom_public_deps
   enabled_features = []
 
   if (is_chromeos) {

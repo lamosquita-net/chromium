@@ -327,6 +327,7 @@ void CheckClientDownloadRequestBase::OnRequestBuilt(
 
   client_download_request_ = std::move(request);
   SanitizeRequest();
+  BRAVE_ON_REQUEST_BUILT_FILTER
 
   // If it's an archive with no archives or executables, finish early.
   if ((client_download_request_->download_type() ==

@@ -342,6 +342,7 @@ static_library("test_support") {
       "trace_to_file.h",
     ]
   }
+  import("//brave/base/sources.gni") sources += brave_base_test_support_sources
 }
 
 component("proto_test_support") {

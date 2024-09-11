@@ -12,6 +12,7 @@ export interface ClientInfo {
   operating_system: string;
   revision_identifier: string;
   version: string;
+  executable_path: string;
 }
 
 export interface Problem {

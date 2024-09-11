@@ -502,6 +502,7 @@ void OmniboxEditModel::AdjustTextForCopy(int sel_min,
       (*text == display_text_ || *text == url_for_editing_)) {
     *url_from_text = controller_->client()->GetNavigationEntryURL();
     *write_url = true;
+    BRAVE_ADJUST_TEXT_FOR_COPY
 
     // Don't let users copy Reader Mode page URLs.
     // We display the original article's URL in the omnibox, so users will

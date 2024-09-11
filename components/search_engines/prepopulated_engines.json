@@ -102,17 +102,6 @@
       "id": 68
     },
 
-    "duckduckgo": {
-      "name": "DuckDuckGo",
-      "keyword": "duckduckgo.com",
-      "favicon_url": "https://duckduckgo.com/favicon.ico",
-      "search_url": "https://duckduckgo.com/?q={searchTerms}",
-      "suggest_url": "https://duckduckgo.com/ac/?q={searchTerms}&type=list",
-      "new_tab_url": "https://duckduckgo.com/chrome_newtab",
-      "type": "SEARCH_ENGINE_DUCKDUCKGO",
-      "id": 92
-    },
-
     "ecosia": {
       "name": "Ecosia",
       "keyword": "ecosia.org",
@@ -262,16 +251,6 @@
       "suggest_url": "https://www.quendu.com/suggest?query={searchTerms}",
       "type": "SEARCH_ENGINE_QUENDU",
       "id": 108
-    },
-
-    "qwant": {
-      "name": "Qwant",
-      "keyword": "qwant.com",
-      "favicon_url": "https://www.qwant.com/favicon.ico",
-      "search_url": "https://www.qwant.com/?q={searchTerms}&client=opensearch",
-      "suggest_url": "https://api.qwant.com/api/suggest/?q={searchTerms}&client=opensearch",
-      "type": "SEARCH_ENGINE_QWANT",
-      "id": 94
     },
 
     "seznam_cz": {

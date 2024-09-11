@@ -40,7 +40,7 @@ guestTopLevelRoute = routes.PRIVACY;
 // </if>
 
 const TOP_LEVEL_EQUIVALENT_ROUTE: Route =
-    loadTimeData.getBoolean('isGuest') ? guestTopLevelRoute : routes.PEOPLE;
+    loadTimeData.getBoolean('isGuest') ? guestTopLevelRoute : routes.GET_STARTED;
 
 function classifyRoute(route: Route|null): RouteState {
   if (!route) {

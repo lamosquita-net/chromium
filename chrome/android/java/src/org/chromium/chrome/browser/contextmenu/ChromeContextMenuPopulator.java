@@ -159,7 +159,7 @@ public class ChromeContextMenuPopulator implements ContextMenuPopulator {
             Action.SHARE_HIGHLIGHT,
             Action.REMOVE_HIGHLIGHT,
             Action.LEARN_MORE,
-            Action.OPEN_IN_NEW_TAB_IN_GROUP
+            Action.OPEN_IN_NEW_TAB_IN_GROUP, Action.COPY_CLEAN_LINK
         })
         @Retention(RetentionPolicy.SOURCE)
         public @interface Action {
@@ -204,7 +204,7 @@ public class ChromeContextMenuPopulator implements ContextMenuPopulator {
             int LEARN_MORE = 38;
             int OPEN_IN_NEW_TAB_IN_GROUP = 39;
             int OPEN_IN_NEW_WINDOW = 40;
-            int NUM_ENTRIES = 41;
+            int COPY_CLEAN_LINK = 41;int NUM_ENTRIES = 42;
         }
     }
 
@@ -294,6 +294,7 @@ public class ChromeContextMenuPopulator implements ContextMenuPopulator {
             if (!MailTo.isMailTo(mParams.getLinkUrl().getSpec())
                     && !UrlUtilities.isTelScheme(mParams.getLinkUrl())) {
                 linkGroup.add(createListItem(Item.COPY_LINK_ADDRESS));
+                linkGroup.add(createListItem(Item.COPY_CLEAN_LINK));
                 if (!mParams.getLinkText().trim().isEmpty() && !mParams.isImage()) {
                     linkGroup.add(createListItem(Item.COPY_LINK_TEXT));
                 }

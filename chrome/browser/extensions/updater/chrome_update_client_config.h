@@ -86,6 +86,7 @@ class ChromeUpdateClientConfig : public update_client::Configurator {
   update_client::UpdaterStateProvider GetUpdaterStateProvider() const override;
   std::optional<base::FilePath> GetCrxCachePath() const override;
   bool IsConnectionMetered() const override;
+  BRAVE_CHROME_UPDATE_CLIENT_CONFIG_H_
 
  protected:
   friend class base::RefCountedThreadSafe<ChromeUpdateClientConfig>;

@@ -290,5 +290,6 @@ def main():
   return deps_checker.Report()
 
 
+from brave_chromium_utils import inline_chromium_src_override; inline_chromium_src_override(globals(), locals())
 if '__main__' == __name__:
   sys.exit(main())

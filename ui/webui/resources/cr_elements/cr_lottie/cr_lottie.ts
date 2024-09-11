@@ -344,6 +344,7 @@ export class CrLottieElement extends CrLitElement {
       this.fire('cr-lottie-paused');
     } else if (event.data.name === 'stopped') {
       this.fire('cr-lottie-stopped');
+    } else if (event.data.name === 'complete') { this.fire('cr-lottie-complete');
     } else if (event.data.name === 'resized') {
       this.fire('cr-lottie-resized', event.data.size);
     }

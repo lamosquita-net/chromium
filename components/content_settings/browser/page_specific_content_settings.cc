@@ -821,6 +821,7 @@ bool PageSpecificContentSettings::IsContentBlocked(
       content_type == ContentSettingsType::ADS ||
       content_type == ContentSettingsType::SOUND ||
       content_type == ContentSettingsType::CLIPBOARD_READ_WRITE ||
+      content_type == ContentSettingsType::AUTOPLAY ||
       content_type == ContentSettingsType::SENSORS ||
       content_type == ContentSettingsType::GEOLOCATION ||
       content_type == ContentSettingsType::NOTIFICATIONS) {
@@ -847,6 +848,7 @@ bool PageSpecificContentSettings::IsContentAllowed(
       content_type != ContentSettingsType::MEDIASTREAM_CAMERA &&
       content_type != ContentSettingsType::MIDI_SYSEX &&
       content_type != ContentSettingsType::CLIPBOARD_READ_WRITE &&
+      content_type != ContentSettingsType::AUTOPLAY &&
       content_type != ContentSettingsType::SENSORS &&
       content_type != ContentSettingsType::GEOLOCATION &&
       content_type != ContentSettingsType::NOTIFICATIONS) {

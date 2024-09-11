@@ -127,6 +127,7 @@ class AvatarToolbarButton : public ToolbarButton {
   void NotifyShowSigninPausedDelayEnded() const;
 
  private:
+  BRAVE_AVATAR_BUTTON_H
   FRIEND_TEST_ALL_PREFIXES(AvatarToolbarButtonTest,
                            HighlightMeetsMinimumContrast);
 

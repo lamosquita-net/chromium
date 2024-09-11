@@ -1,5 +1,5 @@
-@@PACKAGE@@-@@CHANNEL@@ (@@VERSIONFULL@@) @@CHANNEL@@; urgency=low
+@@PACKAGEANDCHANNEL@@ (@@VERSIONFULL@@) @@CHANNEL@@; urgency=low
 
-  * Build spec: https://chromium.googlesource.com/chromium/src.git/+/@@VERSION@@/
+  * Build spec: https://github.com/brave/brave-browser/releases/tag/v@@VERSION@@
 
  -- @@MAINTNAME@@ <@@MAINTMAIL@@>  @@DATE_RFC5322@@

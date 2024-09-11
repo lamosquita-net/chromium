@@ -507,3 +507,4 @@ def _SendHistogramJson(url, histogramset_json, token_generator_callback):
       logging.info('Upload completion token created. Token id: %s' % token)
   except Exception as e:  # pylint: disable=broad-except
     logging.warning('Error fetching upload completion token: %s' % e)
+from brave_chromium_utils import inline_chromium_src_override; inline_chromium_src_override(globals(), locals())

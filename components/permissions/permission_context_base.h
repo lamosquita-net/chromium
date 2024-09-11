@@ -150,6 +150,7 @@ class PermissionContextBase : public content_settings::Observer {
     has_device_permission_for_test_ = has_permission;
   }
 
+  BRAVE_PERMISSION_CONTEXT_BASE_H_
  protected:
   virtual ContentSetting GetPermissionStatusInternal(
       content::RenderFrameHost* render_frame_host,

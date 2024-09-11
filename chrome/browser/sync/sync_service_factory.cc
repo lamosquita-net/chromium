@@ -167,7 +167,7 @@ std::unique_ptr<KeyedService> BuildSyncService(
   }
 
   auto sync_service =
-      std::make_unique<syncer::SyncServiceImpl>(std::move(init_params));
+      BRAVE_BUILD_SERVICE_INSTANCE_FOR
   sync_service->Initialize();
 
   // Notify the PasswordStore of complete initialisation to resolve a circular

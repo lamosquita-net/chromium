@@ -868,6 +868,7 @@ void CorsURLLoader::StartRequest() {
       (fetch_cors_flag_ ||
        (request_.method != net::HttpRequestHeaders::kGetMethod &&
         request_.method != net::HttpRequestHeaders::kHeadMethod))) {
+    BRAVE_CORS_URL_LOADER_START_REQUEST
     if (tainted_) {
       request_.headers.SetHeader(net::HttpRequestHeaders::kOrigin,
                                  url::Origin().Serialize());

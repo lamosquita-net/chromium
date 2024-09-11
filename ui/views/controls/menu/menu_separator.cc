@@ -51,6 +51,7 @@ void MenuSeparator::OnPaint(gfx::Canvas* canvas) {
       menu_config.separator_horizontal_border_padding, y,
       width() - menu_config.separator_horizontal_border_padding * 2,
       separator_thickness);
+  BRAVE_MENU_SEPARATOR_ON_PAINT
   if (type_ == ui::PADDED_SEPARATOR) {
     paint_rect.Inset(
         gfx::Insets::TLBR(0, menu_config.padded_separator_start_padding, 0, 0));

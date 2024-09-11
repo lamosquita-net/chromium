@@ -29,7 +29,7 @@ enum ImportItem {
   SEARCH_ENGINES     = 1 << 4,
   HOME_PAGE          = 1 << 5,
   AUTOFILL_FORM_DATA = 1 << 6,
-  ALL                = (1 << 7) - 1  // All the bits should be 1, hence the -1.
+  BRAVE_IMPORT_ITEM
 };
 
 // Information about a profile needed by an importer to do import work.
@@ -109,6 +109,7 @@ enum VisitSource {
   VISIT_SOURCE_FIREFOX_IMPORTED = 1,
   VISIT_SOURCE_IE_IMPORTED = 2,
   VISIT_SOURCE_SAFARI_IMPORTED = 3,
+  BRAVE_VISIT_SOURCE
 };
 
 }  // namespace importer

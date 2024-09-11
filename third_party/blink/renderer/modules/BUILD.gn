@@ -19,6 +19,7 @@ if (is_ios) {
 }
 
 visibility = [ "//third_party/blink/renderer/*" ]
+visibility += brave_blink_renderer_modules_visibility
 
 config("modules_implementation") {
   defines = [ "BLINK_MODULES_IMPLEMENTATION=1" ]
@@ -178,6 +179,7 @@ component("modules") {
   # generating the snapshot for android, blink is compiled with
   # current_os="linux" and target_os="android". Using target_os is necessary as
   # we need to compile in the same way as would happen when current_os="android".
+  sub_modules += brave_blink_sub_modules
   if (target_os_is_android) {
     sub_modules += [ "//third_party/blink/renderer/modules/remote_objects" ]
   } else {

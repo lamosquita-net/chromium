@@ -311,6 +311,7 @@ void Tab::Layout(PassKey) {
   // indicator, but visually it will be smaller at kFaviconSize wide.
   gfx::Rect favicon_bounds(start, contents_rect.y(), 0, 0);
   if (showing_icon_) {
+    BRAVE_UI_VIEWS_TABS_TAB_LAYOUT_ADJUST_ICON_POSITION
     if (center_icon_) {
       // When centering the favicon, the favicon is allowed to escape the normal
       // contents rect.
@@ -414,6 +415,7 @@ void Tab::Layout(PassKey) {
     int title_right = contents_rect.right();
     if (showing_alert_indicator_) {
       title_right = alert_indicator_button_->x() - after_title_padding;
+      BRAVE_UI_VIEWS_TABS_TAB_ALERT_INDICATOR_POSITION
     } else if (showing_close_button_) {
       // Allow the title to overlay the close button's empty border padding.
       title_right = close_x - after_title_padding;
@@ -1090,6 +1092,7 @@ void Tab::UpdateIconVisibility() {
     }
 
     showing_close_button_ = large_enough_for_close_button;
+    BRAVE_UI_VIEWS_TABS_TAB_UPDATE_ICON_VISIBILITY
     if (showing_close_button_) {
       available_width -= close_button_width;
     }

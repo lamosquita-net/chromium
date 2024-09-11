@@ -202,8 +202,9 @@ pub fn build_rule_from_dep(
         let mut aliases = Vec::new();
         for dep in &normal_deps {
             let target_name = NormalizedName::from_crate_name(&dep.package_name).to_string();
+            let epoch = Epoch::from_version(&dep.version).to_string();
             if target_name != dep.use_name {
-                aliases.push((dep.use_name.clone(), format!(":{target_name}")));
+                aliases.push((dep.use_name.clone(), format!("{target_name}/{epoch}")));
             }
         }
         aliases.sort_unstable();
@@ -536,6 +537,7 @@ fn target_os_to_condition(target_os: &str) -> &'static str {
     for (t, c) in &[
         ("android", "is_android"),
         ("darwin", "is_mac"),
+        ("macos", "is_mac"),
         ("fuchsia", "is_fuchsia"),
         ("ios", "is_ios"),
         ("linux", "is_linux || is_chromeos"),

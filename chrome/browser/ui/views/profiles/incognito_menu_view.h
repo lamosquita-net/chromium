@@ -33,6 +33,7 @@ class IncognitoMenuView : public ProfileMenuViewBase {
   // ProfileMenuViewBase:
   void BuildMenu() override;
 
+  BRAVE_INCOGNITO_MENU_VIEW_H_
  private:
   // views::BubbleDialogDelegateView:
   std::u16string GetAccessibleWindowTitle() const override;

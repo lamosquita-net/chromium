@@ -537,6 +537,7 @@ export class InfoViewElement extends CustomElement {
           value: clientInfo.graphics_backend,
         },
         {description: 'Command Line', value: clientInfo.command_line},
+        {description: 'Executable path', value: clientInfo.executable_path || ''},
       ]);
     } else {
       sections.clientInfo.list.textContent = '... loading ...';

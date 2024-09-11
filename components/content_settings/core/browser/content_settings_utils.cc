@@ -167,6 +167,7 @@ bool CanTrackLastVisit(ContentSettingsType type) {
   if (type == ContentSettingsType::PROTOCOL_HANDLERS) {
     return false;
   }
+  BRAVE_CAN_TRACK_LAST_VISIT
 
   // Chooser based content settings will not be tracked by default.
   // Only allowlisted ones should be tracked.

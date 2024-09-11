@@ -219,3 +219,4 @@ class PerfBenchmark(benchmark.Benchmark):
     if 'XVFB_DISPLAY' in os.environ:
       return True
     return False
+from brave_chromium_utils import inline_chromium_src_override; inline_chromium_src_override(globals(), locals())

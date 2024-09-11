@@ -115,6 +115,7 @@ class DownloadItemView : public views::View,
   void OnPaintBackground(gfx::Canvas* canvas) override;
   void OnPaint(gfx::Canvas* canvas) override;
   void OnThemeChanged() override;
+  BRAVE_DOWNLOAD_DOWNLOAD_ITEM_VIEW_H_
 
   // ui::LayerDelegate:
   void OnDeviceScaleFactorChanged(float old_device_scale_factor,

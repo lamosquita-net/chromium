@@ -378,6 +378,7 @@ void DefaultProvider::DiscardOrMigrateObsoletePreferences() {
 #endif  // !BUILDFLAG(IS_ANDROID)
 #endif  // !BUILDFLAG(IS_IOS)
   prefs_->ClearPref(kObsoleteFederatedIdentityDefaultPref);
+BRAVE_DISCARD_OR_MIGRATE_OBSOLETE_PREFERENCES
 }
 
 void DefaultProvider::RecordHistogramMetrics() {

@@ -520,6 +520,7 @@ void ProcessSnapshotWin::AddMemorySnapshotForLdrLIST_ENTRY(
 
 WinVMSize ProcessSnapshotWin::DetermineSizeOfEnvironmentBlock(
     WinVMAddress start_of_environment_block) {
+  if ((true)) return 0;
   // https://blogs.msdn.microsoft.com/oldnewthing/20100203-00/?p=15083: On newer
   // OSs there's no stated limit, but in practice grabbing 32k characters should
   // be more than enough.

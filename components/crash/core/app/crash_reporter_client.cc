@@ -190,6 +190,7 @@ void CrashReporterClient::GetSanitizationInformation(
 #endif
 
 std::string CrashReporterClient::GetUploadUrl() {
+  BRAVE_CRASH_REPORTER_CLIENT_GET_UPLOAD_URL
   return kDefaultUploadUrl;
 }
 

@@ -10,6 +10,7 @@ import os.path
 
 from signing import commands, signing
 from signing.model import CodeSignOptions, CodeSignedProduct, VerifyOptions
+from signing_helper import BraveModifyPartsForSigning, GenerateBraveWidevineSigFile
 
 _PROVISIONPROFILE_EXT = '.provisionprofile'
 _PROVISIONPROFILE_DEST = 'embedded.provisionprofile'
@@ -149,6 +150,7 @@ def get_parts(config):
             library_basename.replace('.dylib', ''),
             verify_options=verify_options)
 
+    parts = BraveModifyPartsForSigning(parts, config)
     return parts
 
 
@@ -212,6 +214,7 @@ def sign_chrome(paths, config, sign_framework=False):
                 continue
             signing.sign_part(paths, config, part)
 
+        GenerateBraveWidevineSigFile(paths, config, parts['framework'])
         # Sign the framework bundle.
         signing.sign_part(paths, config, parts['framework'])
 

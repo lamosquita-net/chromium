@@ -163,6 +163,7 @@ static_library("engine") {
     "traffic_logger.h",
     "update_handler.h",
   ]
+  import("//brave/components/sync/engine/sources.gni") sources += brave_components_sync_engine_sources
 
   configs += [
     # The target has >50 .cc files, so speed up the build with

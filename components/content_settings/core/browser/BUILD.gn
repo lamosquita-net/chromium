@@ -85,6 +85,7 @@ static_library("browser") {
   }
 
   configs += [ "//build/config/compiler:wexit_time_destructors" ]
+  sources += brave_components_content_settings_core_browser_sources deps += brave_components_content_settings_core_browser_deps
 }
 
 source_set("cookie_settings") {

@@ -30,6 +30,7 @@ DEFAULT_IGNORE_WARNINGS = (
     # META-INF/. This means that all rules with a '-upto-' qualifier will be
     # excluded and all rules with a -from- qualifier will be included.
     r'Running R8 version main', )
+DEFAULT_IGNORE_WARNINGS += ( r'.Brave', )
 
 INTERFACE_DESUGARING_WARNINGS = (r'default or static interface methods', )
 

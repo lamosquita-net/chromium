@@ -1059,6 +1059,7 @@ bool ProfileAttributesEntry::ClearValue(const char* key) {
 
 // This method should be periodically pruned of year+ old migrations.
 void ProfileAttributesEntry::MigrateObsoleteProfileAttributes() {
+  BRAVE_PROFILE_ATTRIBUTES_ENTRY_MIGRATE_OBSOLETE_PROFILE_ATTRIBUTES
   // Added 3/2023.
   ClearValue(kAccountCategories);
 }

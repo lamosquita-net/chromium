@@ -71,7 +71,7 @@ CreatorResult SignArchiveAndCreateHeader(const base::FilePath& output_path,
 
   // Assemble SignedData section.
   SignedData signed_header_data;
-  signed_header_data.set_crx_id(GetCrxId(public_key_str));
+  signed_header_data.set_crx_id(GetCrxId_BraveImpl(public_key_str, header));
   const std::string signed_header_data_str =
       signed_header_data.SerializeAsString();
   const int signed_header_size = signed_header_data_str.size();

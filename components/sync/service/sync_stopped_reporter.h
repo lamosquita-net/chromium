@@ -29,7 +29,7 @@ class SyncStoppedReporter {
   SyncStoppedReporter(const SyncStoppedReporter&) = delete;
   SyncStoppedReporter& operator=(const SyncStoppedReporter&) = delete;
 
-  ~SyncStoppedReporter();
+  virtual ~SyncStoppedReporter();
 
   // Inform the sync server that sync was stopped on this device.
   // |access_token|, |cache_guid|, and |birthday| must not be empty.

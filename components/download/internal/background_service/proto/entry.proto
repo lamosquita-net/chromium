@@ -28,6 +28,7 @@ enum DownloadClient {
 
   // New clients should be added above here.
   BOUNDARY = 11;
+  CUSTOM_LIST_SUBSCRIPTIONS = 256;
 }
 
 // Custom key value pair provided by the client and will be sent back to client

@@ -257,7 +257,7 @@ fn supported_os_cfgs() -> &'static [Cfg] {
     CFG_SET.get_or_init(|| {
         [
             // Set of supported OSes for `cfg(target_os = ...)`.
-            "android", "darwin", "fuchsia", "ios", "linux", "windows",
+            "android", "macos", "darwin", "fuchsia", "ios", "linux", "windows",
         ]
         .into_iter()
         .map(|os| Cfg::KeyPair("target_os".to_string(), os.to_string()))

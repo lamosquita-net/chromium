@@ -22,6 +22,7 @@ import '../settings_page/settings_subpage.js';
 import '../settings_shared.css.js';
 import '../site_settings/offer_writing_help_page.js';
 import '../site_settings/settings_category_default_radio_group.js';
+import './personalization_options.js';
 import './privacy_guide/privacy_guide_dialog.js';
 
 import {PrefsMixin} from '/shared/settings/prefs/prefs_mixin.js';

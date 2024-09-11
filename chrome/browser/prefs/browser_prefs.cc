@@ -1746,6 +1746,7 @@ void RegisterLocalState(PrefRegistrySimple* registry) {
   registry->RegisterBooleanPref(prefs::kQRCodeGeneratorEnabled, true);
 
   // This is intentionally last.
+  brave::RegisterLocalStatePrefs(registry);
   RegisterLocalStatePrefsForMigration(registry);
 }
 
@@ -2189,6 +2190,7 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry,
   registry->RegisterIntegerPref(prefs::kLensOverlayStartCount, 0);
 
   registry->RegisterDictionaryPref(prefs::kReportingEndpoints);
+  brave::RegisterProfilePrefs(registry);
 }
 
 void RegisterUserProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {

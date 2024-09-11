@@ -35,7 +35,7 @@ class MockImporterBridge : public ImporterBridge {
   MOCK_METHOD0(NotifyEnded, void());
   MOCK_METHOD1(GetLocalizedString, std::u16string(int));
 
- private:
+ protected:
   ~MockImporterBridge() override;
 };
 

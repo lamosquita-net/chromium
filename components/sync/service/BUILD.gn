@@ -126,4 +126,5 @@ static_library("service") {
   }
 
   configs += [ "//build/config/compiler:wexit_time_destructors" ]
+  sources += brave_components_sync_driver_sources deps += brave_components_sync_driver_deps
 }

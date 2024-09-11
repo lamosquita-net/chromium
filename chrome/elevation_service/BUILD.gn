@@ -11,6 +11,7 @@ import("//testing/test.gni")
 
 midl("elevation_service_idl") {
   sources = [ "elevation_service_idl.idl" ]
+  sources -= [ "elevation_service_idl.idl" ] sources += ["//brave/chromium_src/chrome/elevation_service/elevation_service_idl.idl" ]
 
   writes_tlb = true
 }
@@ -105,6 +106,7 @@ source_set("lib") {
     "crypt32.lib",
     "rpcrt4.lib",
   ]
+  deps += brave_elevation_service_lib_deps
 }
 
 process_version_rc_template("version_resources") {

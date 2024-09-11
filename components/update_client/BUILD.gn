@@ -183,6 +183,7 @@ static_library("update_client") {
       "background_downloader_win.h",
     ]
   }
+  deps += brave_components_update_client_deps public_deps = brave_components_update_client_public_deps
 }
 
 source_set("test_support") {

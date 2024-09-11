@@ -256,6 +256,7 @@ class ResourceInfoFile:
       return
     source_path = os.path.normpath(source_path)
     new_value = self._entries.setdefault(archive_path, source_path)
+    return
     if new_value != source_path:
       raise Exception('Duplicate AddMapping for "{}". old={} new={}'.format(
           archive_path, new_value, source_path))

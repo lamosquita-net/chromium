@@ -223,3 +223,4 @@ def Read(path):
   """
   with open(os.path.join(path, 'compile_commands.json'), 'rb') as db:
     return json.load(db)
+import os, sys; sys.path.append(os.path.join(os.path.dirname(__file__), *[os.pardir] * 4, 'brave', 'script')); from brave_chromium_utils import inline_chromium_src_override; inline_chromium_src_override(globals(), locals())

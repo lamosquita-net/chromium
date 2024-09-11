@@ -151,6 +151,7 @@ static_library("browser") {
       "android/visit_sql_handler.h",
     ]
   }
+  import("//brave/components/history/core/browser/sources.gni") sources += brave_components_history_core_browser_sources deps += brave_components_history_core_browser_deps
 }
 
 source_set("unit_tests") {

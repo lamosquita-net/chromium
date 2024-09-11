@@ -33,7 +33,11 @@ using base::win::RegKey;
 using installer::InstallationState;
 
 const wchar_t GoogleUpdateSettings::kPoliciesKey[] =
+#if defined(OFFICIAL_BUILD)
+    L"SOFTWARE\\Policies\\BraveSoftware\\Update";
+#else
     L"SOFTWARE\\Policies\\Google\\Update";
+#endif
 const wchar_t GoogleUpdateSettings::kUpdatePolicyValue[] = L"UpdateDefault";
 const wchar_t GoogleUpdateSettings::kDownloadPreferencePolicyValue[] =
     L"DownloadPreference";
@@ -45,6 +49,10 @@ const wchar_t GoogleUpdateSettings::kCheckPeriodOverrideMinutes[] =
 const int GoogleUpdateSettings::kCheckPeriodOverrideMinutesMax =
     60 * 24 * 7 * 6;
 
+#if defined(OFFICIAL_BUILD)
+#undef BUILDFLAG_INTERNAL_GOOGLE_CHROME_BRANDING
+#define BUILDFLAG_INTERNAL_GOOGLE_CHROME_BRANDING() (1)
+#endif
 const GoogleUpdateSettings::UpdatePolicy
     GoogleUpdateSettings::kDefaultUpdatePolicy =
 #if BUILDFLAG(GOOGLE_CHROME_BRANDING)

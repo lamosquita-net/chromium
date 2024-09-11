@@ -287,7 +287,7 @@ std::unique_ptr<VideoOverlayWindowViews> VideoOverlayWindowViews::Create(
   // constructor. It's important that the constructor be private, because it
   // doesn't initialize the object fully.
   auto overlay_window =
-      base::WrapUnique(new VideoOverlayWindowViews(controller));
+      base::WrapUnique(new BraveVideoOverlayWindowViews(controller));
 
   overlay_window->CalculateAndUpdateWindowBounds();
   overlay_window->SetUpViews();
@@ -744,6 +744,7 @@ void VideoOverlayWindowViews::UpdateMaxSize(const gfx::Rect& work_area) {
 
   max_size_ = new_max_size;
 
+  BRAVE_UPDATE_MAX_SIZE
   if (!native_widget())
     return;
 

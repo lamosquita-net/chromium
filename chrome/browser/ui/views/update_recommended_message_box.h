@@ -24,6 +24,8 @@ class UpdateRecommendedMessageBox : public views::DialogDelegate {
       delete;
 
  private:
+  friend class UpdateRecommendedMessageBoxMac;
+
   UpdateRecommendedMessageBox();
   ~UpdateRecommendedMessageBox() override;
 

@@ -224,6 +224,7 @@ void ContentSettingsPref::SetWebsiteSetting(
   DCHECK(thread_checker_.CalledOnValidThread());
   DCHECK(prefs_);
   DCHECK(primary_pattern != ContentSettingsPattern::Wildcard() ||
+         BRAVE_SET_WEBSITE_SETTING
          secondary_pattern != ContentSettingsPattern::Wildcard());
 
   // Update in memory value map.

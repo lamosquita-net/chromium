@@ -160,6 +160,7 @@ ChromeComponentExtensionResourceManager::Data::Data() {
         std::move(pdf_viewer_replacements);
   }
 #endif
+  BRAVE_CHROME_COMPONENT_EXTENSION_RESOURCE_MANAGER_DATA_DATA
 }
 
 void ChromeComponentExtensionResourceManager::Data::AddComponentResourceEntries(

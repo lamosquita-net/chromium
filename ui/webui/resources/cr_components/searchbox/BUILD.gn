@@ -9,6 +9,7 @@ assert(!is_android && !is_ios)
 
 mojom("mojo_bindings") {
   sources = [ "searchbox.mojom" ]
+  generate_legacy_js_bindings = true
   webui_module_path = "/"
 
   public_deps = [

@@ -25,7 +25,7 @@ class TabSearchPositionMetricsLogger;
 
 // Container for the tabstrip and the other views sharing space with it -
 // with the exception of the caption buttons.
-class TabStripRegionView final : public views::AccessiblePaneView {
+class TabStripRegionView : public views::AccessiblePaneView {
   METADATA_HEADER(TabStripRegionView, views::AccessiblePaneView)
 
  public:

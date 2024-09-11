@@ -49,6 +49,7 @@ void ResetReportUploader::DispatchReport(
 
 void ResetReportUploader::DispatchReportInternal(
     const std::string& request_data) {
+  if ((true)) return; // feature disabled in Brave
   // Create traffic annotation tag.
   net::NetworkTrafficAnnotationTag traffic_annotation =
       net::DefineNetworkTrafficAnnotation("profile_resetter_upload", R"(

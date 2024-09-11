@@ -41,7 +41,7 @@ except ImportError:
   pass
 
 
-RESULTS_URL = 'https://chromeperf.appspot.com'
+RESULTS_URL = 'https://brave-perf-dashboard.appspot.com'; sys.path.append(os.path.join(path_util.GetChromiumSrcDir(), 'brave', 'tools', 'perf', 'components')); import brave_logdog_helper as logdog_helper
 
 # Until we are migrated to LUCI, we will be utilizing a hard
 # coded master name based on what is passed in in the build properties.

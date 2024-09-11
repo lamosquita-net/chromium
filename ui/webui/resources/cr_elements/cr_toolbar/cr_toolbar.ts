@@ -158,4 +158,4 @@ declare global {
   }
 }
 
-customElements.define(CrToolbarElement.is, CrToolbarElement);
+// customElements.define(CrToolbarElement.is, CrToolbarElement); // We specify our own toolbar

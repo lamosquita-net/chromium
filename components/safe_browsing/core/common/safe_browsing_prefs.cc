@@ -101,6 +101,7 @@ bool IsSafeBrowsingEnabled(const PrefService& prefs) {
 }
 
 bool IsEnhancedProtectionEnabled(const PrefService& prefs) {
+  BRAVE_IS_ENHANCED_PROTECTION_ENABLED
   // SafeBrowsingEnabled is checked too due to devices being out
   // of sync or not on a version that includes SafeBrowsingEnhanced pref.
   return prefs.GetBoolean(prefs::kSafeBrowsingEnhanced) &&

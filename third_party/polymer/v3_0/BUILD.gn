@@ -39,10 +39,12 @@ js_files = [
 # Also needed on LaCros for Print Preview. Remove once CrOS Print Preview
 # launches.
 if (is_chromeos) {
+} if (!is_android) {
   js_files += [ "iron-fit-behavior/iron-fit-behavior.js" ]
 }
 
 if (is_chromeos_ash) {
+} if (!is_android) {
   js_files += [
     "iron-a11y-announcer/iron-a11y-announcer.js",
     "iron-behaviors/iron-control-state.js",
@@ -269,11 +271,13 @@ ts_library("library") {
   # Also needed on LaCros for Print Preview. Remove once CrOS Print Preview
   # launches.
   if (is_chromeos) {
+  } if (!is_android) {
     definitions +=
         [ "components-chromium/iron-fit-behavior/iron-fit-behavior.d.ts" ]
   }
 
   if (is_chromeos_ash) {
+  } if (!is_android) {
     definitions += [
       "components-chromium/iron-a11y-announcer/iron-a11y-announcer.d.ts",
       "components-chromium/iron-collapse/iron-collapse.d.ts",
@@ -298,4 +302,5 @@ ts_library("library") {
       "components-chromium/paper-tooltip/paper-tooltip.d.ts",
     ]
   }
+  import("//brave/third_party/polymer/v3_0/sources.gni") visibility += brave_polymer_library_visibility
 }

@@ -636,6 +636,7 @@ ProcessExitResult RunSetup(const Configuration& configuration,
   // on to setup.exe
   AppendCommandLineFlags(configuration.command_line(), &cmd_line);
 
+  BRAVE_RUN_SETUP
   return RunProcessAndWait(setup_exe.get(), cmd_line.get(),
                            RUN_SETUP_FAILED_FILE_NOT_FOUND,
                            RUN_SETUP_FAILED_PATH_NOT_FOUND,

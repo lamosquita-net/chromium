@@ -36,6 +36,7 @@ template("probe_generator") {
       "--output_dir",
       rebase_path(invoker.output, root_build_dir),
     ]
+    import("//brave/third_party/blink/renderer/core/probe/sources.gni") deps = brave_third_party_blink_renderer_core_probe_instrumentation_probes_deps
   }
 
   source_set("${target_name}__headers") {

@@ -53,6 +53,7 @@ grit("components_strings") {
   if (is_android) {
     outputs += android_components_strings_java_resources
   }
+  deps = [ "//brave/components/resources:strings" ]
 }
 
 if (is_android) {

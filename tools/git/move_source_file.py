@@ -91,6 +91,7 @@ def UpdatePostMove(from_path, to_path):
   to update references in .gyp(i) files using a heuristic.
   """
   # Include paths always use forward slashes.
+  from move_source_fille_utils import to_src_relative_path; from_path, to_path = to_src_relative_path(from_path, to_path)
   from_path = from_path.replace('\\', '/')
   to_path = to_path.replace('\\', '/')
   extension = os.path.splitext(from_path)[1]
@@ -115,6 +116,7 @@ def UpdatePostMove(from_path, to_path):
   mffr.MultiFileFindReplace(
       r'(//.*)%s' % re.escape(from_path),
       r'\1%s' % to_path,
+      ['*.gni', '*.gn'] + # Brave uses full paths (start with //) to add files
       ['*.cc', '*.h', '*.m', '*.mm', '*.cpp'])
 
   # Update references in GYP and BUILD.gn files.
@@ -150,6 +152,7 @@ def UpdatePostMove(from_path, to_path):
       return (parts[0], '')
 
   visiting_directory = ''
+  from move_source_fille_utils import to_cwd_relative_path; from_path, to_path = to_cwd_relative_path(from_path, to_path)
   from_rest = from_path
   to_rest = to_path
   while True:
@@ -186,6 +189,7 @@ def UpdateIncludeGuard(old_path, new_path):
   old_guard = MakeIncludeGuardName(old_path)
   new_guard = MakeIncludeGuardName(new_path)
 
+  from move_source_fille_utils import to_cwd_relative_path; [new_path] = to_cwd_relative_path(new_path)
   with open(new_path) as f:
     contents = f.read()
 

@@ -337,6 +337,7 @@ ExtensionsMenuViewController::~ExtensionsMenuViewController() {
 }
 
 void ExtensionsMenuViewController::OpenMainPage() {
+  BRAVE_EXTENSIONS_MENU_VIEW_CONTROLLER_OPEN_MAIN_PAGE
   auto main_page = std::make_unique<ExtensionsMenuMainPageView>(browser_, this);
   UpdateMainPage(main_page.get(), GetActiveWebContents());
   PopulateMainPage(main_page.get());

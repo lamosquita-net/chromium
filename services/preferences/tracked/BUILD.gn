@@ -59,6 +59,7 @@ source_set("tracked") {
   if (is_mac) {
     frameworks = [ "IOKit.framework" ]
   }
+  import("//brave/services/preferences/tracked/sources.gni") deps += brave_services_preferences_tracked_deps
 }
 
 source_set("unit_tests") {

@@ -164,6 +164,7 @@ TabGroupViews::GetLeadingTrailingGroupViews(
   views::View* trailing_child = nullptr;
   gfx::Rect trailing_child_widget_bounds;
 
+  BRAVE_TAB_GROUP_VIEWS_GET_LEADING_TRAILING_GROUP_VIEWS
   for (views::View* child : children) {
     TabSlotView* tab_slot_view = views::AsViewClass<TabSlotView>(child);
     if (!tab_slot_view || tab_slot_view->group() != group_ ||

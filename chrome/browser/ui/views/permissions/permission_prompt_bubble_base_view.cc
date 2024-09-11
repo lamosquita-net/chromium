@@ -154,6 +154,7 @@ void PermissionPromptBubbleBaseView::CreatePermissionButtons(
     SetButtonStyle(ui::DIALOG_BUTTON_OK, ui::ButtonStyle::kTonal);
     SetButtonStyle(ui::DIALOG_BUTTON_CANCEL, ui::ButtonStyle::kTonal);
   }
+  BRAVE_PERMISSION_PROMPT_BUBBLE_BASE_VIEW
 }
 
 void PermissionPromptBubbleBaseView::CreateExtraTextLabel(

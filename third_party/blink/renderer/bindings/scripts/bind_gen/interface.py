@@ -7516,3 +7516,4 @@ def generate_interfaces(task_queue):
                          "InitIDLInterfacesForTesting",
                          "init_idl_interfaces_for_testing",
                          for_testing=True)
+from brave_chromium_utils import inline_chromium_src_override; inline_chromium_src_override(globals(), locals())

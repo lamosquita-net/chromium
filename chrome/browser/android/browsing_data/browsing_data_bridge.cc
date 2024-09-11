@@ -133,6 +133,7 @@ static void JNI_BrowsingDataBridge_ClearBrowsingData(
         remove_mask |= chrome_browsing_data_remover::DATA_TYPE_CONTENT_SETTINGS;
         break;
       case browsing_data::BrowsingDataType::DOWNLOADS:
+      BRAVE_CLEAR_BROWSING_DATA
       case browsing_data::BrowsingDataType::HOSTED_APPS_DATA:
         // Only implemented on Desktop.
         NOTREACHED_IN_MIGRATION();

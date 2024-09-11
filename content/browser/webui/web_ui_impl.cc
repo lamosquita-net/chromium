@@ -82,6 +82,7 @@ WebUIImpl::WebUIImpl(WebContents* web_contents)
       web_contents_observer_(
           std::make_unique<WebUIMainFrameObserver>(this, web_contents_)) {
   DCHECK(web_contents_);
+  BRAVE_WEB_UI_IMPL
 }
 
 WebUIImpl::WebUIImpl(NavigationRequest* request)

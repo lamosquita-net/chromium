@@ -730,6 +730,7 @@ SkPath IconLabelBubbleView::GetHighlightPath() const {
   const float corner_radius = highlight_bounds.height() / 2.f;
   const SkRect rect = RectToSkRect(highlight_bounds);
 
+  BRAVE_ICON_LABEL_BUBBLE_VIEW_GET_HIGHLIGHT_PATH
   return SkPath().addRoundRect(rect, corner_radius, corner_radius);
   // return SkPath().addCircle(12, radius, radius); // size / 2
 }

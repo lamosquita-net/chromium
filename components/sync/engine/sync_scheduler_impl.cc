@@ -475,6 +475,7 @@ void SyncSchedulerImpl::HandleFailure(
     SDVLOG(2) << "Sync cycle failed.  Will back off for "
               << wait_interval_->length.InMilliseconds() << "ms.";
   }
+  BRAVE_SYNC_SCHEDULER_IMPL_HANDLE_FAILURE
 }
 
 void SyncSchedulerImpl::DoPollSyncCycleJob() {

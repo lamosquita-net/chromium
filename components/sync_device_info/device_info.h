@@ -153,6 +153,7 @@ class DeviceInfo {
   DeviceInfo(const DeviceInfo&) = delete;
   DeviceInfo& operator=(const DeviceInfo&) = delete;
 
+  virtual
   ~DeviceInfo();
 
   // Sync specific unique identifier for the device. Note if a device

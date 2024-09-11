@@ -590,6 +590,8 @@ class IDLSchema(object):
           documentation_options['namespace'] = node.value
         elif node.name == 'documented_in':
           documentation_options['documented_in'] = node.value
+        elif node.name == 'none_as_absent_optional':
+          compiler_options['none_as_absent_optional'] = True
         else:
           continue
       else:

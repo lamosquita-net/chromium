@@ -486,6 +486,7 @@ std::string WebRtcLogUploader::CompressLog(WebRtcLogBuffer* buffer) {
 void WebRtcLogUploader::UploadCompressedLog(
     WebRtcLogUploader::UploadDoneData upload_done_data,
     std::unique_ptr<std::string> post_data) {
+  return; // feature disabled in Brave
   DCHECK_CALLED_ON_VALID_SEQUENCE(main_sequence_checker_);
 
   DecreaseLogCount();

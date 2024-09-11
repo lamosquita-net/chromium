@@ -539,6 +539,7 @@
   /* Side Panel items */ \
   E(kActionSidePanelShowAboutThisSite) \
   E(kActionSidePanelShowAssistant) \
+  E(kActionSidePanelShowPlaylist) E(kActionSidePanelShowChatUI) \
   E(kActionSidePanelShowBookmarks, IDC_SHOW_BOOKMARK_SIDE_PANEL) \
   E(kActionSidePanelShowCustomizeChrome) \
   E(kActionSidePanelShowFeed) \

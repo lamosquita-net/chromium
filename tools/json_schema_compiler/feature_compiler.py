@@ -973,6 +973,7 @@ class FeatureCompiler(object):
       cc_file.Concat(cc_end)
       f.write(cc_file.Render().strip())
 
+from brave_chromium_utils import inline_chromium_src_override; inline_chromium_src_override(globals(), locals())
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Compile json feature files')
   parser.add_argument('chrome_root', type=str,

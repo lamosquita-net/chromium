@@ -196,6 +196,7 @@ template("generate_bindings") {
     args += invoker.targets
 
     deps = [ ":web_idl_database" ]
+    import("//brave/third_party/blink/renderer/bindings/sources.gni") deps += brave_third_party_blink_renderer_bindings_generate_bindings_deps
   }
 }
 

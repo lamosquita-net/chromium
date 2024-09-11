@@ -3458,6 +3458,7 @@ void NavigationRequest::OnRequestRedirected(
   common_params_->url = redirect_info.new_url;
   common_params_->method = redirect_info.new_method;
   common_params_->referrer->url = GURL(redirect_info.new_referrer);
+  BRAVE_ONREQUESTREDIRECTED_MAYBEHIDEREFERRER
   common_params_->referrer = Referrer::SanitizeForRequest(
       common_params_->url, *common_params_->referrer);
 
@@ -5234,6 +5235,7 @@ void NavigationRequest::OnStartChecksComplete(
   headers.MergeFrom(TakeModifiedRequestHeaders());
   begin_params_->headers = headers.ToString();
 
+  BRAVE_ONSTARTCHECKSCOMPLETE_MAYBEHIDEREFERRER
   // TODO(clamy): Avoid cloning the navigation params and create the
   // ResourceRequest directly here.
   std::vector<std::unique_ptr<NavigationLoaderInterceptor>> interceptor;

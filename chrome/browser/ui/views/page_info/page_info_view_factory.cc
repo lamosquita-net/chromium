@@ -426,6 +426,7 @@ const ui::ImageModel PageInfoViewFactory::GetPermissionIcon(
 
   icon = &gfx::kNoneIcon;
   switch (info.type) {
+    BRAVE_PAGE_INFO_VIEW_FACTORY_GET_PERMISSION_ICON
     case ContentSettingsType::COOKIES:
       icon = &vector_icons::kDatabaseIcon;
       break;

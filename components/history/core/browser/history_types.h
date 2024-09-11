@@ -53,6 +53,8 @@ enum VisitSource {
   SOURCE_FIREFOX_IMPORTED = 3,
   SOURCE_IE_IMPORTED = 4,
   SOURCE_SAFARI_IMPORTED = 5,
+  SOURCE_CHROME_IMPORTED = 6,
+  SOURCE_BRAVE_IMPORTED = 7,
 };
 
 // Corresponds to the "id" column of the "visits" SQL table.

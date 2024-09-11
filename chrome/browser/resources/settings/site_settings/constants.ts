@@ -63,6 +63,7 @@ export enum ContentSettingsTypes {
   PDF_DOCUMENTS = 'pdfDocuments',
   SITE_DATA = 'site-data',
   OFFER_WRITING_HELP = 'offer-writing-help',
+  AUTOPLAY = 'autoplay', ETHEREUM = 'ethereum', SOLANA = 'solana', BRAVE_SHIELDS = 'braveShields', GOOGLE_SIGN_IN = 'googleSignIn', LOCALHOST_ACCESS = 'localhostAccess',
 }
 
 /**

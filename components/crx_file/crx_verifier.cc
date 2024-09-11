@@ -205,6 +205,7 @@ VerifierResult VerifyCrx3(
       found_publisher_key =
           found_publisher_key || key_hash == publisher_key ||
           (accept_publisher_test_key && key_hash == *publisher_test_key);
+      found_publisher_key = found_publisher_key || IsBravePublisher(key_hash);
       auto v = std::make_unique<crypto::SignatureVerifier>();
       static_assert(sizeof(unsigned char) == sizeof(uint8_t),
                     "Unsupported char size.");

@@ -60,7 +60,7 @@ const int kTranslateInitCheckDelayMs = 150;
 
 // The maximum number of times we'll check to see if the translate library
 // injected in the page is ready.
-const int kMaxTranslateInitCheckAttempts = 5;
+const int kMaxTranslateInitCheckAttempts = 11;
 
 // The delay we wait in milliseconds before checking whether the translation has
 // finished.
