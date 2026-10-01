@@ -1488,6 +1488,8 @@ policies:
   1487: DeviceMaxUserProfiles
   1488: ""
   1489: LaunchOnStartupEnabled
+  1490: ""
+  1491: AllHttpAuthSchemesAllowedForProxies
 
 atomic_groups:
   1: Homepage

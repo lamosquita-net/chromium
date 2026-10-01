@@ -3547,6 +3547,9 @@ std::unique_ptr<ConfigurationPolicyHandlerList> BuildHandlerList(
   handlers->AddHandler(std::make_unique<URLSchemeListPolicyHandler>(
       key::kAllHttpAuthSchemesAllowedForOrigins,
       prefs::kAllHttpAuthSchemesAllowedForOrigins));
+  handlers->AddHandler(std::make_unique<URLSchemeListPolicyHandler>(
+      key::kAllHttpAuthSchemesAllowedForProxies,
+      prefs::kAllHttpAuthSchemesAllowedForProxies));
 
   handlers->AddHandler(std::make_unique<PrivacySandboxPolicyHandler>());
 
