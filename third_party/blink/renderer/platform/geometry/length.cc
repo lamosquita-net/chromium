@@ -148,7 +148,7 @@ class CalculationValueHandleMap {
 };
 
 static CalculationValueHandleMap& CalcHandles() {
-  DCHECK(IsMainThread());
+  CHECK(IsMainThread());
   DEFINE_STATIC_LOCAL(CalculationValueHandleMap, handle_map, ());
   return handle_map;
 }
