@@ -9148,8 +9148,8 @@ void WebContentsImpl::EnumerateDirectory(
   absl::Cleanup cancel_chooser = [&listener] {
     listener->FileSelectionCanceled();
   };
-  if (visibility_ == Visibility::HIDDEN) {
-    // Do not allow background tab to open file chooser.
+  if (visibility_ != Visibility::VISIBLE) {
+    // Do not allow background or occluded tab to open file chooser.
     return;
   }
   if (!delegate_->IsContentsActive(this)) {
@@ -9980,8 +9980,8 @@ void WebContentsImpl::RunFileChooser(
   absl::Cleanup cancel_chooser = [&listener] {
     listener->FileSelectionCanceled();
   };
-  if (visibility_ == Visibility::HIDDEN) {
-    // Do not allow background tab to open file chooser.
+  if (visibility_ != Visibility::VISIBLE) {
+    // Do not allow background or occluded tab to open file chooser.
     return;
   }
   if (delegate_ && !delegate_->IsContentsActive(this)) {
