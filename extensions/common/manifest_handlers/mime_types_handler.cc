@@ -27,7 +27,7 @@
 #include "extensions/common/install_warning.h"
 #include "extensions/common/manifest.h"
 #include "extensions/common/manifest_constants.h"
-#include "mime_types_handler.h"
+#include "extensions/common/manifest_handlers/mime_types_handler_permission.h"
 
 namespace keys = extensions::manifest_keys;
 namespace errors = extensions::manifest_errors;
@@ -90,8 +90,8 @@ bool ParseDictFormat(extensions::Extension* extension,
       continue;
     }
     if (!is_legacy_extension &&
-        !std::ranges::contains(MimeTypesHandler::GetPublicAllowedMIMETypeList(),
-                               mime_type)) {
+        !extensions::MimeTypesHandlerPermission::PermissionIDForMimeType(
+            mime_type)) {
       extension->AddInstallWarning(extensions::InstallWarning(
           base::StrCat({"mime_types_handler: ignoring unsupported "
                         "MIME type '",
@@ -142,13 +142,6 @@ MimeTypesHandler::GetMIMETypeAllowlist() {
       allowlist_vector{std::begin(kMIMETypeHandlersAllowlist),
                        std::end(kMIMETypeHandlersAllowlist)};
   return *allowlist_vector;
-}
-
-// static
-base::span<const std::string_view>
-MimeTypesHandler::GetPublicAllowedMIMETypeList() {
-  static constexpr std::string_view kAllowed[] = {"application/pdf"};
-  return kAllowed;
 }
 
 MimeTypesHandler::MimeTypeConfig::MimeTypeConfig() = default;
@@ -298,6 +291,23 @@ bool MimeTypesHandlerParser::Parse(extensions::Extension* extension,
 
   extension->SetManifestData(std::move(info));
   return true;
+}
+
+extensions::ManifestPermission* MimeTypesHandlerParser::CreatePermission() {
+  return new extensions::MimeTypesHandlerPermission();
+}
+
+extensions::ManifestPermission*
+MimeTypesHandlerParser::CreateInitialRequiredPermission(
+    const extensions::Extension* extension) {
+  const MimeTypesHandler* handler = MimeTypesHandler::Get(*extension);
+  // Plugin handlers are trusted by the allowlist and never prompt.
+  if (!handler || handler->IsPluginExtension()) {
+    return nullptr;
+  }
+  return new extensions::MimeTypesHandlerPermission(
+      extensions::MimeTypesHandlerPermission::MimeTypeSet(
+          handler->GetSupportedMimeTypes()));
 }
 
 base::span<const char* const> MimeTypesHandlerParser::Keys() const {
