@@ -2263,10 +2263,13 @@ error::Error GLES2DecoderPassthroughImpl::DoWritePixelsYUVINTERNAL(
       return error::kNoError;
     }
   }
-  ScopedPixelLocalStorageInterrupt scoped_pls_interrupt(this);
   auto* shared_context_state = lazy_context_->shared_context_state();
-  ui::ScopedMakeCurrent smc(shared_context_state->context(),
-                            shared_context_state->surface());
+  ScopedSharedContextCurrent scoped_current(
+      this, shared_context_state->context(), shared_context_state->surface());
+  if (!scoped_current.IsContextCurrent()) {
+    MarkContextLost(error::kMakeCurrentFailed);
+    return error::kLostContext;
+  }
 
   if (src_yuv_plane_config > static_cast<int>(SkYUVAInfo::PlaneConfig::kLast)) {
     InsertError(GL_INVALID_ENUM,
@@ -2469,9 +2472,13 @@ error::Error GLES2DecoderPassthroughImpl::DoReadbackARGBImagePixelsINTERNAL(
       return error::kNoError;
     }
   }
-  ScopedPixelLocalStorageInterrupt scoped_pls_interrupt(this);
-  ui::ScopedMakeCurrent smc(lazy_context_->shared_context_state()->context(),
-                            lazy_context_->shared_context_state()->surface());
+  ScopedSharedContextCurrent scoped_current(
+      this, lazy_context_->shared_context_state()->context(),
+      lazy_context_->shared_context_state()->surface());
+  if (!scoped_current.IsContextCurrent()) {
+    MarkContextLost(error::kMakeCurrentFailed);
+    return error::kLostContext;
+  }
 
   if (dst_sk_color_type > kLastEnum_SkColorType) {
     InsertError(GL_INVALID_ENUM,
@@ -4803,9 +4810,13 @@ error::Error GLES2DecoderPassthroughImpl::DoCopySharedImageINTERNAL(
       return error::kNoError;
     }
   }
-  ScopedPixelLocalStorageInterrupt scoped_pls_interrupt(this);
-  ui::ScopedMakeCurrent smc(lazy_context_->shared_context_state()->context(),
-                            lazy_context_->shared_context_state()->surface());
+  ScopedSharedContextCurrent scoped_current(
+      this, lazy_context_->shared_context_state()->context(),
+      lazy_context_->shared_context_state()->surface());
+  if (!scoped_current.IsContextCurrent()) {
+    MarkContextLost(error::kMakeCurrentFailed);
+    return error::kLostContext;
+  }
   CopySharedImageHelper helper(group_->shared_image_representation_factory(),
                                lazy_context_->shared_context_state());
   auto result = helper.CopySharedImage(xoffset, yoffset, x, y, width, height,
@@ -4833,9 +4844,13 @@ error::Error GLES2DecoderPassthroughImpl::DoCopySharedImageToTextureINTERNAL(
       return error::kNoError;
     }
   }
-  ScopedPixelLocalStorageInterrupt scoped_pls_interrupt(this);
-  ui::ScopedMakeCurrent smc(lazy_context_->shared_context_state()->context(),
-                            lazy_context_->shared_context_state()->surface());
+  ScopedSharedContextCurrent scoped_current(
+      this, lazy_context_->shared_context_state()->context(),
+      lazy_context_->shared_context_state()->surface());
+  if (!scoped_current.IsContextCurrent()) {
+    MarkContextLost(error::kMakeCurrentFailed);
+    return error::kLostContext;
+  }
 
   if (target != GL_TEXTURE_2D && target != GL_TEXTURE_RECTANGLE_ANGLE) {
     InsertError(GL_INVALID_VALUE, "Invalid texture target");
