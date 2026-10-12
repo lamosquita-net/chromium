@@ -2124,6 +2124,9 @@ void TabStripModel::RemoveFromGroupImpl(const std::vector<int>& indices) {
 
   for (const auto& [immutable_group_id, immutable_group_indices] :
        indices_per_tab_group) {
+    if (!group_model_->ContainsTabGroup(immutable_group_id)) {
+      continue;
+    }
     auto group_indices = immutable_group_indices;
     const TabGroup* group = group_model_->GetTabGroup(immutable_group_id);
     CHECK(group);
@@ -2135,6 +2138,9 @@ void TabStripModel::RemoveFromGroupImpl(const std::vector<int>& indices) {
         static_cast<int>(immutable_group_indices.size()) ==
             group->tab_count()) {
       ExitFocusMode(TabGroupFocusExitReason::kGroupUngrouped);
+      if (!group_model_->ContainsTabGroup(immutable_group_id)) {
+        continue;
+      }
     }
 
     tabs::TabInterface* last_tab_in_group = group->GetLastTab();
@@ -2157,8 +2163,10 @@ void TabStripModel::RemoveFromGroupImpl(const std::vector<int>& indices) {
 
     MoveTabsAndSetPropertiesImpl(left_of_group, first_tab_index, std::nullopt,
                                  false);
-    MoveTabsAndSetPropertiesImpl(right_of_group, last_tab_index + 1,
-                                 std::nullopt, false);
+    if (group_model_->ContainsTabGroup(immutable_group_id)) {
+      MoveTabsAndSetPropertiesImpl(right_of_group, last_tab_index + 1,
+                                   std::nullopt, false);
+    }
   }
 }
 
@@ -5562,7 +5570,10 @@ void TabStripModel::MoveTabsWithNotifications(
         observer.OnTabPinnedStateChanged(tab, final_index);
       }
     }
+  }
 
+  for (const auto& notification : notifications) {
+    tabs::TabInterface* tab = GetTabAtIndex(GetIndexOfTab(notification.tab));
     MaybeUpdateFocusModeForMovedTab(tab, notification.initial_pinned,
                                     initial_focused_group);
   }
