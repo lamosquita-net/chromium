@@ -1019,6 +1019,10 @@ void DevToolsUIBindings::InnerAttach() {
 
 // DevToolsEmbedderMessageDispatcher::Delegate implementation -----------------
 
+bool DevToolsUIBindings::IsLocalFrontend() const {
+  return is_local_frontend_;
+}
+
 void DevToolsUIBindings::ActivateWindow() {
   delegate_->ActivateWindow();
 }
@@ -1183,14 +1187,6 @@ void DevToolsUIBindings::OnAidaResponse(
 void DevToolsUIBindings::DispatchHttpRequest(
     DispatchCallback callback,
     const DevToolsDispatchHttpRequestParams& params) {
-  if (!is_local_frontend_) {
-    base::DictValue response_dict;
-    response_dict.Set("error", "Request validation failed");
-    base::Value response = base::Value(std::move(response_dict));
-    std::move(callback).Run(&response);
-    return;
-  }
-
   if (params.stream_id.has_value()) {
     int stream_id = *params.stream_id;
     auto stream_writer = base::BindRepeating(
@@ -1452,9 +1448,6 @@ void DevToolsUIBindings::OpenSearchResultsInNewTab(const std::string& query) {
 void DevToolsUIBindings::ShowItemInFolder(const std::string& file_system_path) {
   CHECK(IsValidFrontendURL(web_contents_->GetLastCommittedURL()) &&
         frontend_host_);
-  if (!is_local_frontend_) {
-    return;
-  }
   if (!file_helper_.IsFileInFileSystem(file_system_path)) {
     return;
   }
@@ -1481,9 +1474,6 @@ void DevToolsUIBindings::SaveToFile(const std::string& url,
 
 void DevToolsUIBindings::AppendToFile(const std::string& url,
                                       const std::string& content) {
-  if (!is_local_frontend_) {
-    return;
-  }
   file_helper_.Append(url, content,
                       base::BindOnce(&DevToolsUIBindings::AppendedTo,
                                      weak_factory_.GetWeakPtr(), url));
@@ -1524,9 +1514,6 @@ void DevToolsUIBindings::AddFileSystem(const std::string& type) {
 void DevToolsUIBindings::RemoveFileSystem(const std::string& file_system_path) {
   CHECK(IsValidFrontendURL(web_contents_->GetLastCommittedURL()) &&
         frontend_host_);
-  if (!is_local_frontend_) {
-    return;
-  }
   file_helper_.RemoveFileSystem(file_system_path);
 }
 
@@ -1534,9 +1521,6 @@ void DevToolsUIBindings::UpgradeDraggedFileSystemPermissions(
     const std::string& file_system_url) {
   CHECK(IsValidFrontendURL(web_contents_->GetLastCommittedURL()) &&
         frontend_host_);
-  if (!is_local_frontend_) {
-    return;
-  }
   file_helper_.UpgradeDraggedFileSystemPermissions(
       file_system_url,
       base::BindRepeating(&DevToolsUIBindings::HandleDirectoryPermissions,
@@ -1551,10 +1535,6 @@ void DevToolsUIBindings::ConnectAutomaticFileSystem(
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
   CHECK(IsValidFrontendURL(web_contents_->GetLastCommittedURL()) &&
         frontend_host_);
-  if (!is_local_frontend_) {
-    ConnectAutomaticFileSystemDone(std::move(callback), false);
-    return;
-  }
   // Ensure that the |file_system_uuid| is indeed a valid UUID.
   base::Uuid uuid = base::Uuid::ParseCaseInsensitive(file_system_uuid);
   if (!uuid.is_valid()) {
@@ -1586,9 +1566,6 @@ void DevToolsUIBindings::DisconnectAutomaticFileSystem(
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
   CHECK(IsValidFrontendURL(web_contents_->GetLastCommittedURL()) &&
         frontend_host_);
-  if (!is_local_frontend_) {
-    return;
-  }
   file_helper_.DisconnectAutomaticFileSystem(file_system_path);
 }
 
@@ -1698,9 +1675,6 @@ void DevToolsUIBindings::SetDevicesDiscoveryConfig(
     const std::string& port_forwarding_config,
     bool network_discovery_enabled,
     const std::string& network_discovery_config) {
-  if (!is_local_frontend_) {
-    return;
-  }
   std::optional<base::DictValue> parsed_port_forwarding =
       base::JSONReader::ReadDict(port_forwarding_config,
                                  base::JSON_PARSE_CHROMIUM_EXTENSIONS);
@@ -1761,9 +1735,6 @@ void DevToolsUIBindings::SendPortForwardingStatus(base::Value status) {
 }
 
 void DevToolsUIBindings::SetDevicesUpdatesEnabled(bool enabled) {
-  if (!is_local_frontend_ && enabled) {
-    return;
-  }
 #if BUILDFLAG(IS_ANDROID)
   NOTIMPLEMENTED();
 #else
@@ -1813,9 +1784,6 @@ void DevToolsUIBindings::SetDevicesUpdatesEnabled(bool enabled) {
 
 void DevToolsUIBindings::OpenRemotePage(const std::string& browser_id,
                                         const std::string& url) {
-  if (!is_local_frontend_) {
-    return;
-  }
   if (!remote_targets_handler_) {
     return;
   }
@@ -1823,9 +1791,6 @@ void DevToolsUIBindings::OpenRemotePage(const std::string& browser_id,
 }
 
 void DevToolsUIBindings::OpenNodeFrontend() {
-  if (!is_local_frontend_) {
-    return;
-  }
   delegate_->OpenNodeFrontend();
 }
 
@@ -2565,16 +2530,10 @@ void DevToolsUIBindings::SetChromeFlagInternal(Profile* profile,
 
 void DevToolsUIBindings::SetChromeFlag(const std::string& flag_name,
                                        bool value) {
-  if (!is_local_frontend_) {
-    return;
-  }
   SetChromeFlagInternal(profile_, flag_name, value);
 }
 
 void DevToolsUIBindings::RequestRestart() {
-  if (!is_local_frontend_) {
-    return;
-  }
   chrome::AttemptRestart();
 }
 
@@ -3097,9 +3056,6 @@ void DevToolsUIBindings::CanShowSurvey(DispatchCallback callback,
 }
 
 bool DevToolsUIBindings::EnsureAidaClientAvailable() {
-  if (!is_local_frontend_) {
-    return false;
-  }
   if (!can_access_aida_ || AidaClient::CanUseAida(profile_).blocked) {
     return false;
   }
