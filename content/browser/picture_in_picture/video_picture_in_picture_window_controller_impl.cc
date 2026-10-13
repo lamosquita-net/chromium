@@ -7,6 +7,7 @@
 #include <set>
 #include <utility>
 
+#include "base/memory/weak_ptr.h"
 #include "components/viz/common/surfaces/surface_id.h"
 #include "content/browser/media/media_web_contents_observer.h"
 #include "content/browser/media/session/media_session_impl.h"
@@ -316,7 +317,11 @@ PictureInPictureResult VideoPictureInPictureWindowControllerImpl::StartSession(
   WebContentsDelegate* delegate = web_contents()->GetDelegate();
   if (delegate && (IsImmersive() ? delegate->IsImmersivePlaybackEnabled()
                                  : delegate->IsPictureInPictureEnabled())) {
+    base::WeakPtr<WebContents> weak_web_contents = web_contents()->GetWeakPtr();
     result = GetWebContentsImpl()->EnterPictureInPicture();
+    if (!weak_web_contents) {
+      return PictureInPictureResult::kNotSupported;
+    }
   }
 
   // Picture-in-Picture may not be supported by all embedders, so we should only
