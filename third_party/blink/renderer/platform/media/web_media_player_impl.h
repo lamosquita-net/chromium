@@ -91,6 +91,7 @@ namespace blink {
 class BufferedDataSourceHostImpl;
 class PowerStatusHelper;
 class KURL;
+class SecurityOrigin;
 class ThreadSafeBrowserInterfaceBrokerProxy;
 class UrlIndex;
 class VideoDecodeStatsReporter;
@@ -885,6 +886,7 @@ class PLATFORM_EXPORT WebMediaPlayerImpl
 
   std::unique_ptr<BufferedDataSourceHostImpl> buffered_data_source_host_;
   raw_ptr<UrlIndex> url_index_ = nullptr;
+  const scoped_refptr<const SecurityOrigin> security_origin_;
   scoped_refptr<viz::RasterContextProvider> raster_context_provider_;
 
   // Video rendering members.

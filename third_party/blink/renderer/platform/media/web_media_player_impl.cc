@@ -105,6 +105,7 @@
 #include "third_party/blink/renderer/platform/scheduler/public/post_cross_thread_task.h"
 #include "third_party/blink/renderer/platform/scheduler/public/worker_pool.h"
 #include "third_party/blink/renderer/platform/weborigin/kurl.h"
+#include "third_party/blink/renderer/platform/weborigin/security_origin.h"
 #include "third_party/blink/renderer/platform/wtf/cross_thread_copier_base.h"
 #include "third_party/blink/renderer/platform/wtf/cross_thread_copier_std.h"
 #include "third_party/blink/renderer/platform/wtf/cross_thread_functional.h"
@@ -490,6 +491,7 @@ WebMediaPlayerImpl::WebMediaPlayerImpl(
                                                   std::move(demuxer_override))),
       tick_clock_(base::DefaultTickClock::GetInstance()),
       url_index_(url_index),
+      security_origin_(frame->GetSecurityOrigin()),
       raster_context_provider_(std::move(raster_context_provider)),
       vfc_task_runner_(std::move(video_frame_compositor_task_runner)),
       compositor_(std::move(compositor)),
@@ -981,7 +983,8 @@ void WebMediaPlayerImpl::DoLoad(LoadType load_type,
       main_task_runner_,
       url_index_->GetByUrl(
           url, static_cast<UrlData::CorsMode>(cors_mode),
-          is_cache_disabled ? UrlData::kCacheDisabled : UrlData::kNormal),
+          is_cache_disabled ? UrlData::kCacheDisabled : UrlData::kNormal,
+          security_origin_),
       media_log_.get(), buffered_data_source_host_.get(),
       blink::BindRepeating(&WebMediaPlayerImpl::NotifyDownloading, weak_this_));
 
@@ -1751,7 +1754,8 @@ void WebMediaPlayerImpl::GetUrlData(
   DCHECK(main_task_runner_->BelongsToCurrentThread());
   auto url_data = url_index_->GetByUrl(
       KURL(gurl), static_cast<UrlData::CorsMode>(cors_mode_),
-      TranslateCacheMode(is_cache_disabled_, cache_mode), encoding_mode);
+      TranslateCacheMode(is_cache_disabled_, cache_mode), security_origin_,
+      encoding_mode);
   std::move(cb).Run(std::move(url_data));
 }
 
