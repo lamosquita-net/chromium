@@ -6914,6 +6914,13 @@
       status: "test",
     },
     {
+      // Kill switch for https://crbug.com/568974861, which prevents painting
+      // view transition content (which may contain cross-origin frames) under
+      // SVG reference filters.
+      name: "ViewTransitionPreventSvgFilterPaint",
+      status: "stable",
+    },
+    {
       name: "VisibilityCollapseColumn",
     },
     {
