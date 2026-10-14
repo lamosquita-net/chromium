@@ -1253,6 +1253,7 @@ class ChromeContentBrowserClient : public content::ContentBrowserClient {
       const std::string& embedder_histogram_suffix) override;
 
   bool IsExemptFromWindowSizeCheck(const GURL& url) override;
+  bool IsNoStatePrefetch(content::WebContents* web_contents) override;
 
  protected:
   static bool HandleWebUI(GURL* url, content::BrowserContext* browser_context);

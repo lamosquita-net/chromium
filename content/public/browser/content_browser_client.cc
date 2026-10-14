@@ -2076,4 +2076,8 @@ bool ContentBrowserClient::IsExemptFromWindowSizeCheck(const GURL& url) {
   return url.SchemeIs(kChromeUIScheme) || url.SchemeIs(kChromeDevToolsScheme);
 }
 
+bool ContentBrowserClient::IsNoStatePrefetch(WebContents* web_contents) {
+  return false;
+}
+
 }  // namespace content

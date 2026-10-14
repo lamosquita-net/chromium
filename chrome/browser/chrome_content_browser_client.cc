@@ -9867,3 +9867,9 @@ bool ChromeContentBrowserClient::IsExemptFromWindowSizeCheck(const GURL& url) {
   return false;
 #endif
 }
+
+bool ChromeContentBrowserClient::IsNoStatePrefetch(
+    content::WebContents* web_contents) {
+  return prerender::ChromeNoStatePrefetchContentsDelegate::FromWebContents(
+             web_contents) != nullptr;
+}
