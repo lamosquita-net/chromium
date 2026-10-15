@@ -125,6 +125,28 @@ bool IsInspectionAllowed(Profile* profile,
   return IsInspectionAllowed(profile, agent_host->GetURL());
 }
 
+bool IsInspectionAllowed(Profile* profile, content::RenderFrameHost* rfh) {
+  if (!rfh) {
+    // When no frame is provided, fall back to the general profile-level policy.
+    return IsInspectionAllowed(profile,
+                               static_cast<content::WebContents*>(nullptr));
+  }
+
+  // Under target-level evaluation, inspect a non-primary-main frame's own last
+  // committed URL first so restricted subframes are blocked even when the main
+  // frame is allowed.
+  if (!rfh->IsInPrimaryMainFrame() &&
+      base::FeatureList::IsEnabled(features::kDevToolsTargetLevelEvaluation) &&
+      !IsInspectionAllowed(profile, rfh->GetLastCommittedURL())) {
+    return false;
+  }
+
+  // Also ensure the owning WebContents (and primary main frame) permits
+  // inspection.
+  return IsInspectionAllowed(profile,
+                             content::WebContents::FromRenderFrameHost(rfh));
+}
+
 bool IsInspectionAllowed(Profile* profile, content::WebContents* web_contents) {
   if (!web_contents) {
     // For contexts without web_contents, we can only check the general policy.

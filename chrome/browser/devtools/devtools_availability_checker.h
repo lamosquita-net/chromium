@@ -10,6 +10,7 @@ class Profile;
 
 namespace content {
 class DevToolsAgentHost;
+class RenderFrameHost;
 class WebContents;
 }
 
@@ -24,6 +25,10 @@ class WebApp;
 // |web_contents| may be null, in which case this function just checks
 // the settings for |profile|.
 bool IsInspectionAllowed(Profile* profile, content::WebContents* web_contents);
+// |rfh| may be null, in which case this function just checks the settings for
+// |profile|. When target-level evaluation is enabled, this checks the frame's
+// own last committed URL before falling back to its owning WebContents.
+bool IsInspectionAllowed(Profile* profile, content::RenderFrameHost* rfh);
 
 // |extension| may be null, in which case this function just checks
 // the settings for |profile|.
