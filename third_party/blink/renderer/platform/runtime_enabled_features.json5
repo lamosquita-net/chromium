@@ -5987,6 +5987,10 @@
       status: "stable",
     },
     {
+      name: "SkipHtmlInterchangeInForeignContent",
+      status: "stable",
+    },
+    {
       // crbug.com/517761566
       name: "SkipStaleUndoStepsInIdleSpellCheck",
       status: "stable",
