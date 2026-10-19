@@ -306,7 +306,7 @@ class CORE_EXPORT WorkerGlobalScope
                     bool is_service_worker_global_scope);
 
   // ExecutionContext
-  void ExceptionThrown(ErrorEvent*) override;
+  void ExceptionThrown(ErrorEvent*, SanitizeScriptErrors) override;
   void RemoveURLFromMemoryCache(const KURL&) final;
 
   void FetchClassicScript(
