@@ -118,6 +118,8 @@ TEST_F(UrlIndexTest, TryInsert) {
   KURL url("http://foo.bar.com");
   scoped_refptr<UrlData> a = GetByUrl(url, UrlData::CORS_UNSPECIFIED);
   scoped_refptr<UrlData> c = GetByUrl(url, UrlData::CORS_UNSPECIFIED);
+  scoped_refptr<UrlData> mismatched_length =
+      GetByUrl(url, UrlData::CORS_UNSPECIFIED);
   EXPECT_NE(a, c);
   EXPECT_FALSE(a->Valid());
   base::Time now = base::Time::Now();
@@ -162,6 +164,19 @@ TEST_F(UrlIndexTest, TryInsert) {
   // B is still valid, so it should be preferred over C.
   EXPECT_EQ(b, url_index_->TryInsert(c));
   EXPECT_EQ(b, GetByUrl(url, UrlData::CORS_UNSPECIFIED));
+
+  // If a new valid entry has a mismatched length, MergeFrom fails and
+  // TryInsert should return the new entry rather than overwriting the indexed
+  // entry's length.
+  b->set_length(1000);
+  mismatched_length->set_range_supported();
+  mismatched_length->set_valid_until(valid_until);
+  mismatched_length->set_last_modified(last_modified);
+  mismatched_length->SetDataOrigin(url, /*is_cors_cross_origin=*/false);
+  mismatched_length->set_length(500);
+  EXPECT_TRUE(mismatched_length->Valid());
+  EXPECT_EQ(mismatched_length, url_index_->TryInsert(mismatched_length));
+  EXPECT_EQ(b->length(), 1000);
 }
 
 TEST_F(UrlIndexTest, GetByUrlCacheDisabled) {
