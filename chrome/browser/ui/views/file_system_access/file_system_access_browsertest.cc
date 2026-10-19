@@ -1567,10 +1567,18 @@ IN_PROC_BROWSER_TEST_F(FileSystemAccessBrowserTest,
 // showing closes the dialog.
 IN_PROC_BROWSER_TEST_F(FileSystemAccessBrowserTest,
                        ShowOpenFileThenResizeSmall) {
+  // Use a popup browser because normal tabbed browser windows on macOS enforce
+  // a minimum client size of 500x375 (via kMainBrowserContentsMinimumWidth and
+  // the 4:3 aspect ratio in BrowserFrameViewMac::GetMinimumSize), which clamps
+  // programmatic SetBounds() calls above the 400x300 threshold.
+  BrowserWindowInterface* popup_browser =
+      CreateBrowserForPopup(browser()->GetProfile());
+  BrowserView::GetBrowserViewForBrowser(popup_browser)
+      ->SetBounds(gfx::Rect(0, 0, 800, 600));
   EXPECT_TRUE(ui_test_utils::NavigateToURL(
-      browser(), embedded_test_server()->GetURL("/title1.html")));
-  content::WebContents* first_tab =
-      browser()->GetTabStripModel()->GetActiveWebContents();
+      popup_browser, embedded_test_server()->GetURL("/title1.html")));
+  content::WebContents* popup_tab =
+      popup_browser->GetTabStripModel()->GetActiveWebContents();
 
   // Open the dialog and wait until it's created.
   content::SelectFileDialogRecorder recorder;
@@ -1579,7 +1587,7 @@ IN_PROC_BROWSER_TEST_F(FileSystemAccessBrowserTest,
           recorder.GetWeakPtr()));
   EXPECT_EQ(42,
             content::EvalJs(
-                first_tab,
+                popup_tab,
                 "window.p = self.showOpenFilePicker().catch(e => e.name); 42"));
   EXPECT_TRUE(base::test::RunUntil([&recorder]() {
     return recorder.state != content::SelectFileDialogRecorder::kNotCreated;
@@ -1588,19 +1596,19 @@ IN_PROC_BROWSER_TEST_F(FileSystemAccessBrowserTest,
   // Narrowing only the WebContents (e.g. when opening a side panel or split
   // view) while the top-level browser window remains large should NOT cancel
   // the dialog.
-  first_tab->Resize(gfx::Rect(0, 0, 200, 600));
+  popup_tab->Resize(gfx::Rect(0, 0, 200, 600));
   EXPECT_NE(recorder.state, content::SelectFileDialogRecorder::kDestroyed);
 
   // Resize the top-level window below the minimum dimension threshold.
-  BrowserView::GetBrowserViewForBrowser(browser())->SetBounds(
-      gfx::Rect(0, 0, 100, 100));
-  first_tab->Resize(gfx::Rect(0, 0, 100, 100));
+  BrowserView::GetBrowserViewForBrowser(popup_browser)
+      ->SetBounds(gfx::Rect(0, 0, 100, 100));
+  popup_tab->Resize(gfx::Rect(0, 0, 100, 100));
   EXPECT_TRUE(base::test::RunUntil([&recorder]() {
     return recorder.state == content::SelectFileDialogRecorder::kDestroyed;
   }));
 
   // Check that the dialog was closed.
-  EXPECT_EQ("AbortError", content::EvalJs(first_tab, "window.p"));
+  EXPECT_EQ("AbortError", content::EvalJs(popup_tab, "window.p"));
 }
 
 class FileSystemAccessBrowserTestForWebUI : public InProcessBrowserTest {
