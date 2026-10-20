@@ -9756,11 +9756,6 @@ bool Document::IsFocusAllowed(FocusTrigger trigger,
     return true;
   }
 
-  AddConsoleMessage(MakeGarbageCollected<ConsoleMessage>(
-      ConsoleMessage::Source::kOther, ConsoleMessage::Level::kWarning,
-      "Blocked focus call from a frame because its "
-      "'focus-without-user-activation' permissions policy is denied."));
-
   CountUse(WebFeature::kFocusWithoutUserActivationBlocked);
   return false;
 }
