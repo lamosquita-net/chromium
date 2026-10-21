@@ -230,6 +230,20 @@ void URLLoaderFactoryManager::OverrideURLLoaderFactoryParams(
     return;
   }
 
+  // A sandboxed frame (or page) derived from an extension may be hosted in a
+  // separate, unprivileged renderer process under kIsolateSandboxedIframes.
+  // Only grant extension privileges if the recipient process is actually a
+  // privileged extension process.
+  if (origin.opaque() && !is_for_isolated_world) {
+    ProcessMap* process_map = ProcessMap::Get(browser_context);
+    if (!process_map ||
+        factory_params->process_id == network::mojom::kBrowserProcessId ||
+        !process_map->IsPrivilegedExtensionProcess(*extension,
+                                                   factory_params->process_id)) {
+      return;
+    }
+  }
+
   // Identify and set |factory_params| that need to be overridden.
   FactoryUser factory_user = is_for_isolated_world
                                  ? FactoryUser::kContentScript
