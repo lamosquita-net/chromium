@@ -236,6 +236,20 @@ protocol::DOM::PseudoType InspectorDOMAgent::ProtocolPseudoElementType(
       return protocol::DOM::PseudoTypeEnum::Resizer;
     case kPseudoIdInputListButton:
       return protocol::DOM::PseudoTypeEnum::InputListButton;
+    case kPseudoIdPlaceholder:
+      return protocol::DOM::PseudoTypeEnum::Placeholder;
+    case kPseudoIdFileSelectorButton:
+      return protocol::DOM::PseudoTypeEnum::FileSelectorButton;
+    case kPseudoIdDetailsContent:
+      return protocol::DOM::PseudoTypeEnum::DetailsContent;
+    case kPseudoIdSelectFallbackButton:
+      return protocol::DOM::PseudoTypeEnum::SelectFallbackButton;
+    case kPseudoIdSelectFallbackButtonIcon:
+      return protocol::DOM::PseudoTypeEnum::SelectFallbackButtonIcon;
+    case kPseudoIdSelectFallbackButtonText:
+      return protocol::DOM::PseudoTypeEnum::SelectFallbackButtonText;
+    case kPseudoIdSelectFallbackDatalist:
+      return protocol::DOM::PseudoTypeEnum::SelectFallbackDatalist;
     case kPseudoIdViewTransition:
       return protocol::DOM::PseudoTypeEnum::ViewTransition;
     case kPseudoIdViewTransitionGroup:

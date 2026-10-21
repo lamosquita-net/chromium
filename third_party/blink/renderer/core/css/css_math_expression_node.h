@@ -453,7 +453,7 @@ struct DowncastTraits<CSSMathExpressionIdentifierLiteral> {
 class CORE_EXPORT CSSMathExpressionKeywordLiteral final
     : public CSSMathExpressionNode {
  public:
-  enum class Context { kMediaProgress, kCalcSize };
+  enum class Context { kMediaProgress, kCalcSize, kColorChannel };
 
   static CSSMathExpressionKeywordLiteral* Create(CSSValueID keyword,
                                                  Context context) {

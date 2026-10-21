@@ -154,7 +154,7 @@ class CORE_EXPORT ElementRuleCollector {
   StyleRuleList* MatchedStyleRuleList();
   RuleIndexList* MatchedCSSRuleList();
 
-  void CollectMatchingRules(const MatchRequest&);
+  void CollectMatchingRules(const MatchRequest&, PartNames* part_names);
   void CollectMatchingShadowHostRules(const MatchRequest&);
   void CollectMatchingSlottedRules(const MatchRequest&);
   void CollectMatchingPartPseudoRules(const MatchRequest&,
@@ -242,6 +242,8 @@ class CORE_EXPORT ElementRuleCollector {
   };
 
  private:
+  // TODO(https://crbug.com/40280846): Remove PartRequest when removing the
+  // CSSCascadeCorrectScope flag.
   struct PartRequest {
     STACK_ALLOCATED();
 
@@ -265,7 +267,7 @@ class CORE_EXPORT ElementRuleCollector {
   // invalidate style on the element anyway.
 
   template <bool stop_at_first_match>
-  bool CollectMatchingRulesInternal(const MatchRequest&);
+  bool CollectMatchingRulesInternal(const MatchRequest&, PartNames* part_names);
 
   template <bool stop_at_first_match, bool perf_trace_enabled>
   bool CollectMatchingRulesForListInternal(

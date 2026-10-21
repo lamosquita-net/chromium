@@ -623,6 +623,7 @@ _CONFIG = [
             'scroll_customization::.+',
             'scroll_into_view_util::.+',
             'scroll_timeline_util::.+',
+            'shadow_element_utils::.+',
             'style_change_extra_data::.+',
             'style_change_reason::.+',
             'svg_path_parser::.+',
@@ -973,15 +974,21 @@ _CONFIG = [
         ],
     },
     {
+        'paths': ['third_party/blink/renderer/core/css/color_function.h'],
+        'allowed': [
+            'base::MakeFixedFlatMap',
+        ],
+    },
+    {
         'paths': ['third_party/blink/renderer/core/css/media_values.cc'],
         'allowed': [
             'color_space_utilities::GetColorSpaceGamut',
         ],
     },
     {
-        'paths': ['third_party/blink/renderer/core/css/properties/css_color_function_parser.cc'],
+        'paths': ['third_party/blink/renderer/core/css/style_color.cc'],
         'allowed': [
-            'base::MakeFixedFlatMap',
+            'base::flat_map',
         ],
     },
     {

@@ -69,6 +69,7 @@
 #include "third_party/blink/renderer/core/css/parser/css_parser_context.h"
 #include "third_party/blink/renderer/core/css/parser/css_parser_mode.h"
 #include "third_party/blink/renderer/core/css/properties/computed_style_utils.h"
+#include "third_party/blink/renderer/core/css/css_to_length_conversion_data.h"
 #include "third_party/blink/renderer/core/css/resolver/style_builder_converter.h"
 #include "third_party/blink/renderer/core/css/style_color.h"
 #include "third_party/blink/renderer/core/dom/document.h"
@@ -936,8 +937,10 @@ ColorParseResult BaseRenderingContext2D::ParseColorOrCurrentColor(
     const TextLinkColors& text_link_colors =
         window ? window->document()->GetTextLinkColors()
                : kDefaultTextLinkColors;
-    const StyleColor style_color = ResolveColorValue(
-        *color_mix_value, text_link_colors, color_scheme_, GetColorProvider());
+    // TODO(40946458): Don't use default length resolver here!
+    const StyleColor style_color =
+        ResolveColorValue(CSSToLengthConversionData(), *color_mix_value,
+                          text_link_colors, color_scheme_, GetColorProvider());
     color = style_color.Resolve(GetCurrentColor(), color_scheme_);
     return ColorParseResult::kColor;
   }

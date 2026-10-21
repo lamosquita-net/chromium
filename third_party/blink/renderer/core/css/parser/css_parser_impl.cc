@@ -2255,6 +2255,9 @@ static std::optional<StyleRuleFunction::Type> ParseFunctionType(
       case CSSSyntaxType::kTransformList:
       case CSSSyntaxType::kCustomIdent:
         break;
+      case CSSSyntaxType::kString:
+        DCHECK(RuntimeEnabledFeatures::CSSAtPropertyStringSyntaxEnabled());
+        break;
     }
   }
 

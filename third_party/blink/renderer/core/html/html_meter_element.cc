@@ -33,6 +33,7 @@
 #include "third_party/blink/renderer/platform/bindings/exception_state.h"
 #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
 #include "third_party/blink/renderer/platform/instrumentation/use_counter.h"
+#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
 #include "ui/base/ui_base_features.h"
 
 namespace blink {
@@ -210,10 +211,12 @@ void HTMLMeterElement::DidAddUserAgentShadowRoot(ShadowRoot& root) {
 
   inner->AppendChild(bar);
 
-  auto* fallback = MakeGarbageCollected<MeterShadowElement>(GetDocument());
-  fallback->AppendChild(MakeGarbageCollected<HTMLSlotElement>(GetDocument()));
-  fallback->SetShadowPseudoId(AtomicString("-internal-fallback"));
-  root.AppendChild(fallback);
+  if (!RuntimeEnabledFeatures::MeterAppearanceNoneFallbackStyleEnabled()) {
+    auto* fallback = MakeGarbageCollected<MeterShadowElement>(GetDocument());
+    fallback->AppendChild(MakeGarbageCollected<HTMLSlotElement>(GetDocument()));
+    fallback->SetShadowPseudoId(AtomicString("-internal-fallback"));
+    root.AppendChild(fallback);
+  }
 }
 
 void HTMLMeterElement::UpdateValueAppearance(double percentage) {
@@ -250,6 +253,22 @@ bool HTMLMeterElement::CanContainRangeEndPoint() const {
     return false;
   }
   return GetComputedStyle() && !GetComputedStyle()->HasEffectiveAppearance();
+}
+
+void HTMLMeterElement::AdjustStyle(ComputedStyleBuilder& builder) {
+  // Descendants of the <meter> UA shadow host use
+  // a -internal-shadow-host-has-non-auto-appearance selector which depends on
+  // the computed value of the host's 'appearance'.
+  // This information is propagated via StyleUAShadowHostData to ensure
+  // invalidation of those descendants when the appearance changes.
+
+  builder.SetUAShadowHostData(std::make_unique<StyleUAShadowHostData>(
+      /* width */ Length(),
+      /* height */ Length(),
+      StyleAspectRatio(EAspectRatioType::kAuto, gfx::SizeF()),
+      /* alt_text */ g_null_atom,
+      /* alt_attr */ g_null_atom,
+      /* src_attr */ g_null_atom, builder.HasEffectiveAppearance()));
 }
 
 void HTMLMeterElement::Trace(Visitor* visitor) const {

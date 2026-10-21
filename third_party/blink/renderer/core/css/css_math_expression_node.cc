@@ -41,6 +41,7 @@
 #include <tuple>
 
 #include "base/memory/values_equivalent.h"
+#include "third_party/blink/renderer/core/css/css_color_channel_keywords.h"
 #include "third_party/blink/renderer/core/css/css_custom_ident_value.h"
 #include "third_party/blink/renderer/core/css/css_math_function_value.h"
 #include "third_party/blink/renderer/core/css/css_math_operator.h"
@@ -842,6 +843,13 @@ CSSMathExpressionNumericLiteral::ToPixelsAndPercent(
       return PixelsAndPercent(value_->GetFloatValue() * length_resolver.Zoom(),
                               0.0f, /*has_explicit_pixels=*/true,
                               /*has_explicit_percent=*/false);
+    case kCalcAngle:
+      // Treat angles as pixels to support calc() expressions on hue angles in
+      // relative color syntax. This allows converting such expressions to
+      // CalculationValues.
+      return PixelsAndPercent(value_->GetFloatValue(), 0.0f,
+                              /*has_explicit_pixels=*/true,
+                              /*has_explicit_percent=*/false);
     default:
       NOTREACHED_IN_MIGRATION();
       return {};
@@ -1190,6 +1198,8 @@ CalculationResultCategory DetermineKeywordCategory(
       return kCalcLength;
     case CSSMathExpressionKeywordLiteral::Context::kCalcSize:
       return kCalcLengthFunction;
+    case CSSMathExpressionKeywordLiteral::Context::kColorChannel:
+      return kCalcNumber;
   };
 }
 
@@ -1226,6 +1236,9 @@ CSSMathExpressionKeywordLiteral::ToCalculationExpression(
     case CSSMathExpressionKeywordLiteral::Context::kCalcSize:
       return base::MakeRefCounted<CalculationExpressionSizingKeywordNode>(
           CSSValueIDToSizingKeyword(keyword_));
+    case CSSMathExpressionKeywordLiteral::Context::kColorChannel:
+      return base::MakeRefCounted<CalculationExpressionColorChannelKeywordNode>(
+          CSSValueIDToColorChannelKeyword(keyword_));
   };
 }
 
@@ -1243,6 +1256,7 @@ double CSSMathExpressionKeywordLiteral::ComputeDouble(
       }
     }
     case CSSMathExpressionKeywordLiteral::Context::kCalcSize:
+    case CSSMathExpressionKeywordLiteral::Context::kColorChannel:
       NOTREACHED_NORETURN();
   };
 }
@@ -1261,6 +1275,7 @@ CSSMathExpressionKeywordLiteral::ToPixelsAndPercent(
           NOTREACHED_NORETURN();
       }
     case CSSMathExpressionKeywordLiteral::Context::kCalcSize:
+    case CSSMathExpressionKeywordLiteral::Context::kColorChannel:
       return std::nullopt;
   }
 }
@@ -3965,13 +3980,23 @@ class CSSMathExpressionNodeParser {
           (token.GetType() == kPercentageToken &&
            parsing_flags_.Has(Flag::AllowPercent)) ||
           token.GetType() == kDimensionToken)) {
-      // For relative color syntax. Swap in the associated value of a color
-      // channel here. e.g. color(from color(srgb 1 0 0) calc(r * 2) 0 0) should
+      // For relative color syntax.
+      // If the associated values of color channels are known, swap them in
+      // here. e.g. color(from color(srgb 1 0 0) calc(r * 2) 0 0) should
       // swap in "1" for the value of "r" in the calc expression.
-      if (color_channel_map_.Contains(token.Id())) {
-        return CSSMathExpressionNumericLiteral::Create(
-            color_channel_map_.at(token.Id()),
-            CSSPrimitiveValue::UnitType::kNumber);
+      // If channel values are not known, create keyword literals for valid
+      // channel names instead.
+      if (auto it = color_channel_map_.find(token.Id());
+          it != color_channel_map_.end()) {
+        const std::optional<double>& channel = it->value;
+        if (channel.has_value()) {
+          return CSSMathExpressionNumericLiteral::Create(
+              channel.value(), CSSPrimitiveValue::UnitType::kNumber);
+        } else {
+          return CSSMathExpressionKeywordLiteral::Create(
+              token.Id(),
+              CSSMathExpressionKeywordLiteral::Context::kColorChannel);
+        }
       }
       return nullptr;
     }
@@ -4218,28 +4243,33 @@ CSSMathExpressionNode* CSSMathExpressionNode::Create(PixelsAndPercent value) {
 // static
 CSSMathExpressionNode* CSSMathExpressionNode::Create(
     const CalculationExpressionNode& node) {
-  if (node.IsPixelsAndPercent()) {
-    const auto& pixels_and_percent =
-        To<CalculationExpressionPixelsAndPercentNode>(node);
-    return Create(pixels_and_percent.GetPixelsAndPercent());
+  if (const auto* pixels_and_percent =
+          DynamicTo<CalculationExpressionPixelsAndPercentNode>(node)) {
+    return Create(pixels_and_percent->GetPixelsAndPercent());
   }
 
-  if (node.IsIdentifier()) {
-    return CSSMathExpressionIdentifierLiteral::Create(
-        To<CalculationExpressionIdentifierNode>(node).Value());
+  if (const auto* identifier =
+          DynamicTo<CalculationExpressionIdentifierNode>(node)) {
+    return CSSMathExpressionIdentifierLiteral::Create(identifier->Value());
   }
 
-  if (node.IsSizingKeyword()) {
+  if (const auto* sizing_keyword =
+          DynamicTo<CalculationExpressionSizingKeywordNode>(node)) {
     return CSSMathExpressionKeywordLiteral::Create(
-        SizingKeywordToCSSValueID(
-            To<CalculationExpressionSizingKeywordNode>(node).Value()),
+        SizingKeywordToCSSValueID(sizing_keyword->Value()),
         CSSMathExpressionKeywordLiteral::Context::kCalcSize);
   }
 
-  if (node.IsNumber()) {
+  if (const auto* color_channel_keyword =
+          DynamicTo<CalculationExpressionColorChannelKeywordNode>(node)) {
+    return CSSMathExpressionKeywordLiteral::Create(
+        ColorChannelKeywordToCSSValueID(color_channel_keyword->Value()),
+        CSSMathExpressionKeywordLiteral::Context::kColorChannel);
+  }
+
+  if (const auto* number = DynamicTo<CalculationExpressionNumberNode>(node)) {
     return CSSMathExpressionNumericLiteral::Create(
-        To<CalculationExpressionNumberNode>(node).Value(),
-        CSSPrimitiveValue::UnitType::kNumber);
+        number->Value(), CSSPrimitiveValue::UnitType::kNumber);
   }
 
   DCHECK(node.IsOperation());

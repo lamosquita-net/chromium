@@ -95,6 +95,15 @@ enum PseudoId : uint8_t {
   kPseudoIdScrollMarkerGroupBefore,
   kPseudoIdResizer,
   kPseudoIdInputListButton,
+  kPseudoIdPlaceholder,
+  kPseudoIdFileSelectorButton,
+  kPseudoIdDetailsContent,
+  // FlyWeb (level 131): the 128's customizable <select> pseudo-elements, in
+  // place of Chromium 131's ::picker(select) (471ed5d216b).
+  kPseudoIdSelectFallbackButton,
+  kPseudoIdSelectFallbackButtonIcon,
+  kPseudoIdSelectFallbackButtonText,
+  kPseudoIdSelectFallbackDatalist,
   // Special values follow:
   kAfterLastInternalPseudoId,
   kPseudoIdInvalid,

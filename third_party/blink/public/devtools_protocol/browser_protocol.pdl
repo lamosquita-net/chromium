@@ -2663,6 +2663,13 @@ domain DOM
       view-transition-image-pair
       view-transition-old
       view-transition-new
+      placeholder
+      file-selector-button
+      details-content
+      select-fallback-button
+      select-fallback-button-icon
+      select-fallback-button-text
+      select-fallback-datalist
 
   # Shadow root type.
   type ShadowRootType extends string

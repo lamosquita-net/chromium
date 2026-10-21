@@ -178,6 +178,7 @@
 #include "third_party/blink/renderer/core/html/parser/html_element_stack.h"
 #include "third_party/blink/renderer/core/html/parser/html_parser_idioms.h"
 #include "third_party/blink/renderer/core/html/shadow/shadow_element_names.h"
+#include "third_party/blink/renderer/core/html/shadow/shadow_element_utils.h"
 #include "third_party/blink/renderer/core/html_element_type_helpers.h"
 #include "third_party/blink/renderer/core/html_names.h"
 #include "third_party/blink/renderer/core/input/event_handler.h"
@@ -7441,8 +7442,8 @@ const ComputedStyle* Element::EnsureComputedStyle(
   StyleEngine::InEnsureComputedStyleScope ensure_scope(
       GetDocument().GetStyleEngine());
 
-  if (PseudoElement* element =
-          GetNestedPseudoElement(pseudo_element_specifier, pseudo_argument)) {
+  if (Element* element =
+          GetStyledPseudoElement(pseudo_element_specifier, pseudo_argument)) {
     return element->EnsureComputedStyle();
   }
 
@@ -7984,11 +7985,32 @@ PseudoElement* Element::GetPseudoElement(
   return nullptr;
 }
 
-PseudoElement* Element::GetNestedPseudoElement(
+Element* Element::GetStyledPseudoElement(
     PseudoId pseudo_id,
     const AtomicString& view_transition_name) const {
   if (!IsTransitionPseudoElement(pseudo_id)) {
-    return GetPseudoElement(pseudo_id, view_transition_name);
+    if (PseudoElement* result =
+            GetPseudoElement(pseudo_id, view_transition_name)) {
+      return result;
+    }
+    const AtomicString& pseudo_string =
+        shadow_element_utils::StringForUAShadowPseudoId(pseudo_id);
+    if (pseudo_string != g_null_atom) {
+      // This is a pseudo-element that refers to an element in the UA shadow
+      // tree (such as a part-like pseudo-element).  Find it in the shadow
+      // tree.
+      if (ShadowRoot* root = GetShadowRoot()) {
+        if (root->IsUserAgent()) {
+          for (Element& el : ElementTraversal::DescendantsOf(*root)) {
+            if (el.ShadowPseudoId() == pseudo_string) {
+              return &el;
+            }
+          }
+        }
+      }
+    }
+
+    return nullptr;
   }
 
   // The transition pseudos can currently only exist on the document element.
@@ -8021,7 +8043,8 @@ PseudoElement* Element::GetNestedPseudoElement(
 }
 
 LayoutObject* Element::PseudoElementLayoutObject(PseudoId pseudo_id) const {
-  if (PseudoElement* element = GetPseudoElement(pseudo_id)) {
+  if (Element* element = GetStyledPseudoElement(
+          pseudo_id, /*view_transition_name*/ g_null_atom)) {
     return element->GetLayoutObject();
   }
   return nullptr;

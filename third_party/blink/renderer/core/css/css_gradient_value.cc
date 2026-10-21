@@ -365,12 +365,14 @@ static void ReplaceColorHintsWithColorStops(
   }
 }
 
-static Color ResolveStopColor(const CSSValue& stop_color,
+static Color ResolveStopColor(const CSSLengthResolver& length_resolver,
+                              const CSSValue& stop_color,
                               const Document& document,
                               const ComputedStyle& style) {
   mojom::blink::ColorScheme color_scheme = style.UsedColorScheme();
   const StyleColor style_stop_color =
-      ResolveColorValue(stop_color, document.GetTextLinkColors(), color_scheme,
+      ResolveColorValue(length_resolver, stop_color,
+                        document.GetTextLinkColors(), color_scheme,
                         document.GetColorProviderForPainting(color_scheme));
   return style_stop_color.Resolve(
       style.VisitedDependentColor(GetCSSPropertyColor()), color_scheme);
@@ -403,7 +405,8 @@ void CSSGradientValue::AddDeprecatedStops(
       offset = stop.offset_->ComputeNumber(conversion_data);
     }
 
-    const Color color = ResolveStopColor(*stop.color_, document, style);
+    const Color color =
+        ResolveStopColor(conversion_data, *stop.color_, document, style);
     desc.stops.emplace_back(offset, color);
   }
 }
@@ -417,7 +420,9 @@ static const CSSValue* GetComputedStopColor(const CSSValue& color,
   // TODO(crbug.com/40779801): Need to pass an appropriate color provider here.
   const mojom::blink::ColorScheme color_scheme = style.UsedColorScheme();
   const StyleColor style_stop_color =
-      ResolveColorValue(color, TextLinkColors(), color_scheme, nullptr);
+      // TODO(40946458): Don't use default length resolver here!
+      ResolveColorValue(CSSToLengthConversionData(), color, TextLinkColors(),
+                        color_scheme, nullptr);
   const Color current_color =
       style.VisitedDependentColor(GetCSSPropertyColor());
   return ComputedStyleUtils::ValueForColor(
@@ -637,7 +642,8 @@ void CSSGradientValue::AddStops(
     if (stop.IsHint()) {
       has_hints = true;
     } else {
-      stops[i].color = ResolveStopColor(*stop.color_, document, style);
+      stops[i].color =
+          ResolveStopColor(conversion_data, *stop.color_, document, style);
     }
 
     if (stop.offset_) {
@@ -869,8 +875,10 @@ static gfx::PointF ComputeEndPoint(
 bool CSSGradientValue::KnownToBeOpaque(const Document& document,
                                        const ComputedStyle& style) const {
   for (auto& stop : stops_) {
-    if (!stop.IsHint() &&
-        !ResolveStopColor(*stop.color_, document, style).IsOpaque()) {
+    // TODO(40946458): Don't use default length resolver here!
+    if (!stop.IsHint() && !ResolveStopColor(CSSToLengthConversionData(),
+                                            *stop.color_, document, style)
+                               .IsOpaque()) {
       return false;
     }
   }
@@ -906,7 +914,9 @@ Vector<Color> CSSGradientValue::GetStopColors(
   Vector<Color> stop_colors;
   for (const auto& stop : stops_) {
     if (!stop.IsHint()) {
-      stop_colors.push_back(ResolveStopColor(*stop.color_, document, style));
+      // TODO(40946458): Don't use default length resolver here!
+      stop_colors.push_back(ResolveStopColor(CSSToLengthConversionData(),
+                                             *stop.color_, document, style));
     }
   }
   return stop_colors;
@@ -1888,7 +1898,9 @@ void CSSConstantGradientValue::TraceAfterDispatch(
 bool CSSConstantGradientValue::KnownToBeOpaque(
     const Document& document,
     const ComputedStyle& style) const {
-  return ResolveStopColor(*color_, document, style).IsOpaque();
+  // TODO(40946458): Don't use default length resolver here!
+  return ResolveStopColor(CSSToLengthConversionData(), *color_, document, style)
+      .IsOpaque();
 }
 
 scoped_refptr<Gradient> CSSConstantGradientValue::CreateGradient(
@@ -1899,7 +1911,8 @@ scoped_refptr<Gradient> CSSConstantGradientValue::CreateGradient(
   DCHECK(!size.IsEmpty());
 
   GradientDesc desc({0.0f, 0.0f}, {1.0f, 1.0f}, kSpreadMethodPad);
-  const Color color = ResolveStopColor(*color_, document, style);
+  const Color color =
+      ResolveStopColor(conversion_data, *color_, document, style);
   desc.stops.emplace_back(0.0f, color);
   desc.stops.emplace_back(1.0f, color);
 

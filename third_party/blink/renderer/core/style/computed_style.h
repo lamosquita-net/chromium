@@ -2765,11 +2765,12 @@ class ComputedStyleBuilder final : public ComputedStyleBuilderBase {
     SetClipInternal(ComputedStyleInitialValues::InitialClip());
   }
 
-  // clip-patch
+  // clip-path
   void SetClipPath(ClipPathOperation* clip_path) {
     SetHasClipPath(clip_path);
     SetClipPathInternal(clip_path);
   }
+  ClipPathOperation* MutableClipPath() { return ClipPathInternal().Get(); }
 
   // color
   blink::Color GetCurrentColor() const {

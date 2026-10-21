@@ -109,6 +109,9 @@ class CORE_EXPORT HTMLPlugInElement
       const QualifiedName&,
       const AtomicString&,
       MutableCSSPropertyValueSet*) override;
+  // HTMLFrameOwnerElement overrides:
+  void DisconnectContentFrame() override;
+  void IntrinsicSizingInfoChanged() final;
 
   virtual bool HasFallbackContent() const;
   // Create or update the LayoutEmbeddedContent and return it, triggering layout
@@ -169,10 +172,6 @@ class CORE_EXPORT HTMLPlugInElement
   // HTMLElement overrides:
   bool HasCustomFocusLogic() const override;
   bool IsPluginElement() const final;
-
-  // HTMLFrameOwnerElement overrides:
-  void DisconnectContentFrame() override;
-  void IntrinsicSizingInfoChanged() final;
 
   // TODO(dcheng): Consider removing this, since HTMLEmbedElementLegacyCall
   // and HTMLObjectElementLegacyCall usage is extremely low.

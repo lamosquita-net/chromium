@@ -820,6 +820,8 @@ component("platform") {
     "geometry/calculation_expression_node.h",
     "geometry/calculation_value.cc",
     "geometry/calculation_value.h",
+    "geometry/color_channel_keyword.h",
+    "geometry/evaluation_input.h",
     "geometry/float_polygon.cc",
     "geometry/float_polygon.h",
     "geometry/float_rounded_rect.cc",

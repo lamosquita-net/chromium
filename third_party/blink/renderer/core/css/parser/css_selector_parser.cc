@@ -1020,9 +1020,20 @@ PseudoId CSSSelectorParser::ParsePseudoElement(const String& selector_string,
         return pseudo_id;
       }
 
-      // Keep current behavior for shadow pseudo-elements like ::placeholder.
-      if (GetImplicitShadowCombinatorForMatching(pseudo_type) ==
-              CSSSelector::kUAShadow &&
+      // For ::-webkit-* and ::-internal-* pseudo-elements, act like there's
+      // no pseudo-element provided and (at least for getComputedStyle, our
+      // most significant caller) use the element style instead.
+      // TODO(https://crbug.com/363015176): We should either do something
+      // correct or treat them as unsupported.
+      if ((pseudo_type == CSSSelector::PseudoType::kPseudoWebKitCustomElement ||
+           pseudo_type ==
+               CSSSelector::PseudoType::kPseudoBlinkInternalElement ||
+           (!RuntimeEnabledFeatures::
+                PseudoElementsCorrectInGetComputedStyleEnabled() &&
+            (pseudo_type == CSSSelector::PseudoType::kPseudoCue ||
+             pseudo_type == CSSSelector::PseudoType::kPseudoPlaceholder ||
+             pseudo_type ==
+                 CSSSelector::PseudoType::kPseudoFileSelectorButton))) &&
           num_colons == 2) {
         return kPseudoIdNone;
       }
@@ -1129,6 +1140,9 @@ bool IsUserActionPseudoClass(CSSSelector::PseudoType pseudo) {
 bool IsPseudoClassValidAfterPseudoElement(
     CSSSelector::PseudoType pseudo_class,
     CSSSelector::PseudoType compound_pseudo_element) {
+  // NOTE: pseudo-class rules for ::part() and part-like pseudo-elements do
+  // not need to be handled here; they should be handled in
+  // CSSSelector::IsAllowedAfterPart() instead.
   switch (compound_pseudo_element) {
     case CSSSelector::kPseudoResizer:
     case CSSSelector::kPseudoScrollbar:
@@ -1140,12 +1154,13 @@ bool IsPseudoClassValidAfterPseudoElement(
       return IsScrollbarPseudoClass(pseudo_class);
     case CSSSelector::kPseudoSelection:
       return pseudo_class == CSSSelector::kPseudoWindowInactive;
-    case CSSSelector::kPseudoPart:
+    // NOTE: pseudo-class rules for ::part() and part-like pseudo-elements do
+    // not need to be handled here; they should be handled in
+    // CSSSelector::IsAllowedAfterPart() instead.
     // TODO(crbug.com/1511354): Add tests for the PseudoSelect cases here
     case CSSSelector::kPseudoSelectFallbackButton:
     case CSSSelector::kPseudoSelectFallbackButtonIcon:
     case CSSSelector::kPseudoSelectFallbackButtonText:
-    case CSSSelector::kPseudoSelectFallbackDatalist:
       return IsUserActionPseudoClass(pseudo_class) ||
              pseudo_class == CSSSelector::kPseudoState ||
              pseudo_class == CSSSelector::kPseudoStateDeprecatedSyntax;
@@ -1182,13 +1197,13 @@ bool IsSimpleSelectorValidAfterPseudoElement(
       break;
     case CSSSelector::kPseudoSlotted:
       return simple_selector.IsTreeAbidingPseudoElement();
-    case CSSSelector::kPseudoPart:
-      if (simple_selector.IsAllowedAfterPart()) {
-        return true;
-      }
-      break;
     default:
       break;
+  }
+  if ((compound_pseudo_element == CSSSelector::kPseudoPart ||
+       CSSSelector::IsPartLikePseudoElement(compound_pseudo_element)) &&
+      simple_selector.IsAllowedAfterPart()) {
+    return true;
   }
   if (simple_selector.Match() != CSSSelector::kPseudoClass) {
     return false;
@@ -2264,9 +2279,9 @@ void CSSSelectorParser::SplitCompoundAtImplicitShadowCrossingCombinator(
       std::rotate(selectors.begin(), selectors.begin() + i, selectors.end());
 
       base::span<CSSSelector> remaining = selectors.first(selectors.size() - i);
-      // We might need to split the compound twice, since ::placeholder is
-      // allowed after ::slotted and they both need an implicit combinator for
-      // matching.
+      // We might need to split the compound multiple times, since a number of
+      // the relevant pseudo-elements can be combined, and they all need an
+      // implicit combinator for matching.
       SplitCompoundAtImplicitShadowCrossingCombinator(remaining);
       remaining.back().SetRelation(relation);
       break;

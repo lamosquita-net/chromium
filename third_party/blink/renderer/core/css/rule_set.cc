@@ -54,6 +54,7 @@
 #include "third_party/blink/renderer/core/css/style_rule_nested_declarations.h"
 #include "third_party/blink/renderer/core/css/style_sheet_contents.h"
 #include "third_party/blink/renderer/core/html/shadow/shadow_element_names.h"
+#include "third_party/blink/renderer/core/html/shadow/shadow_element_utils.h"
 #include "third_party/blink/renderer/core/html/track/text_track_cue.h"
 #include "third_party/blink/renderer/core/html_names.h"
 #include "third_party/blink/renderer/core/inspector/invalidation_set_to_selector_map.h"
@@ -297,6 +298,7 @@ static void ExtractSelectorValues(const CSSSelector* selector,
         case CSSSelector::kPseudoAnyLink:
         case CSSSelector::kPseudoFocusVisible:
         case CSSSelector::kPseudoPlaceholder:
+        case CSSSelector::kPseudoDetailsContent:
         case CSSSelector::kPseudoFileSelectorButton:
         case CSSSelector::kPseudoHost:
         case CSSSelector::kPseudoHostContext:
@@ -311,7 +313,6 @@ static void ExtractSelectorValues(const CSSSelector* selector,
           break;
         case CSSSelector::kPseudoWebKitCustomElement:
         case CSSSelector::kPseudoBlinkInternalElement:
-        case CSSSelector::kPseudoDetailsContent:
           custom_pseudo_element_name = selector->Value();
           break;
         case CSSSelector::kPseudoPart:
@@ -476,15 +477,47 @@ void RuleSet::FindBestRuleSetAndAdd(CSSSelector& component,
     return;
   }
 
+  auto get_ua_shadow_pseudo = [&]() -> const AtomicString& {
+    if (pseudo_type != CSSSelector::kPseudoUnknown) {
+      return shadow_element_utils::StringForUAShadowPseudoId(
+          CSSSelector::GetPseudoId(pseudo_type));
+    }
+    return g_null_atom;
+  };
+
+  AtomicString ua_shadow_pseudo = get_ua_shadow_pseudo();
+
+  if (RuntimeEnabledFeatures::CSSCascadeCorrectScopeEnabled()) {
+    // Any selector with or following ::part() or a UA shadow pseudo-element
+    // must go in the bucket for the *innermost* such pseudo-element.
+
+    // TODO(dbaron): Should this eventually check kShadowSlot as well?
+    if (part_name.empty() && ua_shadow_pseudo == g_null_atom && it &&
+        (it->Relation() == CSSSelector::RelationType::kUAShadow ||
+         it->Relation() == CSSSelector::RelationType::kShadowPart)) {
+      const CSSSelector* previous = it->NextSimpleSelector();
+      if (previous->Match() == CSSSelector::kPseudoElement) {
+        ExtractSelectorValues(previous, id, class_name, attr_name, attr_value,
+                              is_exact_attr, custom_pseudo_element_name,
+                              tag_name, part_name, pseudo_type);
+        ua_shadow_pseudo = get_ua_shadow_pseudo();
+      }
+    }
+  }
+
   // Any selector with or following ::part() must go in the part bucket,
   // because we look in that bucket in higher scopes to find rules that need
   // to match inside the shadow tree.
-  if (!part_name.empty() || (it && it->FollowsPart())) {
+  if (!part_name.empty() ||
+      (it && it->FollowsPart() &&
+       !RuntimeEnabledFeatures::CSSCascadeCorrectScopeEnabled())) {
     // NOTE: Cannot mark as covered by bucketing because the part buckets are
     // shared between the part itself and pseudo-elements inside of them.
     // (Though we do check at least some of the relevant conditions *before*
     // we check whether the selector is covered by bucketing, so it might be
     // doable if we want.)
+    // TODO(https://crbug.com/40280846): When the CSSCascadeCorrectScope flag
+    // is removed (and enabled), we can revisit this.
     AddToRuleSet(part_pseudo_rules_, rule_data);
     return;
   }
@@ -499,6 +532,19 @@ void RuleSet::FindBestRuleSetAndAdd(CSSSelector& component,
     AddToRuleSet(custom_pseudo_element_name, ua_shadow_pseudo_element_rules_,
                  rule_data);
     // TODO: Mark as covered by bucketing?
+    return;
+  }
+
+  if (ua_shadow_pseudo != g_null_atom) {
+    // TODO(dbaron): This needs further work to support multiple
+    // pseudo-elements after ::slotted().  This likely requires reorganization
+    // of how MatchSlottedRules interacts with MatchOuterScopeRules.
+    if (it->FollowsSlotted()) {
+      AddToRuleSet(slotted_pseudo_element_rules_, rule_data);
+    } else {
+      AddToRuleSet(ua_shadow_pseudo, ua_shadow_pseudo_element_rules_,
+                   rule_data);
+    }
     return;
   }
 
@@ -543,42 +589,6 @@ void RuleSet::FindBestRuleSetAndAdd(CSSSelector& component,
         });
       }
       AddToRuleSet(focus_visible_pseudo_class_rules_, rule_data);
-      return;
-    case CSSSelector::kPseudoPlaceholder:
-    case CSSSelector::kPseudoFileSelectorButton:
-    case CSSSelector::kPseudoSelectFallbackButton:
-    case CSSSelector::kPseudoSelectFallbackButtonIcon:
-    case CSSSelector::kPseudoSelectFallbackButtonText:
-    case CSSSelector::kPseudoSelectFallbackDatalist:
-      if (it->FollowsSlotted()) {
-        AddToRuleSet(slotted_pseudo_element_rules_, rule_data);
-      } else {
-        AtomicString name;
-        switch (pseudo_type) {
-          case CSSSelector::kPseudoPlaceholder:
-            name = shadow_element_names::kPseudoInputPlaceholder;
-            break;
-          case CSSSelector::kPseudoFileSelectorButton:
-            name = shadow_element_names::kPseudoFileUploadButton;
-            break;
-          case CSSSelector::kPseudoSelectFallbackButton:
-            name = shadow_element_names::kSelectFallbackButton;
-            break;
-          case CSSSelector::kPseudoSelectFallbackButtonIcon:
-            name = shadow_element_names::kSelectFallbackButtonIcon;
-            break;
-          case CSSSelector::kPseudoSelectFallbackButtonText:
-            name = shadow_element_names::kSelectFallbackButtonText;
-            break;
-          case CSSSelector::kPseudoSelectFallbackDatalist:
-            name = shadow_element_names::kSelectFallbackDatalist;
-            break;
-          default:
-            NOTREACHED_IN_MIGRATION();
-            break;
-        }
-        AddToRuleSet(name, ua_shadow_pseudo_element_rules_, rule_data);
-      }
       return;
     case CSSSelector::kPseudoHost:
     case CSSSelector::kPseudoHostContext:

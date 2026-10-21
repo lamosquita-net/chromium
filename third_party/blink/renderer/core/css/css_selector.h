@@ -362,7 +362,7 @@ class CORE_EXPORT CSSSelector {
     kPseudoHighlight,
     kPseudoHost,
     kPseudoHostContext,
-    kPseudoHostHasAppearance,
+    kPseudoHostHasNonAutoAppearance,
     kPseudoIsHtml,
     kPseudoListBox,
     kPseudoMultiSelectFocus,
@@ -581,12 +581,20 @@ class CORE_EXPORT CSSSelector {
 
   bool MatchesPseudoElement() const;
   bool IsTreeAbidingPseudoElement() const;
+  bool IsPartLikePseudoElement() const;
+  static bool IsPartLikePseudoElement(CSSSelector::PseudoType pseudo);
   bool IsAllowedAfterPart() const;
 
-  // Returns true if the immediately preceeding simple selector is ::part.
+  // Returns true if the immediately preceding simple selector is ::part.
+  // TODO(https://crbug.com/40280846): Remove this when removing the
+  // CSSCascadeCorrectScope flag.
   bool FollowsPart() const;
-  // Returns true if the immediately preceeding simple selector is ::slotted.
+  // Returns true if the immediately preceding simple selector is ::slotted.
   bool FollowsSlotted() const;
+
+  // Returns true if any preceding selectors have combinators that cross tree
+  // scopes.
+  bool CrossesTreeScopes() const;
 
   // True if the selector was added implicitly. This can happen for e.g.
   // nested rules that would otherwise lack the scoping selector (:scope).
