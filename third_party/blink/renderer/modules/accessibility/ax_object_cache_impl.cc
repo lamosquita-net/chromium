@@ -904,6 +904,7 @@ void AXObjectCacheImpl::Dispose() {
   weak_factory_for_loc_updates_pipeline_.Invalidate();
 
   aria_radiogroups_with_changed_membership_.clear();
+  dirty_radio_button_peers_.clear();
 
   lifecycle_.AdvanceTo(AXObjectCacheLifecycle::kDisposed);
 }
@@ -1844,7 +1845,7 @@ void AXObjectCacheImpl::RemoveFromRadioButtonGroupCache(AXID ax_id) {
         if (peer_id != ax_id) {
           if (AXObject* peer = ObjectFromAXID(peer_id)) {
             if (lifecycle().StateAllowsImmediateTreeUpdates()) {
-              MarkAXObjectDirtyWithCleanLayout(peer);
+              dirty_radio_button_peers_.insert(peer_id);
             } else {
               MarkAXObjectDirty(peer);
             }
@@ -1858,7 +1859,7 @@ void AXObjectCacheImpl::RemoveFromRadioButtonGroupCache(AXID ax_id) {
         if (AXObject* radio_obj = Get(radio)) {
           if (radio_obj != obj) {
             if (lifecycle().StateAllowsImmediateTreeUpdates()) {
-              MarkAXObjectDirtyWithCleanLayout(radio_obj);
+              dirty_radio_button_peers_.insert(radio_obj->AXObjectID());
             } else {
               MarkAXObjectDirty(radio_obj);
             }
@@ -1941,6 +1942,10 @@ void AXObjectCacheImpl::Remove(AXID ax_id, bool notify_parent) {
 #if AX_FAIL_FAST_BUILD()
   DCHECK(!nodes_requiring_cache_update_.Contains(ax_id));
 #endif
+  if (!in_remove_subtree_ && relation_cache_ &&
+      lifecycle_.StateAllowsImmediateTreeUpdates() && !IsDisposing()) {
+    relation_cache_->RestorePendingParents();
+  }
 }
 
 void AXObjectCacheImpl::Remove(LayoutObject* layout_object,
@@ -2108,12 +2113,21 @@ void AXObjectCacheImpl::RemoveIncludedSubtree(AXObject* object,
     return;
   }
 
-  for (const auto& ax_child : object->GuardedCachedChildrenIncludingIgnored()) {
-    RemoveIncludedSubtree(ax_child, /*remove_root=*/true);
+  {
+    base::AutoReset<bool> in_remove_subtree(&in_remove_subtree_, true);
+    for (const auto& ax_child :
+         object->GuardedCachedChildrenIncludingIgnored()) {
+      RemoveIncludedSubtree(ax_child, /*remove_root=*/true);
+    }
+    // Removing the children can remove |object|.
+    if (remove_root && !object->IsDetached()) {
+      Remove(object, /*notify_parent=*/false);
+    }
   }
-  // Removing the children can remove |object|.
-  if (remove_root && !object->IsDetached()) {
-    Remove(object, /*notify_parent=*/false);
+
+  if (!in_remove_subtree_ && relation_cache_ &&
+      lifecycle_.StateAllowsImmediateTreeUpdates()) {
+    relation_cache_->RestorePendingParents();
   }
 }
 
@@ -2141,9 +2155,17 @@ void AXObjectCacheImpl::RemoveSubtree(const Node* node) {
 void AXObjectCacheImpl::RemoveSubtree(const Node* node,
                                       bool remove_root,
                                       bool notify_parent) {
-  HashSet<AXID> removing_subtree_axids;
-  RemoveSubtreeInternal(node, remove_root, notify_parent,
-                        removing_subtree_axids);
+  {
+    base::AutoReset<bool> in_remove_subtree(&in_remove_subtree_, true);
+    HashSet<AXID> removing_subtree_axids;
+    RemoveSubtreeInternal(node, remove_root, notify_parent,
+                          removing_subtree_axids);
+  }
+
+  if (!in_remove_subtree_ && relation_cache_ &&
+      lifecycle_.StateAllowsImmediateTreeUpdates()) {
+    relation_cache_->RestorePendingParents();
+  }
 }
 
 void AXObjectCacheImpl::RemoveSubtreeInternal(
@@ -3745,6 +3767,7 @@ bool AXObjectCacheImpl::CommitAXUpdates(Document& document, bool force) {
         MarkDocumentDirtyWithCleanLayout();
         mark_all_dirty_ = false;
       }
+      relation_cache_->ProcessUpdatesWithCleanLayout();
 
       // Now that tree updates and aria-owns relations have been processed,
       // mark all the radios that belong to a radiogroup with a changed children
@@ -3756,6 +3779,7 @@ bool AXObjectCacheImpl::CommitAXUpdates(Document& document, bool force) {
       CHECK(nodes_with_pending_children_changed_.empty());
       CHECK(queued_children_changed_ancestors_.empty());
       CHECK(aria_radiogroups_with_changed_membership_.empty());
+      CHECK(dirty_radio_button_peers_.empty());
 
       {
         lifecycle_.AdvanceTo(AXObjectCacheLifecycle::kFinalizingTree);
@@ -4211,7 +4235,18 @@ void AXObjectCacheImpl::MarkAriaRadioGroupMembersDirty() {
   CHECK(lifecycle_.StateAllowsAXObjectsToGainFinalizationNeededBit());
   // Collecting the radios can update children, which can record more
   // radiogroups, so process until none remain.
-  while (!aria_radiogroups_with_changed_membership_.empty()) {
+  while (!aria_radiogroups_with_changed_membership_.empty() ||
+         !dirty_radio_button_peers_.empty()) {
+    while (!dirty_radio_button_peers_.empty()) {
+      HashSet<AXID> peer_ids;
+      peer_ids.swap(dirty_radio_button_peers_);
+      for (AXID peer_id : peer_ids) {
+        if (AXObject* peer = ObjectFromAXID(peer_id);
+            peer && !peer->IsDetached()) {
+          MarkAXObjectDirtyWithCleanLayout(peer);
+        }
+      }
+    }
     HashSet<AXID> radiogroup_ids;
     radiogroup_ids.swap(aria_radiogroups_with_changed_membership_);
     for (AXID radiogroup_id : radiogroup_ids) {
@@ -6078,6 +6113,9 @@ void AXObjectCacheImpl::RestoreParentOrPruneWithCleanLayout(Node* child_node) {
       // Mark the parent dirty so it picks up this child on next update.
       if (parent) {
         ChildrenChangedWithCleanLayout(parent);
+        if (!parent->IsDetached() && !parent->IsMissingParent()) {
+          parent->UpdateChildrenIfNecessary();
+        }
       }
       return;
     }
