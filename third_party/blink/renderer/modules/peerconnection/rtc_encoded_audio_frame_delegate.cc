@@ -12,7 +12,8 @@
 
 namespace blink {
 
-const void* RTCEncodedAudioFramesAttachment::kAttachmentKey;
+const void* const RTCEncodedAudioFramesAttachment::kAttachmentKey =
+    &RTCEncodedAudioFramesAttachment::kAttachmentKey;
 
 RTCEncodedAudioFrameDelegate::RTCEncodedAudioFrameDelegate(
     std::unique_ptr<webrtc::TransformableAudioFrameInterface> webrtc_frame,
