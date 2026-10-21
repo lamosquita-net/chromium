@@ -1719,7 +1719,7 @@ bool CSSSelector::IsAllowedAfterPart() const {
     case kPseudoHasDatalist:
     case kPseudoHost:
     case kPseudoHostContext:
-    case kPseudoHostHasAppearance:
+    case kPseudoHostHasNonAutoAppearance:
     case kPseudoScope:
       return false;
 
