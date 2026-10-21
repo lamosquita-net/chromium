@@ -156,7 +156,9 @@ class AudioParamHandler final : public ThreadSafeRefCounted<AudioParamHandler>,
     return has_values || NumberOfRenderingConnections();
   }
 
-  bool IsAudioRate() const { return automation_rate_ == kAudio; }
+  // FlyWeb: read the rate under `rate_lock_` too; the main thread sets it while
+  // the audio thread reads it (completes Chromium 8669b50ce1c, crbug 357391257).
+  bool IsAudioRate() const { return GetAutomationRate() == kAudio; }
 
   // Calculates numberOfValues parameter values starting at the context's
   // current time.

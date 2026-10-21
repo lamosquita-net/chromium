@@ -1577,8 +1577,13 @@ const LayoutObject* InlineCursor::CulledInlineTraversal::Find(
       return child;
 
     if (child->IsBox()) {
-      if (!child->IsFloatingOrOutOfFlowPositioned())
+      if (!child->IsFloatingOrOutOfFlowPositioned() &&
+          // Some objects are out of the IFC although they look like in-flow
+          // (`!IsFloatingOrOutOfFlowPositioned()`), such as ruby annotations or
+          // after block-in-inline splits.
+          child->IsInLayoutNGInlineFormattingContext()) {
         return child;
+      }
       child = child->NextInPreOrderAfterChildren(layout_inline_);
       continue;
     }

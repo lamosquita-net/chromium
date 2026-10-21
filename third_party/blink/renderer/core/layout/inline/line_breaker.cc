@@ -1030,11 +1030,12 @@ void LineBreaker::BreakLine(LineInfo* line_info) {
         MoveToNextOf(item);
         continue;
       }
-      if (!HandleRuby(line_info)) {
+      if (HandleRuby(line_info)) {
+        HandleOverflowIfNeeded(line_info);
+      } else {
         AddItem(item, line_info);
         MoveToNextOf(item);
       }
-      HandleOverflowIfNeeded(line_info);
       continue;
     }
     if (item.Type() == InlineItem::kOutOfFlowPositioned) {
@@ -1364,7 +1365,9 @@ void LineBreaker::HandleText(const InlineItem& item,
           IsBreakableSpace(Text()[item_result->EndOffset() - 1])) {
         unsigned end_index = base::checked_cast<unsigned>(
             item_result - line_info->Results().begin());
-        Rewind(end_index, line_info);
+        if (!parent_breaker_ || end_index > 0u) {
+          Rewind(end_index, line_info);
+        }
       }
       return;
     }
@@ -2893,8 +2896,8 @@ void LineBreaker::HandleControlItem(const InlineItem& item,
       }
       const ShapeResult* shape_result =
           ShapeResult::CreateForTabulationCharacters(
-              &style.GetFont(), item.Direction(), style.GetTabSize(), position_,
-              item.StartOffset(), item.Length());
+              &style.GetFont(), item.Direction(), style.GetTabSize(),
+              position_ + tab_stop_offset_, item.StartOffset(), item.Length());
       HandleText(item, *shape_result, line_info);
       return;
     }
@@ -3015,6 +3018,11 @@ void LineBreaker::HandleAtomicInline(const InlineItem& item,
   if (UNLIKELY(HasHyphen()))
     position_ -= RemoveHyphen(line_info->MutableResults());
 
+  const LineBreaker* root_breaker = this;
+  while (root_breaker->parent_breaker_) {
+    root_breaker = root_breaker->parent_breaker_;
+  }
+  const LineBreakerMode mode = root_breaker->mode_;
   const bool is_initial_letter_box =
       item.Type() == InlineItem::kInitialLetterBox;
   // When we're just computing min/max content sizes, we can skip the full
@@ -3022,7 +3030,7 @@ void LineBreaker::HandleAtomicInline(const InlineItem& item,
   // layout we need to do the full layout and get the layout result.
   // Doing a full layout for min/max content can also have undesirable
   // side effects when that falls back to legacy layout.
-  if (mode_ == LineBreakerMode::kContent || UNLIKELY(is_initial_letter_box)) {
+  if (mode == LineBreakerMode::kContent || UNLIKELY(is_initial_letter_box)) {
     // If our baseline-source is non-auto use the easier to reason about
     // "default" algorithm type.
     BaselineAlgorithmType baseline_algorithm_type =
@@ -3065,9 +3073,9 @@ void LineBreaker::HandleAtomicInline(const InlineItem& item,
 
     item_result->inline_size += inline_margins;
   } else {
-    DCHECK(mode_ == LineBreakerMode::kMaxContent ||
-           mode_ == LineBreakerMode::kMinContent);
-    ComputeMinMaxContentSizeForBlockChild(item, item_result);
+    DCHECK(mode == LineBreakerMode::kMaxContent ||
+           mode == LineBreakerMode::kMinContent);
+    ComputeMinMaxContentSizeForBlockChild(item, item_result, root_breaker);
   }
 
   item_result->should_create_line_box = true;
@@ -3097,17 +3105,21 @@ void LineBreaker::HandleAtomicInline(const InlineItem& item,
 
 void LineBreaker::ComputeMinMaxContentSizeForBlockChild(
     const InlineItem& item,
-    InlineItemResult* item_result) {
-  DCHECK(mode_ == LineBreakerMode::kMaxContent ||
-         mode_ == LineBreakerMode::kMinContent);
-  if (mode_ == LineBreakerMode::kMaxContent && max_size_cache_) {
+    InlineItemResult* item_result,
+    const LineBreaker* root_breaker) {
+  const LineBreakerMode mode = root_breaker->mode_;
+  MaxSizeCache* size_cache = root_breaker->max_size_cache_;
+
+  DCHECK(mode == LineBreakerMode::kMaxContent ||
+         mode == LineBreakerMode::kMinContent);
+  if (mode == LineBreakerMode::kMaxContent && size_cache) {
     const unsigned item_index =
         base::checked_cast<unsigned>(&item - Items().begin());
-    item_result->inline_size = (*max_size_cache_)[item_index];
+    item_result->inline_size = (*size_cache)[item_index];
     return;
   }
 
-  DCHECK(mode_ == LineBreakerMode::kMinContent || !max_size_cache_);
+  DCHECK(mode == LineBreakerMode::kMinContent || !size_cache);
   BlockNode child(To<LayoutBox>(item.GetLayoutObject()));
 
   MinMaxConstraintSpaceBuilder builder(constraint_space_, node_.Style(), child,
@@ -3124,12 +3136,14 @@ void LineBreaker::ComputeMinMaxContentSizeForBlockChild(
   // Ensure `NeedsCollectInlines` isn't set, or it may cause security risks.
   CHECK(!node_.GetLayoutBox()->NeedsCollectInlines());
   const LayoutUnit inline_margins = item_result->margins.InlineSum();
-  const LineBreaker* main_breaker = parent_breaker_ ? parent_breaker_ : this;
+  const LineBreaker* main_breaker = root_breaker;
   if (main_breaker->mode_ == LineBreakerMode::kMinContent) {
     item_result->inline_size = result.sizes.min_size + inline_margins;
-    if (depends_on_block_constraints_out_)
-      *depends_on_block_constraints_out_ |= result.depends_on_block_constraints;
-    if (MaxSizeCache* size_cache = main_breaker->max_size_cache_) {
+    if (root_breaker->depends_on_block_constraints_out_) {
+      *root_breaker->depends_on_block_constraints_out_ |=
+          result.depends_on_block_constraints;
+    }
+    if ((size_cache = main_breaker->max_size_cache_)) {
       if (size_cache->empty()) {
         size_cache->resize(Items().size());
       }
@@ -3140,7 +3154,7 @@ void LineBreaker::ComputeMinMaxContentSizeForBlockChild(
     return;
   }
 
-  DCHECK(mode_ == LineBreakerMode::kMaxContent && !max_size_cache_);
+  DCHECK(mode == LineBreakerMode::kMaxContent && !size_cache);
   item_result->inline_size = result.sizes.max_size + inline_margins;
 }
 
@@ -3216,7 +3230,7 @@ void LineBreaker::HandleBlockInInline(const InlineItem& item,
   } else {
     DCHECK(mode_ == LineBreakerMode::kMaxContent ||
            mode_ == LineBreakerMode::kMinContent);
-    ComputeMinMaxContentSizeForBlockChild(item, item_result);
+    ComputeMinMaxContentSizeForBlockChild(item, item_result, this);
   }
 
   position_ += item_result->inline_size;
@@ -3329,6 +3343,9 @@ bool LineBreaker::HandleRuby(LineInfo* line_info, LayoutUnit retry_size) {
                                : retry_size - 1;
   base_line_info = CreateSubLineInfo(base_start, base_end_index, mode_,
                                      base_target, trailing_whitespace_);
+  // We assume a base LineInfo contains at least one InlineItemResult.
+  // If it's zero, we can't adjust LogicalRubyColumns on bidi reorder.
+  CHECK_GT(base_line_info.Results().size(), 0u);
 
   bool annotation_is_broken = false;
   for (wtf_size_t i = 0; i < number_of_annotations; ++i) {
@@ -3411,6 +3428,11 @@ bool LineBreaker::IsMonolithicRuby(
     return true;
   }
 
+  // The base line is not breakable.
+  if (base_line.Width() <= LayoutUnit()) {
+    return true;
+  }
+
   // We don't break rubies in text-wrap:balance and text-wrap:pretty
   // because the sum of broken ruby inline-size can be different from the
   // inline-size of a non-broken ruby.
@@ -3465,6 +3487,11 @@ LineInfo LineBreaker::CreateSubLineInfo(
   sub_line_breaker.disallow_auto_wrap_ = disallow_auto_wrap;
   sub_line_breaker.SetInputRange(start, end_item_index,
                                  initial_whitespace_state, this);
+  // Tab stops occur at points that are multiples of the tab size from the
+  // starting content edge of the preserved tab's nearest block container
+  // ancestor.
+  // https://www.w3.org/TR/css-text-3/#white-space-phase-2
+  sub_line_breaker.tab_stop_offset_ = position_ + tab_stop_offset_;
   // OverrideAvailableWidth() prevents HandleFloat() from updating
   // available_width_.
   sub_line_breaker.OverrideAvailableWidth(limit);
@@ -4111,8 +4138,13 @@ void LineBreaker::HandleOverflow(LineInfo* line_info) {
 
   // Restore the hyphenation states to before the loop if needed.
   DCHECK(!HasHyphen());
-  if (UNLIKELY(hyphen_index_before))
+  // The loop above may have shrunk `item_results` via `Rewind()` (e.g. when
+  // handling a ruby column), so the saved index can be stale. Only restore
+  // the hyphen if the item it referenced still exists. See crbug.com/435058045.
+  if (UNLIKELY(hyphen_index_before &&
+               *hyphen_index_before < item_results->size())) {
     position_ += AddHyphen(item_results, *hyphen_index_before);
+  }
 
   // If there was a break opportunity, the overflow should stop there.
   if (break_before) {

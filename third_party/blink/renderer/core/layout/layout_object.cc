@@ -1648,7 +1648,11 @@ void LayoutObject::MarkParentForSpannerOrOutOfFlowPositionedChange() {
   //
   // Note that this isn't necessary if we're dealing with a column spanner here,
   // but in order to keep things simple, we'll make no difference.
-  object->SetNeedsCollectInlines();
+  //
+  // `SetChildNeedsCollectInlines()` and not `SetNeedsCollectInlines()`: the
+  // latter can set the flag across the boundary of an inline formatting
+  // context, which is not allowed for atomic inlines (Chromium cc7d71057b7).
+  object->SetChildNeedsCollectInlines();
 
   const LayoutBlock* containing_block = ContainingBlock();
   while (object != containing_block) {

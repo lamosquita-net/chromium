@@ -177,6 +177,22 @@ bool ElementForcesStackingContext(Element* element) {
   return false;
 }
 
+// We need to avoid to inlinify children of <fieldset>, <audio>, and <video>.
+// They create dedicated LayoutObjects, and assume only block children.
+bool ShouldBeInlinified(const Element* element) {
+  if (!element) {
+    return true;
+  }
+  const Element* parent = FlatTreeTraversal::ParentElement(*element);
+  for (; parent; parent = FlatTreeTraversal::ParentElement(*parent)) {
+    const ComputedStyle* parent_style = parent->GetComputedStyle();
+    if (!parent_style || parent_style->Display() != EDisplay::kContents) {
+      break;
+    }
+  }
+  return !IsA<HTMLFieldSetElement>(parent) && !IsA<HTMLMediaElement>(parent);
+}
+
 }  // namespace
 
 // https://drafts.csswg.org/css-display/#transformations
@@ -639,11 +655,8 @@ static void AdjustStyleForDisplay(ComputedStyleBuilder& builder,
     }
   }
 
-  // We need to avoid to inlinify children of a <fieldset>, which creates a
-  // dedicated LayoutObject and it assumes only block children.
   if (layout_parent_style.InlinifiesChildren() &&
-      !builder.HasOutOfFlowPosition() &&
-      !(element && IsA<HTMLFieldSetElement>(element->parentNode()))) {
+      !builder.HasOutOfFlowPosition() && ShouldBeInlinified(element)) {
     if (RuntimeEnabledFeatures::RubyLineBreakableEnabled() &&
         builder.IsFloating()) {
       builder.SetFloating(EFloat::kNone);
