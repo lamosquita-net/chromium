@@ -14,16 +14,15 @@ class FontFeatureValuesMapIterationSource final
  public:
   FontFeatureValuesMapIterationSource(const CSSFontFeatureValuesMap& map,
                                       const FontFeatureAliases* aliases)
-      : map_(map), aliases_(aliases), iterator_(aliases->begin()) {}
+      : map_(map),
+        aliases_(aliases ? *aliases : FontFeatureAliases()),
+        iterator_(aliases_.begin()) {}
 
   bool FetchNextItem(ScriptState* script_state,
                      String& map_key,
                      Vector<uint32_t>& map_value,
                      ExceptionState&) override {
-    if (!aliases_) {
-      return false;
-    }
-    if (iterator_ == aliases_->end()) {
+    if (iterator_ == aliases_.end()) {
       return false;
     }
     map_key = iterator_->key;
@@ -40,7 +39,10 @@ class FontFeatureValuesMapIterationSource final
  private:
   // Needs to be kept alive while we're iterating over it.
   const Member<const CSSFontFeatureValuesMap> map_;
-  const FontFeatureAliases* aliases_;
+  // FlyWeb: backport of the fix for CVE-2026-2441 (https://crbug.com/483569511).
+  // Iterate over an owned copy: set(), delete() or clear() on the map during
+  // iteration rehash the live HashMap and would leave `iterator_` dangling.
+  const FontFeatureAliases aliases_;
   FontFeatureAliases::const_iterator iterator_;
 };
 

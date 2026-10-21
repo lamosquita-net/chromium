@@ -14,7 +14,8 @@
 
 namespace blink {
 
-const void* const RTCEncodedVideoFramesAttachment::kAttachmentKey = nullptr;
+const void* const RTCEncodedVideoFramesAttachment::kAttachmentKey =
+    &RTCEncodedVideoFramesAttachment::kAttachmentKey;
 
 RTCEncodedVideoFrameDelegate::RTCEncodedVideoFrameDelegate(
     std::unique_ptr<webrtc::TransformableVideoFrameInterface> webrtc_frame)
