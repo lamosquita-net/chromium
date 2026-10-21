@@ -11,6 +11,7 @@
 #include "base/check.h"
 #include "base/containers/flat_map.h"
 #include "base/dcheck_is_on.h"
+#include "base/feature_list.h"
 #include "base/functional/bind.h"
 #include "base/no_destructor.h"
 #include "base/strings/pattern.h"
@@ -25,6 +26,7 @@
 #include "extensions/browser/extensions_browser_client.h"
 #include "extensions/common/api/web_request/web_request_resource_type.h"
 #include "extensions/common/constants.h"
+#include "extensions/common/extension_features.h"
 #include "net/base/registry_controlled_domains/registry_controlled_domain.h"
 #include "net/http/http_response_headers.h"
 #include "third_party/blink/public/mojom/loader/resource_load_info.mojom-shared.h"
@@ -133,6 +135,7 @@ bool MatchesHeaderConditions(
 }
 
 bool DoEmbedderConditionsMatch(
+    bool has_host_access,
     int tab_id,
     const std::string& top_level_frame_or_initiator_host,
     scoped_refptr<const net::HttpResponseHeaders> response_headers,
@@ -156,6 +159,13 @@ bool DoEmbedderConditionsMatch(
   auto* embedder_conditions =
       flatbuffers::GetRoot<flat::EmbedderConditions>(conditions_buffer.Data());
   DCHECK(embedder_conditions);
+
+  // If the extension doesn't have host access to the request, then rules with
+  // embedder conditions that require host permissions cannot possibly match.
+  // Note: this must be checked before evaluating any header conditions.
+  if (!has_host_access && embedder_conditions->requires_host_permissions()) {
+    return false;
+  }
 
   auto matches_tab_ids =
       [tab_id](const flatbuffers::Vector<int32_t>& sorted_tab_ids) {
@@ -224,6 +234,27 @@ bool DoEmbedderConditionsMatch(
   return true;
 }
 
+// Initializes the embedder conditions matchers for `params`.
+void InitEmbedderConditionsMatchers(
+    RequestParams& params,
+    int tab_id,
+    const std::string& top_level_frame_or_initiator_host,
+    scoped_refptr<const net::HttpResponseHeaders> response_headers) {
+  params.embedder_conditions_matcher_with_host_access = base::BindRepeating(
+      DoEmbedderConditionsMatch, /*has_host_access=*/true, tab_id,
+      top_level_frame_or_initiator_host, response_headers);
+
+  // If restricting response header value matching is disabled, rules which
+  // would otherwise require host permissions are matched regardless.
+  const bool restrict_header_value_matching = base::FeatureList::IsEnabled(
+      extensions_features::
+          kDeclarativeNetRequestRestrictResponseHeaderValueMatching);
+  params.embedder_conditions_matcher_without_host_access = base::BindRepeating(
+      DoEmbedderConditionsMatch,
+      /*has_host_access=*/!restrict_header_value_matching, tab_id,
+      top_level_frame_or_initiator_host, std::move(response_headers));
+}
+
 }  // namespace
 
 RequestParams::RequestParams(
@@ -270,9 +301,9 @@ RequestParams::RequestParams(
         top_level_frame_or_initiator_origin.host();
   }
 
-  embedder_conditions_matcher = base::BindRepeating(
-      DoEmbedderConditionsMatch, info.frame_data.tab_id,
-      std::move(top_level_frame_or_initiator_host), response_headers);
+  InitEmbedderConditionsMatchers(*this, info.frame_data.tab_id,
+                                 top_level_frame_or_initiator_host,
+                                 std::move(response_headers));
 }
 
 RequestParams::RequestParams(
@@ -311,9 +342,9 @@ RequestParams::RequestParams(
   ExtensionsBrowserClient::Get()->GetTabAndWindowIdForWebContents(
       content::WebContents::FromRenderFrameHost(host), &tab_id,
       &window_id_unused);
-  embedder_conditions_matcher = base::BindRepeating(
-      DoEmbedderConditionsMatch, tab_id,
-      std::move(top_level_frame_or_initiator_host), response_headers);
+  InitEmbedderConditionsMatchers(*this, tab_id,
+                                 top_level_frame_or_initiator_host,
+                                 std::move(response_headers));
 }
 
 RequestParams::RequestParams(
@@ -328,12 +359,11 @@ RequestParams::RequestParams(
       first_party_origin(initiator),
       element_type(GetElementType(request_type)),
       is_third_party(IsThirdPartyRequest(url, first_party_origin)),
-      method(GetRequestMethod(url.SchemeIsHTTPOrHTTPS(), request_method)),
-      embedder_conditions_matcher(base::BindRepeating(
-          DoEmbedderConditionsMatch,
-          tab_id,
-          top_origin.opaque() ? initiator.host() : top_origin.host(),
-          response_headers)) {}
+      method(GetRequestMethod(url.SchemeIsHTTPOrHTTPS(), request_method)) {
+  InitEmbedderConditionsMatchers(
+      *this, tab_id, top_origin.opaque() ? initiator.host() : top_origin.host(),
+      std::move(response_headers));
+}
 
 RequestParams::RequestParams() = default;
 RequestParams::~RequestParams() = default;

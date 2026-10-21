@@ -1346,7 +1346,8 @@ TEST_F(AllowAllRequestsTest, AllowlistedFrameTracking) {
     testing::NiceMock<content::MockNavigationHandle> navigation_handle(
         url, new_host);
     navigation_handle.set_has_committed(true);
-    matcher->OnDidFinishNavigation(&navigation_handle);
+    matcher->OnDidFinishNavigation(&navigation_handle,
+                                   /*has_host_access_for_navigation=*/true);
 
     return new_host;
   };
@@ -1456,7 +1457,8 @@ TEST_F(AllowAllRequestsTest, GetBeforeRequestAction) {
   testing::NiceMock<content::MockNavigationHandle> navigation_handle(
       google_url, web_contents->GetPrimaryMainFrame());
   navigation_handle.set_has_committed(true);
-  matcher->OnDidFinishNavigation(&navigation_handle);
+  matcher->OnDidFinishNavigation(&navigation_handle,
+                                 /*has_host_access_for_navigation=*/true);
 
   struct {
     std::string url;
@@ -1549,6 +1551,8 @@ TEST_F(RulesetMatcherTest, SetDisabledRuleIds) {
 
 class RulesetMatcherResponseHeadersTest : public RulesetMatcherTest {
  public:
+  static constexpr char kExtensionId[] = "extensionid";
+
   RulesetMatcherResponseHeadersTest() {
     scoped_feature_list_.InitAndEnableFeature(
         extensions_features::kDeclarativeNetRequestResponseHeaderMatching);
@@ -1589,6 +1593,9 @@ TEST_F(RulesetMatcherResponseHeadersTest, OnHeadersReceivedAction) {
   GURL google_url("http://google.com");
   RequestParams params =
       CreateRequestWithResponseHeaders(google_url, base_headers.get());
+  // `response_headers_rule` matches on a header value, which requires host
+  // access.
+  params.has_host_access[kExtensionId] = true;
 
   std::unique_ptr<RulesetMatcher> matcher;
   ASSERT_TRUE(
@@ -1862,6 +1869,8 @@ TEST_F(RulesetMatcherResponseHeadersTest, MatchOnResponseHeaders) {
         net::HttpUtil::AssembleRawHeaders(cases[i].response_headers.c_str()));
     RequestParams params =
         CreateRequestWithResponseHeaders(url, base_headers.get());
+    // Some of the rules match on header values, which requires host access.
+    params.has_host_access[kExtensionId] = true;
     EXPECT_EQ(
         cases[i].expected_action,
         matcher->GetAction(params, RulesetMatchingStage::kOnHeadersReceived));
