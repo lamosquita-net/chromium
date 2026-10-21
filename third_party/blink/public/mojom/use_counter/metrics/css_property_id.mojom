@@ -852,6 +852,8 @@ enum CSSSampleId {
     kBoxDecorationBreak = 796,
     kPositionTryFallbacks = 797,
     kInterpolateSize = 798,
+    // FlyWeb (anchor positioning, af046fa668e): same number as Chrome 129.
+    kPositionArea = 800,
     // FlyWeb (level 130): same numbers as Chrome 130 (text-wrap-mode,
     // text-wrap-style).
     kTextWrapMode = 805,

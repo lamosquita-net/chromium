@@ -29,6 +29,7 @@ namespace blink {
 
 namespace cssvalue {
 class CSSFontFeatureValue;
+class CSSScopedKeywordValue;
 class CSSURIValue;
 }  // namespace cssvalue
 class CSSIdentifierValue;
@@ -215,6 +216,15 @@ template <CSSValueID... allowedIdents>
 CSSIdentifierValue* ConsumeIdent(CSSParserTokenRange&);
 template <CSSValueID... allowedIdents>
 CSSIdentifierValue* ConsumeIdent(CSSParserTokenStream&);
+
+template <CSSValueID... allowedIdents>
+bool PeekedIdentMatches(CSSParserTokenStream&);
+
+template <CSSValueID... allowedIdents>
+cssvalue::CSSScopedKeywordValue* ConsumeScopedKeywordValue(
+    CSSParserTokenStream&);
+cssvalue::CSSScopedKeywordValue* ConsumeScopedKeywordValue(
+    CSSParserTokenStream&);
 
 CSSCustomIdentValue* ConsumeCustomIdent(CSSParserTokenRange&,
                                         const CSSParserContext&);
@@ -750,16 +760,16 @@ CSSValue* ConsumeFontSizeAdjust(CSSParserTokenStream&, const CSSParserContext&);
 bool ShouldLowerCaseCounterStyleNameOnParse(const AtomicString&,
                                             const CSSParserContext&);
 
-// https://drafts.csswg.org/css-anchor-position-1/#typedef-inset-area
+// https://drafts.csswg.org/css-anchor-position-1/#typedef-position-area
 template <class T>
   requires std::is_same_v<T, CSSParserTokenStream> ||
            std::is_same_v<T, CSSParserTokenRange>
-CSSValue* ConsumeInsetArea(T&);
+CSSValue* ConsumePositionArea(T&);
 
-// inset-area can take one or two keywords. If the second is omitted, either the
-// first is repeated, or the second is span-all. This method returns true if the
-// omitted value should be the first one repeated.
-bool IsRepeatedInsetAreaValue(CSSValueID value_id);
+// position-area can take one or two keywords. If the second is omitted, either
+// the first is repeated, or the second is span-all. This method returns true if
+// the omitted value should be the first one repeated.
+bool IsRepeatedPositionAreaValue(CSSValueID value_id);
 
 // Template implementations are at the bottom of the file for readability.
 
@@ -770,6 +780,12 @@ inline bool IdentMatches(CSSValueID id) {
 template <CSSValueID head, CSSValueID... tail>
 inline bool IdentMatches(CSSValueID id) {
   return id == head || IdentMatches<tail...>(id);
+}
+
+template <CSSValueID... allowedIdents>
+bool PeekedIdentMatches(CSSParserTokenStream& stream) {
+  return stream.Peek().GetType() == kIdentToken &&
+         IdentMatches<allowedIdents...>(stream.Peek().Id());
 }
 
 template <typename...>
@@ -793,11 +809,19 @@ CSSIdentifierValue* ConsumeIdent(CSSParserTokenRange& range) {
 
 template <CSSValueID... names>
 CSSIdentifierValue* ConsumeIdent(CSSParserTokenStream& stream) {
-  if (stream.Peek().GetType() != kIdentToken ||
-      !IdentMatches<names...>(stream.Peek().Id())) {
+  if (!PeekedIdentMatches<names...>(stream)) {
     return nullptr;
   }
   return CSSIdentifierValue::Create(stream.ConsumeIncludingWhitespace().Id());
+}
+
+template <CSSValueID... names>
+cssvalue::CSSScopedKeywordValue* ConsumeScopedKeywordValue(
+    CSSParserTokenStream& stream) {
+  if (!PeekedIdentMatches<names...>(stream)) {
+    return nullptr;
+  }
+  return ConsumeScopedKeywordValue(stream);
 }
 
 // ConsumeCommaSeparatedList and ConsumeSpaceSeparatedList take a callback
@@ -923,8 +947,8 @@ bool ConsumeIfDelimiter(T& range_or_stream, UChar c) {
 
 CORE_EXPORT CSSValue* ConsumeSinglePositionTryFallback(CSSParserTokenStream&,
                                                        const CSSParserContext&);
-CSSValue* ConsumePositionTryFallbacks(CSSParserTokenStream&,
-                                      const CSSParserContext&);
+CORE_EXPORT CSSValue* ConsumePositionTryFallbacks(CSSParserTokenStream&,
+                                                  const CSSParserContext&);
 
 // If the stream starts with “!important”, consumes it and returns true.
 // If the stream is at EOF, returns false.

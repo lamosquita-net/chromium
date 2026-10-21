@@ -1240,6 +1240,7 @@ class CORE_EXPORT LayoutBox : public LayoutBoxModelObject {
 
   const BoxStrut& OutOfFlowInsetsForGetComputedStyle() const;
 
+  Element* AccessibilityAnchor() const;
   const HeapHashSet<Member<Element>>* DisplayLocksAffectedByAnchors() const;
   void NotifyContainingDisplayLocksForAnchorPositioning(
       const HeapHashSet<Member<Element>>*

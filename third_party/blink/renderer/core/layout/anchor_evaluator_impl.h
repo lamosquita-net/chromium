@@ -324,16 +324,22 @@ class CORE_EXPORT AnchorEvaluatorImpl : public AnchorEvaluator {
   std::optional<LayoutUnit> Evaluate(
       const class AnchorQuery&,
       const ScopedCSSName* position_anchor,
-      const std::optional<InsetAreaOffsets>&) override;
+      const std::optional<PositionAreaOffsets>&) override;
 
-  std::optional<InsetAreaOffsets> ComputeInsetAreaOffsetsForLayout(
+  std::optional<PositionAreaOffsets> ComputePositionAreaOffsetsForLayout(
       const ScopedCSSName* position_anchor,
-      InsetArea inset_area) override;
+      PositionArea position_area) override;
 
   std::optional<PhysicalOffset> ComputeAnchorCenterOffsets(
       const ComputedStyleBuilder&) override;
 
   const LogicalAnchorQuery* AnchorQuery() const;
+
+  // Returns the most recent anchor evaluated. If more than one anchor has been
+  // evaluated so far, nullptr is returned. This is done to avoid extra noise
+  // for assistive tech.
+  Element* AccessibilityAnchor() const;
+  void ClearAccessibilityAnchor();
 
   HeapHashSet<Member<Element>>* GetDisplayLocksAffectedByAnchors() const {
     return display_locks_affected_by_anchors_;
@@ -351,11 +357,12 @@ class CORE_EXPORT AnchorEvaluatorImpl : public AnchorEvaluator {
       CSSAnchorValue anchor_value,
       float percentage,
       const ScopedCSSName* position_anchor,
-      const std::optional<InsetAreaOffsets>&) const;
+      const std::optional<PositionAreaOffsets>&) const;
   std::optional<LayoutUnit> EvaluateAnchorSize(
       const AnchorSpecifierValue& anchor_specifier,
       CSSAnchorSizeValue anchor_size_value,
       const ScopedCSSName* position_anchor) const;
+  void UpdateAccessibilityAnchor(const LayoutObject* anchor) const;
 
   const LayoutObject* DefaultAnchor(const ScopedCSSName* position_anchor) const;
   const PaintLayer* DefaultAnchorScrollContainerLayer(
@@ -367,15 +374,15 @@ class CORE_EXPORT AnchorEvaluatorImpl : public AnchorEvaluator {
   bool IsRightOrBottom() const;
 
   LayoutUnit AvailableSizeAlongAxis(
-      const PhysicalRect& inset_area_modified_containing_block_rect) const {
-    return IsYAxis() ? inset_area_modified_containing_block_rect.Height()
-                     : inset_area_modified_containing_block_rect.Width();
+      const PhysicalRect& position_area_modified_containing_block_rect) const {
+    return IsYAxis() ? position_area_modified_containing_block_rect.Height()
+                     : position_area_modified_containing_block_rect.Width();
   }
 
-  // Returns the containing block, further constrained by the inset-area.
+  // Returns the containing block, further constrained by the position-area.
   // Not to be confused with the inset-modified containing block.
-  PhysicalRect InsetAreaModifiedContainingBlock(
-      const std::optional<InsetAreaOffsets>&) const;
+  PhysicalRect PositionAreaModifiedContainingBlock(
+      const std::optional<PositionAreaOffsets>&) const;
 
   const LayoutObject* query_object_ = nullptr;
   mutable const LogicalAnchorQuery* anchor_query_ = nullptr;
@@ -424,9 +431,9 @@ class CORE_EXPORT AnchorEvaluatorImpl : public AnchorEvaluator {
     std::optional<ValueType> value_;
   };
 
-  // Caches most recent result of InsetAreaModifiedContainingBlock.
-  mutable CachedValue<std::optional<InsetAreaOffsets>, PhysicalRect>
-      cached_inset_area_modified_containing_block_;
+  // Caches most recent result of PositionAreaModifiedContainingBlock.
+  mutable CachedValue<std::optional<PositionAreaOffsets>, PhysicalRect>
+      cached_position_area_modified_containing_block_;
 
   // Caches most recent result of DefaultAnchor.
   mutable CachedValue<const ScopedCSSName*, const LayoutObject*>
@@ -438,6 +445,14 @@ class CORE_EXPORT AnchorEvaluatorImpl : public AnchorEvaluator {
 
   mutable bool needs_scroll_adjustment_in_x_ = false;
   mutable bool needs_scroll_adjustment_in_y_ = false;
+
+  // Most recent anchor evaluated, used for accessibility. This value is cleared
+  // before a @position-try rule is applied.
+  mutable Element* accessibility_anchor_ = nullptr;
+
+  // True if more than one anchor has been evaluated so far. This value is
+  // cleared before a @position-try rule is applied.
+  mutable bool has_multiple_accessibility_anchors_ = false;
 
   // A set of elements whose display locks' skipping status are potentially
   // impacted by anchors found by this evaluator.

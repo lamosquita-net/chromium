@@ -311,7 +311,6 @@ StyleScopeData* ElementRareDataVector::GetStyleScopeData() const {
 }
 
 OutOfFlowData& ElementRareDataVector::EnsureOutOfFlowData() {
-  CHECK(RuntimeEnabledFeatures::LastSuccessfulPositionOptionEnabled());
   return EnsureField<OutOfFlowData>(FieldId::kOutOfFlowData);
 }
 

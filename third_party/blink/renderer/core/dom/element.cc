@@ -1260,9 +1260,7 @@ Element* Element::anchorElement() const {
 void Element::setAnchorElement(Element* new_element) {
   CHECK(RuntimeEnabledFeatures::HTMLAnchorAttributeEnabled());
   SetElementAttribute(html_names::kAnchorAttr, new_element);
-  if (RuntimeEnabledFeatures::CSSAnchorPositioningEnabled()) {
-    EnsureAnchorElementObserver().Notify();
-  }
+  EnsureAnchorElementObserver().Notify();
 }
 
 inline void Element::SynchronizeAttribute(const QualifiedName& name) const {
@@ -2774,8 +2772,7 @@ void Element::AttributeChanged(const AttributeModificationParams& params) {
       }
     }
   } else if (params.name == html_names::kAnchorAttr) {
-    if (IsA<HTMLElement>(this) &&
-        RuntimeEnabledFeatures::CSSAnchorPositioningEnabled()) {
+    if (IsA<HTMLElement>(this)) {
       EnsureAnchorElementObserver().Notify();
       return;
     }
@@ -3460,6 +3457,7 @@ const ComputedStyle* Element::StyleForLayoutObject(
     // change as the result.
     DCHECK(GetDocument().GetStyleEngine().InContainerQueryStyleRecalc() ||
            GetDocument().GetStyleEngine().InPositionTryStyleRecalc() ||
+           PostStyleUpdateScope::InPendingPseudoUpdate() ||
            element_animations->CssAnimations().PendingUpdate().IsEmpty());
     element_animations->CssAnimations().ClearPendingUpdate();
   }
@@ -10169,7 +10167,6 @@ AnchorPositionScrollData* Element::GetAnchorPositionScrollData() const {
 }
 
 void Element::IncrementImplicitlyAnchoredElementCount() {
-  DCHECK(RuntimeEnabledFeatures::CSSAnchorPositioningEnabled());
   if (!HasImplicitlyAnchoredElement() && GetLayoutObject()) {
     // Invalidate layout to populate itself into Physical/LogicalAnchorQuery.
     GetLayoutObject()->SetNeedsLayoutAndFullPaintInvalidation(
@@ -10198,15 +10195,11 @@ AnchorElementObserver* Element::GetAnchorElementObserver() const {
 
 AnchorElementObserver& Element::EnsureAnchorElementObserver() {
   DCHECK(IsHTMLElement());
-  DCHECK(RuntimeEnabledFeatures::CSSAnchorPositioningEnabled());
   return EnsureElementRareData().EnsureAnchorElementObserver(
       To<HTMLElement>(this));
 }
 
 Element* Element::ImplicitAnchorElement() const {
-  if (!RuntimeEnabledFeatures::CSSAnchorPositioningEnabled()) {
-    return nullptr;
-  }
   if (const HTMLElement* html_element = DynamicTo<HTMLElement>(this)) {
     if (Element* anchor = html_element->anchorElement()) {
       DCHECK(RuntimeEnabledFeatures::HTMLAnchorAttributeEnabled());

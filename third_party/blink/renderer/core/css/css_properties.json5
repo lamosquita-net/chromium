@@ -282,14 +282,15 @@
     // See also AnchorScope::Mode.
     anchor_mode: {
       valid_values: [
-        // anchor()
+        // anchor() / anchor-size()
         "left",
         "right",
         "top",
         "bottom",
 
         // anchor-size()
-        "size",
+        "width",
+        "height",
       ]
     },
 
@@ -1838,17 +1839,15 @@
       converter: "ConvertAnchorName",
       keywords: ["none"],
       typedom_types: ["Keyword"],
-      runtime_flag: "CSSAnchorPositioning",
       valid_for_permission_element: true,
       invalidate: ["layout"],
     },
     {
       name: "anchor-scope",
       property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal" ],
-      include_paths: ["third_party/blink/renderer/core/style/scoped_css_name.h"],
-      type_name: "ScopedCSSNameList",
-      wrapper_pointer_name: "Member",
-      default_value: "nullptr",
+      include_paths: ["third_party/blink/renderer/core/style/style_anchor_scope.h"],
+      type_name: "StyleAnchorScope",
+      default_value: "StyleAnchorScope()",
       field_group: "*",
       field_template: "external",
       converter: "ConvertAnchorScope",
@@ -3380,7 +3379,7 @@
       default_value: "Length()",
       typedom_types: ["Keyword", "Length", "Percentage"],
       converter: "ConvertLengthSizing",
-      anchor_mode: "size",
+      anchor_mode: "height",
       logical_property_group: {
         name: "size",
         resolver: "vertical",
@@ -3705,6 +3704,7 @@
       valid_for_limited_page_context: true,
       valid_for_page_context: true,
       invalidate: ["margin", "out-of-flow", "scroll-anchor"],
+      anchor_mode: "height",
     },
     {
       name: "margin-left",
@@ -3729,6 +3729,7 @@
       valid_for_limited_page_context: true,
       valid_for_page_context: true,
       invalidate: ["margin", "out-of-flow", "scroll-anchor"],
+      anchor_mode: "width",
     },
     {
       name: "margin-right",
@@ -3753,6 +3754,7 @@
       valid_for_limited_page_context: true,
       valid_for_page_context: true,
       invalidate: ["margin", "out-of-flow", "scroll-anchor"],
+      anchor_mode: "width",
     },
     {
       name: "margin-top",
@@ -3777,6 +3779,7 @@
       valid_for_limited_page_context: true,
       valid_for_page_context: true,
       invalidate: ["margin", "out-of-flow", "scroll-anchor"],
+      anchor_mode: "height",
     },
     {
       name: "marker-end",
@@ -3864,7 +3867,7 @@
       field_template: "<length>",
       default_value: "Length::None()",
       converter: "ConvertLengthMaxSizing",
-      anchor_mode: "size",
+      anchor_mode: "height",
       keywords: ["none"],
       typedom_types: ["Keyword", "Length", "Percentage"],
       logical_property_group: {
@@ -3885,7 +3888,7 @@
       field_template: "<length>",
       default_value: "Length::None()",
       converter: "ConvertLengthMaxSizing",
-      anchor_mode: "size",
+      anchor_mode: "width",
       keywords: ["none"],
       typedom_types: ["Keyword", "Length", "Percentage"],
       logical_property_group: {
@@ -3906,7 +3909,7 @@
       field_template: "<length>",
       default_value: "Length()",
       converter: "ConvertLengthSizing",
-      anchor_mode: "size",
+      anchor_mode: "height",
       typedom_types: ["Length", "Percentage"],
       logical_property_group: {
         name: "min-size",
@@ -3926,7 +3929,7 @@
       field_template: "<length>",
       default_value: "Length()",
       converter: "ConvertLengthSizing",
-      anchor_mode: "size",
+      anchor_mode: "width",
       typedom_types: ["Length", "Percentage"],
       logical_property_group: {
         name: "min-size",
@@ -4536,7 +4539,7 @@
       // @position-try-styling rely on this being high-priority, so that
       // declarations from @position-try blocks can be applied conditionally
       // based on whether or not we're out-of-flow positioned. Also, it needs to
-      // have a priority higher than inset-area which is already at priority:1.
+      // have a priority higher than position-area which is already at priority:1.
       priority: 2,
       valid_for_permission_element: true,
       invalidate: ["clip", "layout", "scroll-anchor"],
@@ -4554,10 +4557,9 @@
       converter: "ConvertPositionAnchor",
       keywords: ["auto"],
       typedom_types: ["Keyword"],
-      runtime_flag: "CSSAnchorPositioning",
       valid_for_permission_element: true,
       valid_for_position_try: true,
-      // Needs to be applied before inset-area which in turn needs to be applied
+      // Needs to be applied before position-area which in turn needs to be applied
       // before inset properties.
       priority: 2,
       invalidate: ["layout", "paint"],
@@ -4592,7 +4594,6 @@
       typedom_types: ["Keyword"],
       default_value: "normal",
       invalidate: ["layout", "paint"],
-      runtime_flag: "CSSPositionTryOrder",
     },
     {
       name: "position-visibility",
@@ -4608,7 +4609,6 @@
       keywords: ["always", "anchors-visible", "no-overflow"],
       typedom_types: ["Keyword"],
       invalidate: ["layout", "paint"],
-      runtime_flag: "CSSPositionVisibility",
     },
     {
       name: "quotes",
@@ -6858,7 +6858,7 @@
       default_value: "Length()",
       typedom_types: ["Keyword", "Length", "Percentage"],
       converter: "ConvertLengthSizing",
-      anchor_mode: "size",
+      anchor_mode: "width",
       logical_property_group: {
         name: "size",
         resolver: "horizontal",
@@ -7628,30 +7628,42 @@
       runtime_flag: "ViewTransitionOnNavigation",
     },
     {
-      name: "inset-area",
+      name: "position-area",
       property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
       style_builder_custom_functions: ["value", "inherit"],
       field_group: "*",
       field_template: "external",
-      include_paths: ["third_party/blink/renderer/core/style/inset_area.h"],
-      converter: "ConvertInsetArea",
-      default_value: "InsetArea()",
-      type_name: "InsetArea",
+      include_paths: ["third_party/blink/renderer/core/style/position_area.h"],
+      converter: "ConvertPositionArea",
+      default_value: "PositionArea()",
+      type_name: "PositionArea",
       keywords: [
         "none", "top", "bottom", "center", "left", "right", "x-start", "x-end",
         "y-start", "y-end", "start", "end", "self-start", "self-end", "all"
       ],
       typedom_types: ["Keyword"],
       valid_for_position_try: true,
-      runtime_flag: "CSSAnchorPositioning",
       valid_for_permission_element: true,
-      // inset-area needs to be applied before inset properties since
+      // position-area needs to be applied before inset properties since
       // anchor() functions compute relative to the containing block that is
-      // modified by inset-area in AnchorEvaluatorImpl.
+      // modified by position-area in AnchorEvaluatorImpl.
       priority: 1,
       invalidate: ["layout", "out-of-flow", "paint"],
     },
+    {
+      name: "inset-area",
+      surrogate_for: "position-area",
+      runtime_flag: "CSSInsetAreaProperty",
 
+      property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
+      keywords: [
+        "none", "top", "bottom", "center", "left", "right", "x-start", "x-end",
+        "y-start", "y-end", "start", "end", "self-start", "self-end", "all"
+      ],
+      typedom_types: ["Keyword"],
+      valid_for_position_try: true,
+      priority: 1,
+    },
     // Shorthands
     {
       name: "animation",
@@ -8193,7 +8205,6 @@
       name: "position-try",
       longhands: ["position-try-order", "position-try-options"],
       property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
-      runtime_flag: "CSSPositionTryOrder",
     },
     {
       // Variant of the "position-try" shorthand which has the new

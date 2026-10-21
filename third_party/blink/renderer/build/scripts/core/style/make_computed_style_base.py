@@ -58,10 +58,11 @@ ALIGNMENT_ORDER = [
     'IntrinsicLength',
     'TextBoxEdge',
     'TextDecorationThickness',
+    'StyleAnchorScope',
     'StyleAspectRatio',
     'StyleIntrinsicLength',
     'std::optional<StyleOverflowClipMargin>',
-    'std::optional<blink::InsetAreaOffsets>',
+    'std::optional<blink::PositionAreaOffsets>',
     'std::optional<PhysicalOffset>',
     # Compressed builds a Member can be 32 bits, vs. a pointer will be 64.
     'Member',
@@ -96,7 +97,7 @@ ALIGNMENT_ORDER = [
     'size_t',
     'wtf_size_t',
     'int',
-    'InsetArea',
+    'PositionArea',
     # Aligns like short
     'unsigned short',
     'short',

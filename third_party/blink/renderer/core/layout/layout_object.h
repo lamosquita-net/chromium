@@ -743,10 +743,11 @@ class CORE_EXPORT LayoutObject : public GarbageCollected<LayoutObject>,
     if (IsViewTransitionRoot()) {
       return true;
     }
-    if (Element* element = DynamicTo<Element>(GetNode())) {
-      return StyleRef().IsRenderedInTopLayer(*element);
-    }
-    return false;
+    // FlyWeb (FS.22, upstream 0e454ce616, crbug 543070692): base this on the
+    // box tree position, not on the element flag and style, which can be out
+    // of sync while container queries attach/detach top-layer elements during
+    // layout (OOF candidates skip top-layer boxes since 1624b1441b9).
+    return !IsDocumentElement() && Parent()->IsLayoutView();
   }
 
   void NotifyPriorityScrollAnchorStatusChanged();

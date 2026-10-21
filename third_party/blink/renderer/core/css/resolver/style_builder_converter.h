@@ -50,6 +50,7 @@
 #include "third_party/blink/renderer/core/style/named_grid_lines_map.h"
 #include "third_party/blink/renderer/core/style/ordered_named_grid_lines.h"
 #include "third_party/blink/renderer/core/style/shadow_list.h"
+#include "third_party/blink/renderer/core/style/style_anchor_scope.h"
 #include "third_party/blink/renderer/core/style/style_offset_rotation.h"
 #include "third_party/blink/renderer/core/style/style_overflow_clip_margin.h"
 #include "third_party/blink/renderer/core/style/style_reflection.h"
@@ -243,8 +244,8 @@ class StyleBuilderConverter {
                                                       const CSSValue& value);
   static ScopedCSSNameList* ConvertAnchorName(StyleResolverState&,
                                               const CSSValue&);
-  static ScopedCSSNameList* ConvertAnchorScope(StyleResolverState&,
-                                               const CSSValue&);
+  static StyleAnchorScope ConvertAnchorScope(StyleResolverState&,
+                                             const CSSValue&);
   static StyleInitialLetter ConvertInitialLetter(StyleResolverState&,
                                                  const CSSValue&);
   static StyleOffsetRotation ConvertOffsetRotate(StyleResolverState&,
@@ -396,7 +397,7 @@ class StyleBuilderConverter {
   static ScopedCSSNameList* ConvertTimelineScope(StyleResolverState&,
                                                  const CSSValue&);
 
-  static InsetArea ConvertInsetArea(StyleResolverState&, const CSSValue&);
+  static PositionArea ConvertPositionArea(StyleResolverState&, const CSSValue&);
 };
 
 template <typename T>

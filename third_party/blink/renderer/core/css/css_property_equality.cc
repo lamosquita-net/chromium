@@ -174,7 +174,7 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
     case CSSPropertyID::kAnchorName:
       return base::ValuesEquivalent(a.AnchorName(), b.AnchorName());
     case CSSPropertyID::kAnchorScope:
-      return base::ValuesEquivalent(a.AnchorScope(), b.AnchorScope());
+      return a.AnchorScope() == b.AnchorScope();
     case CSSPropertyID::kAppearance:
       return a.Appearance() == b.Appearance();
     case CSSPropertyID::kAppRegion:
@@ -467,8 +467,9 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
       return a.ImageRendering() == b.ImageRendering();
     case CSSPropertyID::kInitialLetter:
       return a.InitialLetter() == b.InitialLetter();
+    case CSSPropertyID::kPositionArea:
     case CSSPropertyID::kInsetArea:
-      return a.GetInsetArea() == b.GetInsetArea();
+      return a.GetPositionArea() == b.GetPositionArea();
     case CSSPropertyID::kInterpolateSize:
       return a.InterpolateSize() == b.InterpolateSize();
     case CSSPropertyID::kIsolation:

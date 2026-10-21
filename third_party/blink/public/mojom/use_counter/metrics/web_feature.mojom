@@ -4405,6 +4405,8 @@ enum WebFeature {
   kAudioContextOnError = 5036,
   kNoVarySearchPrerender = 5037,
   kFlexNewColumnWrapIntrinsicSize = 5043,
+  // FlyWeb (anchor positioning, 4e48c369ccb): same number as Chrome 129.
+  kCSSInsetAreaProperty = 5060,
 
   // Add new features immediately above this line. Don't change assigned
   // numbers of any item, and don't reuse removed slots. Also don't add extra

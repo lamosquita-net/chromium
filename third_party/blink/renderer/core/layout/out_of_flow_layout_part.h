@@ -106,6 +106,9 @@ class CORE_EXPORT OutOfFlowLayoutPart {
     SetChildFragmentStorage(child_fragment_storage);
   }
 
+  // Go through each page area fragment and propagate OOF descendants.
+  void PropagateOOFsFromPageAreas();
+
   // Handle the layout of any OOF elements in a fragmentation context.
   void HandleFragmentation();
 
@@ -131,6 +134,8 @@ class CORE_EXPORT OutOfFlowLayoutPart {
     // The writing direction of the container.
     WritingDirectionMode writing_direction = {WritingMode::kHorizontalTb,
                                               TextDirection::kLtr};
+    // If the container is scrollable.
+    bool is_scroll_container;
     // Size and offset of the container.
     LogicalRect rect;
     // The relative positioned offset to be applied after fragmentation is
@@ -245,6 +250,7 @@ class CORE_EXPORT OutOfFlowLayoutPart {
     // True if the element overflows the inset-modified containing block.
     bool overflows_containing_block = false;
 
+    Member<Element> accessibility_anchor;
     Member<HeapHashSet<Member<Element>>> display_locks_affected_by_anchors;
 
     void Trace(Visitor* visitor) const;
@@ -299,7 +305,7 @@ class CORE_EXPORT OutOfFlowLayoutPart {
       LogicalOffset containing_block_offset = LogicalOffset(),
       bool adjust_for_fragmentation = false);
 
-  void LayoutCandidates();
+  void LayoutCandidates(HeapVector<LogicalOofPositionedNode>*);
 
   void HandleMulticolsWithPendingOOFs(BoxFragmentBuilder* container_builder);
   void LayoutOOFsInMulticol(
@@ -320,8 +326,8 @@ class CORE_EXPORT OutOfFlowLayoutPart {
       const BlockNode& candidate,
       const LogicalAnchorQueryMap* anchor_queries) const;
 
-  ContainingBlockInfo ApplyInsetAreaOffsets(
-      const InsetAreaOffsets& offsets,
+  ContainingBlockInfo ApplyPositionAreaOffsets(
+      const PositionAreaOffsets& offsets,
       const ContainingBlockInfo& container_info) const;
 
   NodeInfo SetupNodeInfo(const LogicalOofPositionedNode& oof_node);
