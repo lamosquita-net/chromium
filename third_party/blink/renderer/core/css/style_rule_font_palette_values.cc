@@ -82,7 +82,8 @@ StyleRuleFontPaletteValues::GetOverrideColorsAsVector() const {
   // TODO(yosin): Should we use ` ThreadState::NoAllocationScope` for main
   // thread? Font threads hit `DCHECK` because they don't have `ThreadState'.
 
-  auto ConvertToColor = [](const CSSValuePair& override_pair) -> Color {
+  auto ConvertToColor =
+      [](const CSSValuePair& override_pair) -> std::optional<Color> {
     if (override_pair.Second().IsIdentifierValue()) {
       const CSSIdentifierValue& color_identifier =
           To<CSSIdentifierValue>(override_pair.Second());
@@ -92,9 +93,14 @@ StyleRuleFontPaletteValues::GetOverrideColorsAsVector() const {
                                           mojom::blink::ColorScheme::kLight,
                                           /*color_provider=*/nullptr);
     }
-    const cssvalue::CSSColor& css_color =
-        To<cssvalue::CSSColor>(override_pair.Second());
-    return css_color.Value();
+    if (const cssvalue::CSSColor* css_color =
+            DynamicTo<cssvalue::CSSColor>(override_pair.Second())) {
+      return css_color->Value();
+    }
+    // FlyWeb: b2a0c90996 (crbug 417172068). Relative colors that are not
+    // resolved at parse time (CSSRelativeColorValue, level 131) are not a
+    // CSSColor; skip them instead of a To<> type confusion.
+    return std::nullopt;
   };
 
   Vector<FontPalette::FontPaletteOverride> return_overrides;
@@ -106,10 +112,14 @@ StyleRuleFontPaletteValues::GetOverrideColorsAsVector() const {
         To<CSSPrimitiveValue>(override_pair.First());
     DCHECK(palette_index.IsInteger());
 
-    const Color override_color = ConvertToColor(override_pair);
+    std::optional<const Color> override_color = ConvertToColor(override_pair);
+    if (!override_color.has_value()) {
+      // See comment in ConvertToColor() above.
+      continue;
+    }
 
     FontPalette::FontPaletteOverride palette_override{
-        palette_index.GetValue<uint16_t>(), override_color};
+        palette_index.GetValue<uint16_t>(), override_color.value()};
     return_overrides.push_back(palette_override);
   }
 
