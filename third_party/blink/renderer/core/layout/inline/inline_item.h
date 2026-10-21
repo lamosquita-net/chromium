@@ -75,6 +75,9 @@ class CORE_EXPORT InlineItem {
              unsigned adjusted_start,
              unsigned adjusted_end,
              const ShapeResult*);
+  // Copying must initialize `layout_object_` atomically too, to allow for
+  // concurrently marking InlineItem (Chromium 9df6f20935b).
+  InlineItem(const InlineItem&);
 
   InlineItemType Type() const { return type_; }
   const char* InlineItemTypeToString(InlineItemType val) const;

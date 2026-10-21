@@ -115,6 +115,12 @@ InlineItem::InlineItem(const InlineItem& other,
   DCHECK_GE(end, start);
 }
 
+InlineItem::InlineItem(const InlineItem& other)
+    : InlineItem(other,
+                   other.start_offset_,
+                   other.end_offset_,
+                   other.shape_result_) {}
+
 InlineItem::~InlineItem() = default;
 
 void InlineItem::ComputeBoxProperties() {

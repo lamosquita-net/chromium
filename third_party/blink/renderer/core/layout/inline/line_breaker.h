@@ -221,7 +221,8 @@ class CORE_EXPORT LineBreaker {
                            const BlockBreakToken*,
                            LineInfo*);
   void ComputeMinMaxContentSizeForBlockChild(const InlineItem&,
-                                             InlineItemResult*);
+                                             InlineItemResult*,
+                                             const LineBreaker* root_breaker);
   // Returns false if we can't handle the current InlineItem as a ruby.
   // NOINLINE prevents a compiler for Android 64bit from inlining
   // HandleRuby() twice.
@@ -339,6 +340,12 @@ class CORE_EXPORT LineBreaker {
   // The current position from inline_start. Unlike InlineLayoutAlgorithm
   // that computes position in visual order, this position in logical order.
   LayoutUnit position_;
+
+  // Offset of this (sub-)line's start from the tab-stop origin, i.e. the start
+  // content edge of the nearest block container ancestor. Non-zero only for
+  // ruby sub-LineBreakers.
+  LayoutUnit tab_stop_offset_;
+
   LayoutUnit available_width_;
   LineLayoutOpportunity line_opportunity_;
 
