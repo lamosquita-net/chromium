@@ -297,7 +297,8 @@ class CC_EXPORT TransformTree final : public PropertyTree<TransformNode> {
   gfx::Vector2dF StickyPositionOffset(TransformNode* node);
   gfx::Vector2dF AnchorPositionOffset(TransformNode* node,
                                       int max_updated_node_id,
-                                      UpdateTransformsData* update_data);
+                                      UpdateTransformsData* update_data,
+                                      base::flat_set<int>& visited);
   void UpdateLocalTransform(TransformNode* node,
                             const ViewportPropertyIds* viewport_property_ids,
                             UpdateTransformsData* update_data);

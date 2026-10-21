@@ -7950,7 +7950,9 @@ PseudoElement* Element::CreatePseudoElementIfNeeded(
     return nullptr;
   }
 
-  if (pseudo_id == kPseudoIdBackdrop) {
+  // FlyWeb: 01c7c1b09a (crbug 410437529), only while the originating element
+  // is (still) in the top layer.
+  if (pseudo_id == kPseudoIdBackdrop && IsInTopLayer()) {
     GetDocument().AddToTopLayer(pseudo_element, this);
   }
 

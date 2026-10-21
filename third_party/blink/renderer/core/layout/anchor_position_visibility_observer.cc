@@ -51,6 +51,9 @@ void AnchorPositionVisibilityObserver::MonitorAnchor(const Element* anchor) {
     SetLayerInvisible(LayerPositionVisibility::kAnchorsIntersectionVisible,
                       false);
     SetLayerInvisible(LayerPositionVisibility::kChainedAnchorsVisible, false);
+    // If there is no anchor, reset kAnchorsCssVisible so a previously
+    // invisible anchor no longer hides the anchored element (05730fe4c1c).
+    SetLayerInvisible(LayerPositionVisibility::kAnchorsCssVisible, false);
   }
 }
 

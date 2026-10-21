@@ -29,6 +29,7 @@
 #include "third_party/blink/renderer/core/html/html_element.h"
 #include "third_party/blink/renderer/core/intersection_observer/element_intersection_observer_data.h"
 #include "third_party/blink/renderer/core/layout/anchor_position_scroll_data.h"
+#include "third_party/blink/renderer/core/layout/anchor_position_visibility_observer.h"
 #include "third_party/blink/renderer/core/resize_observer/resize_observation.h"
 #include "third_party/blink/renderer/core/resize_observer/resize_observer.h"
 #include "third_party/blink/renderer/platform/heap/collection_support/heap_hash_map.h"
@@ -407,6 +408,13 @@ AnchorPositionScrollData* ElementRareDataVector::GetAnchorPositionScrollData()
       GetField(FieldId::kAnchorPositionScrollData));
 }
 void ElementRareDataVector::RemoveAnchorPositionScrollData() {
+  // Disconnect the visibility observer from its anchor (31adde08d12,
+  // crbug 457646320).
+  if (auto* scroll_data = GetAnchorPositionScrollData()) {
+    if (auto* observer = scroll_data->GetAnchorPositionVisibilityObserver()) {
+      observer->MonitorAnchor(nullptr);
+    }
+  }
   SetField(FieldId::kAnchorPositionScrollData, nullptr);
 }
 AnchorPositionScrollData& ElementRareDataVector::EnsureAnchorPositionScrollData(
