@@ -364,8 +364,8 @@ TEST_F(PasswordGenerationPopupControllerImplTest,
   // In the nudge password experiment suggestion is previewed on show.
   controller->GeneratePasswordValue(PasswordGenerationType::kAutomatic);
   EXPECT_CALL(driver(), PreviewGenerationSuggestion);
-  controller->Show(
-      PasswordGenerationPopupController::GenerationUIState::kOfferGeneration);
+  EXPECT_TRUE(controller->Show(
+      PasswordGenerationPopupController::GenerationUIState::kOfferGeneration));
 }
 
 TEST_F(PasswordGenerationPopupControllerImplTest, ShowDropsFullscreen) {
@@ -384,8 +384,8 @@ TEST_F(PasswordGenerationPopupControllerImplTest, ShowDropsFullscreen) {
   web_contents()->SetDelegate(&delegate);
 
   controller->GeneratePasswordValue(PasswordGenerationType::kAutomatic);
-  controller->Show(
-      PasswordGenerationPopupController::GenerationUIState::kOfferGeneration);
+  EXPECT_TRUE(controller->Show(
+      PasswordGenerationPopupController::GenerationUIState::kOfferGeneration));
 
   EXPECT_TRUE(exit_fullscreen_called);
   web_contents()->SetDelegate(nullptr);
@@ -409,8 +409,8 @@ TEST_F(PasswordGenerationPopupControllerImplTest,
   web_contents()->SetDelegate(&delegate);
 
   controller->GeneratePasswordValue(PasswordGenerationType::kAutomatic);
-  controller->Show(
-      PasswordGenerationPopupController::GenerationUIState::kOfferGeneration);
+  EXPECT_FALSE(controller->Show(
+      PasswordGenerationPopupController::GenerationUIState::kOfferGeneration));
 
   EXPECT_FALSE(controller);
   web_contents()->SetDelegate(nullptr);
