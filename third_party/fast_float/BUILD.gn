@@ -1,0 +1,20 @@
+# Copyright 2024 The Chromium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# FlyWeb (nivel 130, FM.20): third_party/fast_float/BUILD.gn de Chromium 130.0.6723.192 sin los objetivos de
+# pruebas. V8 13.0 depende de ":fast_float". El código (src/) lo trae build.sh en el commit de
+# FlyWeb/fast_float-revision.
+
+config("fast_float_config") {
+  include_dirs = [ "src/include" ]
+}
+
+source_set("fast_float") {
+  public = [ "src/include/fast_float/fast_float.h" ]
+
+  configs -= [ "//build/config/compiler:chromium_code" ]
+  configs += [ "//build/config/compiler:no_chromium_code" ]
+
+  public_configs = [ ":fast_float_config" ]
+}

@@ -12,7 +12,6 @@
 #include "base/debug/stack_trace.h"
 #include "base/functional/bind.h"
 #include "base/location.h"
-#include "base/memory/nonscannable_memory.h"
 #include "base/memory/stack_allocated.h"
 #include "base/no_destructor.h"
 #include "base/system/sys_info.h"
@@ -212,34 +211,28 @@ void V8Platform::OnCriticalMemoryPressure() {
   partition_alloc::ReleaseReservation();
 #endif
 }
-
-v8::ZoneBackingAllocator* V8Platform::GetZoneBackingAllocator() {
-  static struct Allocator final : v8::ZoneBackingAllocator {
-    MallocFn GetMallocFn() const override {
-      return &base::AllocNonQuarantinable;
-    }
-    FreeFn GetFreeFn() const override { return &base::FreeNonQuarantinable; }
-  } allocator;
-  return &allocator;
-}
 #endif  // PA_BUILDFLAG(USE_PARTITION_ALLOC)
 
 std::shared_ptr<v8::TaskRunner> V8Platform::GetForegroundTaskRunner(
     v8::Isolate* isolate,
     v8::TaskPriority priority) {
   PerIsolateData* data = PerIsolateData::From(isolate);
-  if (!data->low_priority_task_runner()) {
-    return data->task_runner();
-  }
-
   switch (priority) {
+    case v8::TaskPriority::kBestEffort:
+      // blink::scheduler::TaskPriority::kLowPriority
+      if (data->best_effort_task_runner()) {
+        return data->best_effort_task_runner();
+      }
+      [[fallthrough]];
+    case v8::TaskPriority::kUserVisible:
+      // blink::scheduler::TaskPriority::kLowPriority
+      if (data->user_visible_task_runner()) {
+        return data->user_visible_task_runner();
+      }
+      [[fallthrough]];
     case v8::TaskPriority::kUserBlocking:
       // blink::scheduler::TaskPriority::kDefaultPriority
       return data->task_runner();
-    case v8::TaskPriority::kUserVisible:
-    case v8::TaskPriority::kBestEffort:
-      // blink::scheduler::TaskPriority::kLowPriority
-      return data->low_priority_task_runner();
     default:
       NOTREACHED_IN_MIGRATION() << "Unsupported TaskPriority.";
       return data->task_runner();
