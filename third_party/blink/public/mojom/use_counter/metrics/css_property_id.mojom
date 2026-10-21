@@ -852,6 +852,10 @@ enum CSSSampleId {
     kBoxDecorationBreak = 796,
     kPositionTryFallbacks = 797,
     kInterpolateSize = 798,
+    // FlyWeb (level 130): same numbers as Chrome 130 (text-wrap-mode,
+    // text-wrap-style).
+    kTextWrapMode = 805,
+    kTextWrapStyle = 806,
 
     // 1. Add new features above this line (don't change the assigned numbers of
     //    the existing items).

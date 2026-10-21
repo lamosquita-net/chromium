@@ -1,0 +1,15 @@
+// Copyright 2024 The Chromium Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// FlyWeb (level 130): as in Chromium 130 (8010721fc51). `invoker` is parsed
+// (and type-checked) as in Chrome 130, but ignored: it only does something
+// with PopoverAnchorRelationships, which is experimental upstream.
+dictionary TogglePopoverOptions {
+  boolean force;
+  HTMLElement invoker;
+};
+
+dictionary ShowPopoverOptions {
+  HTMLElement invoker;
+};

@@ -11,6 +11,7 @@
 #include "third_party/blink/renderer/core/layout/layout_block_flow.h"
 #include "third_party/blink/renderer/core/layout/layout_input_node.h"
 #include "third_party/blink/renderer/core/layout/svg/svg_character_data.h"
+#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
 #include "third_party/blink/renderer/platform/wtf/casting.h"
 #include "third_party/blink/renderer/platform/wtf/text/wtf_string.h"
 
@@ -205,11 +206,20 @@ class CORE_EXPORT InlineNode : public LayoutInputNode {
 };
 
 inline bool InlineNode::IsStickyImagesQuirkForContentSize() const {
+  // See https://quirks.spec.whatwg.org/#the-table-cell-width-calculation-quirk
   if (UNLIKELY(GetDocument().InQuirksMode())) {
     const ComputedStyle& style = Style();
-    if (UNLIKELY(style.Display() == EDisplay::kTableCell &&
-                 !style.LogicalWidth().IsSpecified()))
-      return true;
+    if (UNLIKELY(style.Display() == EDisplay::kTableCell)) {
+      // FlyWeb (level 130): StricterCellWidthContentSizeQuirk (d192ad18b88):
+      // only width:auto, not the intrinsic keywords.
+      if (style.LogicalWidth().IsAuto()) {
+        return true;
+      }
+      if (!RuntimeEnabledFeatures::StricterCellWidthContentSizeQuirkEnabled() &&
+          !style.LogicalWidth().IsSpecified()) {
+        return true;
+      }
+    }
   }
   return false;
 }

@@ -12,6 +12,7 @@
 #include "third_party/blink/renderer/core/events/pointer_event_util.h"
 #include "third_party/blink/renderer/core/frame/local_dom_window.h"
 #include "third_party/blink/renderer/platform/instrumentation/use_counter.h"
+#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
 #include "third_party/blink/renderer/platform/wtf/math_extras.h"
 
 namespace blink {
@@ -139,8 +140,10 @@ double PointerEvent::offsetY() const {
 }
 
 void PointerEvent::ReceivedTarget() {
-  coalesced_events_targets_dirty_ = true;
-  predicted_events_targets_dirty_ = true;
+  if (!RuntimeEnabledFeatures::PointerEventTargetsInEventListsEnabled()) {
+    coalesced_events_targets_dirty_ = true;
+    predicted_events_targets_dirty_ = true;
+  }
   MouseEvent::ReceivedTarget();
 }
 
@@ -162,6 +165,7 @@ HeapVector<Member<PointerEvent>> PointerEvent::getCoalescedEvents() {
   }
 
   if (coalesced_events_targets_dirty_) {
+    CHECK(!RuntimeEnabledFeatures::PointerEventTargetsInEventListsEnabled());
     for (auto coalesced_event : coalesced_events_)
       coalesced_event->SetTarget(target());
     coalesced_events_targets_dirty_ = false;
@@ -171,6 +175,7 @@ HeapVector<Member<PointerEvent>> PointerEvent::getCoalescedEvents() {
 
 HeapVector<Member<PointerEvent>> PointerEvent::getPredictedEvents() {
   if (predicted_events_targets_dirty_) {
+    CHECK(!RuntimeEnabledFeatures::PointerEventTargetsInEventListsEnabled());
     for (auto predicted_event : predicted_events_)
       predicted_event->SetTarget(target());
     predicted_events_targets_dirty_ = false;
@@ -195,6 +200,20 @@ void PointerEvent::Trace(Visitor* visitor) const {
 DispatchEventResult PointerEvent::DispatchEvent(EventDispatcher& dispatcher) {
   if (type().empty())
     return DispatchEventResult::kNotCanceled;  // Shouldn't happen.
+
+  // FlyWeb (level 130): PointerEventTargetsInEventLists, final state of
+  // Chromium 130 (365b4154cbd, 8f487908070): trusted events give their
+  // coalesced and predicted events the node being dispatched to; untrusted
+  // ones leave them unmodified.
+  if (isTrusted() &&
+      RuntimeEnabledFeatures::PointerEventTargetsInEventListsEnabled()) {
+    for (auto coalesced_event : coalesced_events_) {
+      coalesced_event->SetTarget(&dispatcher.GetNode());
+    }
+    for (auto predicted_event : predicted_events_) {
+      predicted_event->SetTarget(&dispatcher.GetNode());
+    }
+  }
 
   if (type() == event_type_names::kClick) {
     return MouseEvent::DispatchEvent(dispatcher);

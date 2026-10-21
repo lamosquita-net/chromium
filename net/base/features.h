@@ -562,6 +562,9 @@ NET_EXPORT BASE_DECLARE_FEATURE(kReportingApiEnableEnterpriseCookieIssues);
 // Optimize parsing data: URLs.
 NET_EXPORT BASE_DECLARE_FEATURE(kOptimizeParsingDataUrls);
 
+// Keep whitespace for non-base64 encoded data: URLs.
+NET_EXPORT BASE_DECLARE_FEATURE(kKeepWhitespaceForDataUrls);
+
 }  // namespace net::features
 
 #endif  // NET_BASE_FEATURES_H_

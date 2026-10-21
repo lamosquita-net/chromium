@@ -570,4 +570,9 @@ BASE_FEATURE(kOptimizeParsingDataUrls,
              "OptimizeParsingDataUrls",
              base::FEATURE_DISABLED_BY_DEFAULT);
 
+// FlyWeb (level 130): as in Chromium 130 (34b6c2b36e8).
+BASE_FEATURE(kKeepWhitespaceForDataUrls,
+             "KeepWhitespaceForDataUrls",
+             base::FEATURE_ENABLED_BY_DEFAULT);
+
 }  // namespace net::features

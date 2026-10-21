@@ -960,7 +960,7 @@
       // Spec change to search for container query and container units up the
       // flat tree instead of the shadow-including ancestors.
       name: "CSSFlatTreeContainer",
-      status: "test",
+      status: "stable",
     },
     {
       name: "CSSFontSizeAdjust",
@@ -1014,6 +1014,10 @@
       name: "CSSMixins",
     },
     {
+      name: "CSSNestedDeclarations",
+      status: "stable",
+    },
+    {
       name: "CSSPaintAPIArguments",
       status: "experimental",
     },
@@ -1021,6 +1025,10 @@
       // Ignore the stylesheet encoding when parsing URLs, always using UTF-8.
       // See crbug.com/1485525.
       name: "CSSParserIgnoreCharsetForURLs",
+    },
+    {
+      name: "CSSPartAllowsMoreSelectorsAfter",
+      status: "stable",
     },
     {
       name: "CSSPositionStickyStaticScrollPosition",
@@ -2736,7 +2744,6 @@
     // Mutation Events.
     {
       name: "MutationEvents",
-      status: "stable",
       origin_trial_feature_name: "MutationEvents",
       origin_trial_type: "deprecation",
       origin_trial_allows_insecure: true,
@@ -3181,6 +3188,14 @@
       status: "stable",
     },
     {
+      name: "PointerEventTargetsInEventLists",
+      status: "stable",
+    },
+    {
+      name: "PopoverDialogNewFocusBehavior",
+      status: "stable",
+    },
+    {
       name: "PositionOutsideTabSpanCheckSiblingNode",
       status: "stable",
     },
@@ -3421,6 +3436,11 @@
         "default": "experimental"},
     },
     {
+      // See https://issues.chromium.org/40805258
+      name: "RemoveCollapsedPlaceholder",
+      status: "stable",
+    },
+    {
       name: "RemoveDanglingMarkupInTarget",
       status: "stable",
     },
@@ -3473,6 +3493,10 @@
       }
     },
     {
+      name: "ResetInputTypeToNoneBeforeCharacterInput",
+      status: "stable",
+    },
+    {
       name: "ResourceTimingContentType",
       status: "experimental",
     },
@@ -3489,6 +3513,12 @@
     {
       // New behavior when line breaker rewinds floats. crbug.com/1499290
       name: "RewindFloats",
+      status: "stable",
+    },
+    {
+      // When enabled, the root element will have a placeholder after all text is deleted.
+      // crbug.com/40702380
+      name: "RootElementWithPlaceHolderAfterDeletingSelection",
       status: "stable",
     },
     {
@@ -3959,6 +3989,10 @@
       status: "experimental",
     },
     {
+      name: "StricterCellWidthContentSizeQuirk",
+      status: "stable",
+    },
+    {
       name: "StrictMimeTypesForWorkers",
       status: "experimental",
     },
@@ -4193,6 +4227,10 @@
       origin_trial_type: "deprecation",
       status: "experimental",
       base_feature: "none",
+    },
+    {
+      name: "TransferableRTCDataChannel",
+      status: "stable",
     },
     // This is conditionally set if the platform supports translation.
     {

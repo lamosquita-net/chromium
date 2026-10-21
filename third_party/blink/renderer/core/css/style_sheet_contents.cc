@@ -265,11 +265,10 @@ void StyleSheetContents::ClearRules() {
   child_rules_.clear();
 }
 
-// HeapVector<Member<StyleRuleBase>> or ChildRuleVector
-template <typename T>
-static wtf_size_t ReplaceRuleIfExistsInternal(const StyleRuleBase* old_rule,
-                                              StyleRuleBase* new_rule,
-                                              T& child_rules) {
+static wtf_size_t ReplaceRuleIfExistsInternal(
+    const StyleRuleBase* old_rule,
+    StyleRuleBase* new_rule,
+    HeapVector<Member<StyleRuleBase>>& child_rules) {
   for (wtf_size_t i = 0; i < child_rules.size(); ++i) {
     StyleRuleBase* rule = child_rules[i].Get();
     if (rule == old_rule) {
@@ -279,6 +278,13 @@ static wtf_size_t ReplaceRuleIfExistsInternal(const StyleRuleBase* old_rule,
     if (auto* style_rule_group = DynamicTo<StyleRuleGroup>(rule)) {
       if (ReplaceRuleIfExistsInternal(old_rule, new_rule,
                                       style_rule_group->ChildRules()) !=
+          std::numeric_limits<wtf_size_t>::max()) {
+        return 0;  // Dummy non-failure value.
+      }
+    } else if (auto* style_rule = DynamicTo<StyleRule>(rule);
+               style_rule && style_rule->ChildRules()) {
+      if (ReplaceRuleIfExistsInternal(old_rule, new_rule,
+                                      *style_rule->ChildRules()) !=
           std::numeric_limits<wtf_size_t>::max()) {
         return 0;  // Dummy non-failure value.
       }
@@ -623,9 +629,8 @@ Document* StyleSheetContents::AnyOwnerDocument() const {
   return RootStyleSheet()->ClientAnyOwnerDocument();
 }
 
-// HeapVector<Member<StyleRuleBase>> or ChildRuleVector
-template <typename T>
-static bool ChildRulesHaveFailedOrCanceledSubresources(const T& rules) {
+static bool ChildRulesHaveFailedOrCanceledSubresources(
+    const HeapVector<Member<StyleRuleBase>>& rules) {
   for (unsigned i = 0; i < rules.size(); ++i) {
     const StyleRuleBase* rule = rules[i].Get();
     switch (rule->GetType()) {
@@ -657,6 +662,7 @@ static bool ChildRulesHaveFailedOrCanceledSubresources(const T& rules) {
       case StyleRuleBase::kMixin:
         NOTREACHED_IN_MIGRATION();
         break;
+      case StyleRuleBase::kNestedDeclarations:
       case StyleRuleBase::kPage:
       case StyleRuleBase::kPageMargin:
       case StyleRuleBase::kProperty:
