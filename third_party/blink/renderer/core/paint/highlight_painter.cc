@@ -19,6 +19,7 @@
 #include "third_party/blink/renderer/core/layout/inline/inline_cursor.h"
 #include "third_party/blink/renderer/core/layout/inline/text_offset_range.h"
 #include "third_party/blink/renderer/core/layout/layout_object.h"
+#include "third_party/blink/renderer/core/layout/layout_text_fragment.h"
 #include "third_party/blink/renderer/core/layout/svg/layout_svg_inline_text.h"
 #include "third_party/blink/renderer/core/layout/text_decoration_offset.h"
 #include "third_party/blink/renderer/core/paint/highlight_overlay.h"
@@ -383,6 +384,18 @@ void HighlightPainter::SelectionPaintState::
   }
 }
 
+// GetNode() for first-letter fragment returns null because it is anonymous.
+// Use AssociatedTextNode() of LayoutTextFragment to get the associated node.
+static Node* AssociatedNode(const LayoutObject* layout_object) {
+  if (RuntimeEnabledFeatures::PaintHighlightsForFirstLetterEnabled()) {
+    if (auto* layout_text_fragment =
+            DynamicTo<LayoutTextFragment>(layout_object)) {
+      return layout_text_fragment->AssociatedTextNode();
+    }
+  }
+  return layout_object->GetNode();
+}
+
 HighlightPainter::HighlightPainter(
     const TextFragmentPaintInfo& fragment_paint_info,
     TextPainter& text_painter,
@@ -406,7 +419,7 @@ HighlightPainter::HighlightPainter(
       originating_text_style_(text_style),
       selection_(selection),
       layout_object_(fragment_item_.GetLayoutObject()),
-      node_(layout_object_->GetNode()),
+      node_(AssociatedNode(layout_object_)),
       foreground_auto_dark_mode_(
           PaintAutoDarkMode(originating_style_,
                             DarkModeFilter::ElementRole::kForeground)),
@@ -502,7 +515,7 @@ void HighlightPainter::PaintNonCssMarkers(Phase phase) {
   if (markers_.empty())
     return;
 
-  DCHECK(fragment_item_.GetNode());
+  CHECK(node_);
   const StringView text = cursor_.CurrentText();
 
   const auto* text_node = DynamicTo<Text>(node_);
@@ -574,7 +587,7 @@ void HighlightPainter::PaintNonCssMarkers(Phase phase) {
               LineRelativeLocalRect(fragment_item_, text, paint_start_offset,
                                     paint_end_offset),
               LayoutUnit(font_data->GetFontMetrics().Height()),
-              fragment_item_.GetNode()->GetDocument().InDarkMode());
+              node_->GetDocument().InDarkMode());
         }
         if (marker->GetType() == DocumentMarker::kComposition &&
             !styleable_marker.TextColor().IsFullyTransparent() &&
@@ -646,8 +659,8 @@ HighlightPainter::Case HighlightPainter::ComputePaintCase() const {
 
 void HighlightPainter::FastPaintSpellingGrammarDecorations() {
   DCHECK_EQ(paint_case_, kFastSpellingGrammar);
-  DCHECK(fragment_item_.GetNode());
-  const auto& text_node = To<Text>(*fragment_item_.GetNode());
+  CHECK(node_);
+  const auto& text_node = To<Text>(*node_);
   const StringView text = cursor_.CurrentText();
 
   // ::spelling-error overlay is drawn on top of ::grammar-error overlay.
@@ -678,8 +691,9 @@ void HighlightPainter::PaintOneSpellingGrammarDecoration(
     const StringView& text,
     unsigned paint_start_offset,
     unsigned paint_end_offset) {
-  if (fragment_item_.GetNode()->GetDocument().Printing())
+  if (node_->GetDocument().Printing()) {
     return;
+  }
 
   if (!text_painter_.GetSvgState()) {
     if (const auto* pseudo_style = HighlightStyleUtils::HighlightPseudoStyle(
@@ -757,7 +771,7 @@ void HighlightPainter::PaintOriginatingShadow(const TextPaintStyle& text_style,
 Vector<LayoutSelectionStatus> HighlightPainter::GetHighlights(
     const HighlightLayer& layer) {
   Vector<LayoutSelectionStatus> result{};
-  const auto* text_node = DynamicTo<Text>(fragment_item_.GetNode());
+  const auto* text_node = DynamicTo<Text>(node_);
   switch (layer.type) {
     case HighlightLayerType::kOriginating:
       NOTREACHED_IN_MIGRATION();

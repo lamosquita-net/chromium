@@ -1588,8 +1588,9 @@
       // This is the "old" version of getInnerHTML() used for declarative shadow
       // DOM, and this version is deprecated. The replacement is called
       // `getHTML()` and it shipped in M125.
+      // FlyWeb (level 131): off, as Chrome 129-130 by field trial and
+      // Chromium 131 in code (5f7bda8f87b).
       name: "ElementGetInnerHTML",
-      status: "stable",
     },
     {
       name: "EnforceAnonymityExposure",
@@ -3120,6 +3121,10 @@
     },
     {
       name: "PageSwapEvent",
+      status: "stable",
+    },
+    {
+      name: "PaintHighlightsForFirstLetter",
       status: "stable",
     },
     {
