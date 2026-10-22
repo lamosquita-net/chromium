@@ -15,8 +15,15 @@ AuthenticatorMac::~AuthenticatorMac() = default;
 
 bool AuthenticatorMac::CheckIfBiometricsAvailable() {
   LAContext* context = [[LAContext alloc] init];
+  // FlyWeb (LOCAL-8): ...WithBiometricsOrWatch is macOS 10.15+; on 10.14
+  // canEvaluatePolicy throws "Unknown policy: '4'" (chrome://settings). As in 116.
+  if (@available(macOS 10.15, *)) {
+    return [context
+        canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometricsOrWatch
+                    error:nil];
+  }
   return [context
-      canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometricsOrWatch
+      canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics
                   error:nil];
 }
 

@@ -65,7 +65,7 @@ using base::apple::ScopedCFTypeRef;
 // We don't need localized variation axis name, so we can use
 // `CTFontCopyVariationAxesInternal()` instead.
 // Request for public API: FB13788219.
-extern "C" CFArrayRef CTFontCopyVariationAxesInternal(CTFontRef);
+extern "C" CFArrayRef CTFontCopyVariationAxesInternal(CTFontRef) __attribute__((weak_import));  // FlyWeb (LOCAL-6, 21-10): solo se usa en macOS 13+
 
 namespace blink {
 

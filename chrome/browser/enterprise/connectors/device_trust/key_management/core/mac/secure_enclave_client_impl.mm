@@ -74,15 +74,20 @@ NSDictionary* CreateAttributesForKey() {
 // Creates the query used for querying the keychain for the secure key
 // reference.
 NSDictionary* CreateQueryForKey(SecureEnclaveClient::KeyType type) {
-  return @{
+  NSMutableDictionary* query = [NSMutableDictionary dictionaryWithDictionary:@{
     CFToNSPtrCast(kSecClass) : CFToNSPtrCast(kSecClassKey),
     CFToNSPtrCast(kSecAttrKeyType) :
         CFToNSPtrCast(kSecAttrKeyTypeECSECPrimeRandom),
     CFToNSPtrCast(kSecAttrLabel) :
         base::SysUTF8ToNSString(SecureEnclaveClient::GetLabelFromKeyType(type)),
     CFToNSPtrCast(kSecReturnRef) : @YES,
-    CFToNSPtrCast(kSecUseDataProtectionKeychain) : @YES,
-  };
+  }];
+  // FlyWeb (LOCAL-8): kSecUseDataProtectionKeychain is macOS 10.15+ (null weak
+  // constant on 10.14; a nil key aborts). As in 116.
+  if (@available(macOS 10.15, *)) {
+    query[CFToNSPtrCast(kSecUseDataProtectionKeychain)] = @YES;
+  }
+  return query;
 }
 
 // Converts an external representation of an EC public key from ANSI X9.63

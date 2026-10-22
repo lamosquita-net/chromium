@@ -144,10 +144,15 @@ const std::vector<CVImageTransferFn>& GetSupportedImageTransferFn() {
             {kCVImageBufferTransferFunction_Linear,
              kCMFormatDescriptionTransferFunction_Linear,
              gfx::ColorSpace::TransferID::LINEAR});
-        supported_transfer_funcs.push_back(
-            {kCVImageBufferTransferFunction_sRGB,
-             kCMFormatDescriptionTransferFunction_sRGB,
-             gfx::ColorSpace::TransferID::SRGB});
+        // FlyWeb (LOCAL-7, 21-10): kCMFormatDescriptionTransferFunction_sRGB
+        // es de macOS 10.15 (nula en 10.14: SEGV en el proceso GPU al crear
+        // IOSurfaces); se repone el @available que tenía la 116.
+        if (@available(macOS 10.15, *)) {
+          supported_transfer_funcs.push_back(
+              {kCVImageBufferTransferFunction_sRGB,
+               kCMFormatDescriptionTransferFunction_sRGB,
+               gfx::ColorSpace::TransferID::SRGB});
+        }
 
         return supported_transfer_funcs;
       }());

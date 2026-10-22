@@ -114,7 +114,12 @@ void SystemGeolocationSourceApple::OpenSystemPermissionSetting() {
 }
 
 void SystemGeolocationSourceApple::RequestPermission() {
-  [location_manager_ requestWhenInUseAuthorization];
+  // FlyWeb (LOCAL-8): -requestWhenInUseAuthorization is macOS 10.15+
+  // (unrecognized selector on 10.14 when a site asks for the location). On
+  // 10.14 the system asks by itself when location updates start, as in 116.
+  if (@available(macOS 10.15, *)) {
+    [location_manager_ requestWhenInUseAuthorization];
+  }
 }
 
 void SystemGeolocationSourceApple::AddPositionUpdateObserver(

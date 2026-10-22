@@ -18,7 +18,7 @@
 
 extern "C" {
 
-extern const CFStringRef _kLSOpenOptionBackgroundLaunchKey;
+extern const CFStringRef _kLSOpenOptionBackgroundLaunchKey __attribute__((weak_import));  // FlyWeb (LOCAL-6, 21-10): no existe en 10.14
 
 }  // extern "C"
 

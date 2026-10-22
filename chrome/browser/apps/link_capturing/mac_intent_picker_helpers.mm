@@ -88,10 +88,14 @@ std::optional<IntentPickerAppInfo> FindMacAppForUrl(const GURL& url) {
     return std::nullopt;
   }
 
-  SFUniversalLink* link = [[SFUniversalLink alloc] initWithWebpageURL:nsurl];
+  // FlyWeb (LOCAL-8): SFUniversalLink is macOS 10.15+; no universal links on
+  // 10.14.
+  if (@available(macOS 10.15, *)) {
+    SFUniversalLink* link = [[SFUniversalLink alloc] initWithWebpageURL:nsurl];
 
-  if (link) {
-    return AppInfoForAppUrl(link.applicationURL);
+    if (link) {
+      return AppInfoForAppUrl(link.applicationURL);
+    }
   }
 
   return std::nullopt;

@@ -345,6 +345,13 @@ bool UnexportableKeyProviderMac::DeleteSigningKeySlowly(
 
 std::unique_ptr<UnexportableKeyProviderMac> GetUnexportableKeyProviderMac(
     UnexportableKeyProvider::Config config) {
+  // FlyWeb (LOCAL-8): kSecUseDataProtectionKeychain is macOS 10.15+ (a null
+  // weak constant on 10.14, and a nil dictionary key aborts). No unexportable
+  // keys on 10.14.
+  if (@available(macOS 10.15, *)) {
+  } else {
+    return nullptr;
+  }
   if (!base::FeatureList::IsEnabled(crypto::kEnableMacUnexportableKeys)) {
     return nullptr;
   }

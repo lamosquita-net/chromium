@@ -622,6 +622,19 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
   // https://crbug.com/1116241. This procedure is purposefully delayed by 3
   // seconds because the camera needs to ramp up after re-configuring itself in
   // order for 3A to stabilize or else the photo is dark/black.
+  // FlyWeb (LOCAL-8): AVCapturePhotoOutput is macOS 10.15+ (nil on 10.14); the
+  // 116 AVCaptureStillImageOutput path is gone in 128, so no photos on 10.14.
+  if (@available(macOS 10.15, *)) {
+  } else {
+    {
+      base::AutoLock lock(_lock);
+      if (_frameReceiver) {
+        _frameReceiver->OnPhotoError();
+      }
+    }
+    [self takePhotoResolved];
+    return;
+  }
   {
     // `_lock` is needed since `_photoOutput` may be read from non-main thread.
     base::AutoLock lock(_lock);

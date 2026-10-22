@@ -65,7 +65,7 @@ NSArray* CommandLineArgsToArgsArray(const CommandLineArgs& command_line_args) {
 
 NSWorkspaceOpenConfiguration* GetOpenConfiguration(
     LaunchApplicationOptions options,
-    const CommandLineArgs& command_line_args) {
+    const CommandLineArgs& command_line_args) API_AVAILABLE(macos(10.15)) {
   NSWorkspaceOpenConfiguration* config =
       [NSWorkspaceOpenConfiguration configuration];
 
@@ -78,12 +78,38 @@ NSWorkspaceOpenConfiguration* GetOpenConfiguration(
   if (options.hidden_in_background) {
     config.addsToRecentItems = NO;
     config.hides = YES;
-    config._additionalLSOpenOptions = @{
-      apple::CFToNSPtrCast(_kLSOpenOptionBackgroundLaunchKey) : @YES,
-    };
+    // FlyWeb (LOCAL-6, 21-10): la clave es débil y nula en 10.14; un nil como
+    // clave de NSDictionary aborta.
+    if (&_kLSOpenOptionBackgroundLaunchKey && _kLSOpenOptionBackgroundLaunchKey) {
+      config._additionalLSOpenOptions = @{
+        apple::CFToNSPtrCast(_kLSOpenOptionBackgroundLaunchKey) : @YES,
+      };
+    }
   }
 
   return config;
+}
+
+// FlyWeb (LOCAL-8): NSWorkspaceOpenConfiguration and its NSWorkspace methods
+// are macOS 10.15+ (unrecognized selector on 10.14). As in 116.
+NSWorkspaceLaunchOptions GetLaunchOptions(LaunchApplicationOptions options) {
+  NSWorkspaceLaunchOptions launch_options = NSWorkspaceLaunchDefault;
+
+  if (!options.activate) {
+    launch_options |= NSWorkspaceLaunchWithoutActivation;
+  }
+  if (options.create_new_instance) {
+    launch_options |= NSWorkspaceLaunchNewInstance;
+  }
+  if (options.prompt_user_if_needed) {
+    launch_options |= NSWorkspaceLaunchWithErrorPresentation;
+  }
+  if (options.hidden_in_background) {
+    launch_options |= NSWorkspaceLaunchAndHide |
+                      NSWorkspaceLaunchWithoutAddingToRecents;
+  }
+
+  return launch_options;
 }
 
 // Sometimes macOS 11 and 12 report an error launching even though the launch
@@ -174,25 +200,53 @@ void LaunchApplication(const base::FilePath& app_bundle_path,
     }
   }
 
-  void (^action_block)(NSRunningApplication*, NSError*) =
-      ^void(NSRunningApplication* app, NSError* error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-          std::move(callback_block_access).Run(app, error);
-        });
-      };
+  if (@available(macOS 10.15, *)) {
+    void (^action_block)(NSRunningApplication*, NSError*) =
+        ^void(NSRunningApplication* app, NSError* error) {
+          dispatch_async(dispatch_get_main_queue(), ^{
+            std::move(callback_block_access).Run(app, error);
+          });
+        };
 
-  NSWorkspaceOpenConfiguration* configuration =
-      GetOpenConfiguration(options, command_line_args);
+    NSWorkspaceOpenConfiguration* configuration =
+        GetOpenConfiguration(options, command_line_args);
 
-  if (ns_urls) {
-    [NSWorkspace.sharedWorkspace openURLs:ns_urls
-                     withApplicationAtURL:bundle_url
-                            configuration:configuration
-                        completionHandler:action_block];
+    if (ns_urls) {
+      [NSWorkspace.sharedWorkspace openURLs:ns_urls
+                       withApplicationAtURL:bundle_url
+                              configuration:configuration
+                          completionHandler:action_block];
+    } else {
+      [NSWorkspace.sharedWorkspace openApplicationAtURL:bundle_url
+                                          configuration:configuration
+                                      completionHandler:action_block];
+    }
   } else {
-    [NSWorkspace.sharedWorkspace openApplicationAtURL:bundle_url
-                                        configuration:configuration
-                                    completionHandler:action_block];
+    NSDictionary* configuration = @{
+      NSWorkspaceLaunchConfigurationArguments :
+          CommandLineArgsToArgsArray(command_line_args),
+    };
+
+    NSWorkspaceLaunchOptions launch_options = GetLaunchOptions(options);
+
+    NSError* error = nil;
+    NSRunningApplication* app;
+    if (ns_urls) {
+      app = [NSWorkspace.sharedWorkspace openURLs:ns_urls
+                             withApplicationAtURL:bundle_url
+                                          options:launch_options
+                                    configuration:configuration
+                                            error:&error];
+    } else {
+      app = [NSWorkspace.sharedWorkspace launchApplicationAtURL:bundle_url
+                                                        options:launch_options
+                                                  configuration:configuration
+                                                          error:&error];
+    }
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+      std::move(callback_block_access).Run(app, error);
+    });
   }
 }
 

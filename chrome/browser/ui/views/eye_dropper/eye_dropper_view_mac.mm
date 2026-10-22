@@ -18,20 +18,25 @@ EyeDropperViewMac::EyeDropperViewMac(content::EyeDropperListener* listener)
   if (!listener_) {
     return;
   }
-  color_sampler_ = [[NSColorSampler alloc] init];
-  // Used to ensure that EyeDropperViewMac is still alive when the handler is
-  // called.
-  base::WeakPtr<EyeDropperViewMac> weak_this = weak_ptr_factory_.GetWeakPtr();
-  [color_sampler_ showSamplerWithSelectionHandler:^(NSColor* selectedColor) {
-    if (!weak_this) {
-      return;
-    }
-    if (!selectedColor) {
-      listener_->ColorSelectionCanceled();
-    } else {
-      listener_->ColorSelected(skia::NSSystemColorToSkColor(selectedColor));
-    }
-  }];
+  // FlyWeb (LOCAL-8): NSColorSampler is macOS 10.15+; ShowEyeDropper() does not
+  // create this view on 10.14 (the 116 generic fallback is gone in 128).
+  if (@available(macOS 10.15, *)) {
+    color_sampler_ = [[NSColorSampler alloc] init];
+    // Used to ensure that EyeDropperViewMac is still alive when the handler is
+    // called.
+    base::WeakPtr<EyeDropperViewMac> weak_this =
+        weak_ptr_factory_.GetWeakPtr();
+    [color_sampler_ showSamplerWithSelectionHandler:^(NSColor* selectedColor) {
+      if (!weak_this) {
+        return;
+      }
+      if (!selectedColor) {
+        listener_->ColorSelectionCanceled();
+      } else {
+        listener_->ColorSelected(skia::NSSystemColorToSkColor(selectedColor));
+      }
+    }];
+  }
 }
 
 EyeDropperViewMac::~EyeDropperViewMac() = default;
@@ -43,5 +48,8 @@ std::unique_ptr<content::EyeDropper> ShowEyeDropper(
     return nullptr;
   }
 
-  return std::make_unique<EyeDropperViewMac>(listener);
+  if (@available(macOS 10.15, *)) {
+    return std::make_unique<EyeDropperViewMac>(listener);
+  }
+  return nullptr;
 }

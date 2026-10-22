@@ -245,7 +245,8 @@ id<MTLRenderPipelineState> CreateRenderPipelineState(id<MTLDevice> device) {
     return;
   }
 
-  if (@available(iOS 16.0, *)) {
+  // FlyWeb (LOCAL-7, 21-10): CAEDRMetadata y setEDRMetadata: son de macOS 10.15.
+  if (@available(macOS 10.15, iOS 16.0, *)) {
     // Set metadata for tone mapping.
     if (_colorSpace != colorSpace || _hdrMetadata != hdrMetadata) {
       CAEDRMetadata* edrMetadata = nil;
@@ -279,9 +280,12 @@ id<MTLRenderPipelineState> CreateRenderPipelineState(id<MTLDevice> device) {
   if (device) {
     self.device = device;
   } else {
-    id<MTLDevice> preferredDevice = self.preferredDevice;
-    if (preferredDevice) {
-      self.device = preferredDevice;
+    // FlyWeb (LOCAL-7, 21-10): preferredDevice es de macOS 10.15.
+    if (@available(macOS 10.15, *)) {
+      id<MTLDevice> preferredDevice = self.preferredDevice;
+      if (preferredDevice) {
+        self.device = preferredDevice;
+      }
     }
     device = self.device;
   }
@@ -416,6 +420,13 @@ void UpdateHDRCopierLayer(CALayer* layer,
 bool ShouldUseHDRCopier(IOSurfaceRef buffer,
                         const gfx::HDRMetadata& hdr_metadata,
                         const gfx::ColorSpace& color_space) {
+  // FlyWeb (LOCAL-7, 21-10): la capa HDR usa API de macOS 10.15 (CAEDRMetadata,
+  // preferredDevice); en 10.14 no se usa, como en la 116.
+  if (@available(macOS 10.15, *)) {
+  } else {
+    return false;
+  }
+
   // Only some transfer functions are supported.
   if (!GetTransferFunctionIndex(color_space)) {
     return false;

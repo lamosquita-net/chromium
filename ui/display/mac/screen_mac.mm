@@ -105,8 +105,12 @@ DisplayMac BuildDisplayForScreen(NSScreen* screen) {
   // Examine the presence of HDR.
   bool enable_hdr = false;
   float hdr_max_lum_relative = 1.f;
-  const float max_potential_edr_value =
-      screen.maximumPotentialExtendedDynamicRangeColorComponentValue;
+  // FlyWeb (LOCAL-6, 21-10): la propiedad es de macOS 10.15; en 10.14, sin HDR.
+  float max_potential_edr_value = 1.f;
+  if (@available(macOS 10.15, *)) {
+    max_potential_edr_value =
+        screen.maximumPotentialExtendedDynamicRangeColorComponentValue;
+  }
   const float max_edr_value =
       screen.maximumExtendedDynamicRangeColorComponentValue;
   if (max_potential_edr_value > 1.f) {
@@ -200,7 +204,9 @@ DisplayMac BuildDisplayForScreen(NSScreen* screen) {
     SetInternalDisplayIds({display_id});
   }
 
-  display.set_label(base::SysNSStringToUTF8(screen.localizedName));
+  if (@available(macOS 10.15, *)) {  // FlyWeb (LOCAL-6, 21-10): 10.15+
+    display.set_label(base::SysNSStringToUTF8(screen.localizedName));
+  }
 
   return DisplayMac{display, screen};
 }
