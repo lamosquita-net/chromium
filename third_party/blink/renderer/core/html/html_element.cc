@@ -1418,9 +1418,10 @@ bool HTMLElement::togglePopover(ExceptionState& exception_state) {
 //  - If `force` is provided, and false, then ensure the popover is *hidden*.
 //    So if the popover is already hidden, do nothing.
 //  - If `force` is not provided, just toggle the popover's current state.
-// FlyWeb (level 130): `force` can also come in a TogglePopoverOptions, as in
-// Chromium 130 (8010721fc51); `invoker` is ignored there, as upstream does
-// without PopoverAnchorRelationships.
+// FlyWeb (level 130): the TogglePopoverOptions dictionary is accepted as in
+// Chromium 130 (8010721fc51), but, as upstream, only read with
+// PopoverAnchorRelationships, which is experimental upstream and not in the
+// 128: so the dictionary (force and invoker) is type-checked and ignored.
 bool HTMLElement::togglePopover(
     V8UnionBooleanOrTogglePopoverOptions* options_or_force,
     ExceptionState& exception_state) {
@@ -1428,12 +1429,6 @@ bool HTMLElement::togglePopover(
   bool force = !popover_was_open;
   if (options_or_force && options_or_force->IsBoolean()) {
     force = options_or_force->GetAsBoolean();
-  } else if (options_or_force && options_or_force->IsTogglePopoverOptions()) {
-    TogglePopoverOptions* options =
-        options_or_force->GetAsTogglePopoverOptions();
-    if (options->hasForce()) {
-      force = options->force();
-    }
   }
   if (!force && popover_was_open) {
     hidePopover(exception_state);

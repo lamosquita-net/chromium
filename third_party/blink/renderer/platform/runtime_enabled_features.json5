@@ -1262,6 +1262,12 @@
       origin_trial_allows_insecure: true,
     },
     {
+      // FlyWeb (level 131): as Chromium 131 (df09f66a3a), where the
+      // deprecated GPUAdapter.requestAdapterInfo() is gone (no status).
+      // See https://crbug.com/335383516
+      name: "DeprecatedRequestAdapterInfo",
+    },
+    {
       name: "DesktopCaptureDisableLocalEchoControl",
       status: "experimental",
     },
