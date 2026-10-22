@@ -59,6 +59,8 @@ class MockLinkLoaderClient final
 
   bool ShouldLoadLink() override { return should_load_; }
   bool IsLinkCreatedByParser() override { return true; }
+  // FlyWeb: pure virtual added by Brave's chromium_src (page graph).
+  HTMLLinkElement* GetOwner() override { return nullptr; }
 
   void LinkLoaded() override {}
   void LinkLoadingErrored() override {}

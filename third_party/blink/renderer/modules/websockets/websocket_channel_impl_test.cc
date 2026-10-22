@@ -50,6 +50,11 @@ using ::testing::Unused;
 
 namespace blink {
 
+// FlyWeb: Brave's chromium_src renames the Chromium class to
+// WebSocketChannelImpl_ChromiumImpl, and CreateForTesting() still builds that
+// one (without Brave's resource pool limiter), so the tests hold it as such.
+using TestedWebSocketChannelImpl = WebSocketChannelImpl_ChromiumImpl;
+
 typedef StrictMock<testing::MockFunction<void(int)>> Checkpoint;
 
 class MockWebSocketChannelClient
@@ -312,7 +317,7 @@ class WebSocketChannelImplTest : public WebSocketChannelImplTestBase {
 
   MockWebSocketChannelClient* ChannelClient() { return channel_client_.Get(); }
 
-  WebSocketChannelImpl* Channel() { return channel_.Get(); }
+  TestedWebSocketChannelImpl* Channel() { return channel_.Get(); }
 
   void DidConsumeBufferedAmount(uint64_t a) {
     sum_of_consumed_buffered_amount_ += a;
@@ -397,7 +402,7 @@ class WebSocketChannelImplTest : public WebSocketChannelImplTestBase {
   std::unique_ptr<MockWebSocketHandshakeThrottle> handshake_throttle_;
   const raw_ptr<MockWebSocketHandshakeThrottle, DanglingUntriaged>
       raw_handshake_throttle_;
-  Persistent<WebSocketChannelImpl> channel_;
+  Persistent<TestedWebSocketChannelImpl> channel_;
   uint64_t sum_of_consumed_buffered_amount_;
 
   base::WeakPtrFactory<WebSocketChannelImplTest> weak_ptr_factory_;
@@ -1717,9 +1722,9 @@ TEST_F(WebSocketChannelImplMultipleTest, ConnectionLimit) {
     EXPECT_CALL(*successful_handshake_throttle, Destructor());
   }
 
-  WebSocketChannelImpl*
+  TestedWebSocketChannelImpl*
       channels[WebSocketChannelImpl::kMaxWebSocketsPerRenderProcess] = {};
-  for (WebSocketChannelImpl*& channel : channels) {
+  for (TestedWebSocketChannelImpl*& channel : channels) {
     auto handshake_throttle =
         std::make_unique<StrictMock<MockWebSocketHandshakeThrottle>>();
     EXPECT_CALL(*handshake_throttle, ThrottleHandshake(_, _, _, _));

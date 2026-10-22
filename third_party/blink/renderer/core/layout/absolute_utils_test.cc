@@ -127,11 +127,12 @@ class AbsoluteUtilsTest : public RenderingTest {
     const InsetModifiedContainingBlock imcb =
         ComputeInsetModifiedContainingBlock(
             node, space.AvailableSize(), LogicalAlignment(), insets,
-            static_position, LogicalAnchorCenterPosition(),
-            container_writing_direction, node.Style().GetWritingDirection());
-    ComputeOofInlineDimensions(node, node.Style(), space, imcb,
-                               LogicalAlignment(), border_padding, std::nullopt,
-                               container_writing_direction, dimensions);
+            static_position, container_writing_direction,
+            node.Style().GetWritingDirection());
+    ComputeOofInlineDimensions(
+        node, node.Style(), space, imcb, LogicalAnchorCenterPosition(),
+        LogicalAlignment(), border_padding, std::nullopt, BoxStrut(),
+        container_writing_direction, dimensions);
     GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kAfterPerformLayout);
     GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kLayoutClean);
   }
@@ -168,10 +169,11 @@ class AbsoluteUtilsTest : public RenderingTest {
     const InsetModifiedContainingBlock imcb =
         ComputeInsetModifiedContainingBlock(
             node, space.AvailableSize(), LogicalAlignment(), insets,
-            static_position, LogicalAnchorCenterPosition(),
-            container_writing_direction, node.Style().GetWritingDirection());
+            static_position, container_writing_direction,
+            node.Style().GetWritingDirection());
     ComputeOofBlockDimensions(node, node.Style(), space, imcb,
-                              LogicalAlignment(), border_padding, std::nullopt,
+                              LogicalAnchorCenterPosition(), LogicalAlignment(),
+                              border_padding, std::nullopt, BoxStrut(),
                               container_writing_direction, dimensions);
     GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kAfterPerformLayout);
     GetDocument().Lifecycle().AdvanceTo(DocumentLifecycle::kLayoutClean);

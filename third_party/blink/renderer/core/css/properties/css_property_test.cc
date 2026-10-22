@@ -41,14 +41,14 @@ class ModeCheckingAnchorEvaluator : public AnchorEvaluator {
   std::optional<LayoutUnit> Evaluate(
       const AnchorQuery&,
       const ScopedCSSName* position_anchor,
-      const std::optional<InsetAreaOffsets>&) override {
+      const std::optional<PositionAreaOffsets>&) override {
     return (required_mode_ == GetMode()) ? std::optional<LayoutUnit>(1)
                                          : std::optional<LayoutUnit>();
   }
 
-  std::optional<InsetAreaOffsets> ComputeInsetAreaOffsetsForLayout(
+  std::optional<PositionAreaOffsets> ComputePositionAreaOffsetsForLayout(
       const ScopedCSSName*,
-      InsetArea) override {
+      PositionArea) override {
     return std::nullopt;
   }
   std::optional<PhysicalOffset> ComputeAnchorCenterOffsets(
@@ -431,8 +431,8 @@ TEST_F(CSSPropertyTest, AnchorModeLeft) {
             ComputedValue("max-height", "anchor-size(width, 0px)", context));
 }
 
-TEST_F(CSSPropertyTest, AnchorModeSize) {
-  ModeCheckingAnchorEvaluator anchor_evaluator(AnchorScope::Mode::kSize);
+TEST_F(CSSPropertyTest, AnchorModeWidth) {
+  ModeCheckingAnchorEvaluator anchor_evaluator(AnchorScope::Mode::kWidth);
   StyleRecalcContext context = {.anchor_evaluator = &anchor_evaluator};
 
   EXPECT_EQ("0px", ComputedValue("top", "anchor(top, 0px)", context));
@@ -440,12 +440,32 @@ TEST_F(CSSPropertyTest, AnchorModeSize) {
   EXPECT_EQ("0px", ComputedValue("bottom", "anchor(top, 0px)", context));
   EXPECT_EQ("0px", ComputedValue("left", "anchor(top, 0px)", context));
   EXPECT_EQ("1px", ComputedValue("width", "anchor-size(width, 0px)", context));
-  EXPECT_EQ("1px", ComputedValue("height", "anchor-size(width, 0px)", context));
+  EXPECT_EQ("0px", ComputedValue("height", "anchor-size(width, 0px)", context));
   EXPECT_EQ("1px",
+            ComputedValue("min-width", "anchor-size(width, 0px)", context));
+  EXPECT_EQ("0px",
+            ComputedValue("min-height", "anchor-size(width, 0px)", context));
+  EXPECT_EQ("1px",
+            ComputedValue("max-width", "anchor-size(width, 0px)", context));
+  EXPECT_EQ("0px",
+            ComputedValue("max-height", "anchor-size(width, 0px)", context));
+}
+
+TEST_F(CSSPropertyTest, AnchorModeHeight) {
+  ModeCheckingAnchorEvaluator anchor_evaluator(AnchorScope::Mode::kHeight);
+  StyleRecalcContext context = {.anchor_evaluator = &anchor_evaluator};
+
+  EXPECT_EQ("0px", ComputedValue("top", "anchor(top, 0px)", context));
+  EXPECT_EQ("0px", ComputedValue("right", "anchor(top, 0px)", context));
+  EXPECT_EQ("0px", ComputedValue("bottom", "anchor(top, 0px)", context));
+  EXPECT_EQ("0px", ComputedValue("left", "anchor(top, 0px)", context));
+  EXPECT_EQ("0px", ComputedValue("width", "anchor-size(width, 0px)", context));
+  EXPECT_EQ("1px", ComputedValue("height", "anchor-size(width, 0px)", context));
+  EXPECT_EQ("0px",
             ComputedValue("min-width", "anchor-size(width, 0px)", context));
   EXPECT_EQ("1px",
             ComputedValue("min-height", "anchor-size(width, 0px)", context));
-  EXPECT_EQ("1px",
+  EXPECT_EQ("0px",
             ComputedValue("max-width", "anchor-size(width, 0px)", context));
   EXPECT_EQ("1px",
             ComputedValue("max-height", "anchor-size(width, 0px)", context));
@@ -485,6 +505,38 @@ TEST_F(CSSPropertyTest, PositionTryOptionsDisabled) {
   EXPECT_EQ(declarations->PropertyAt(0).Id(), CSSPropertyID::kPositionTryOrder);
   EXPECT_EQ(declarations->PropertyAt(1).Id(),
             CSSPropertyID::kPositionTryFallbacks);
+}
+
+TEST_F(CSSPropertyTest, InsetAreaDisabled) {
+  ScopedCSSInsetAreaPropertyForTest inset_area_enabled(false);
+  auto* declarations = ParseShorthand("position-area", "center top");
+  ASSERT_TRUE(declarations);
+  ASSERT_EQ(declarations->PropertyCount(), 1u);
+  declarations = ParseShorthand("inset-area", "center top");
+  ASSERT_TRUE(declarations);
+  ASSERT_EQ(declarations->PropertyCount(), 0u);
+}
+
+TEST_F(CSSPropertyTest, AnchorSizeInsetsMarginsDisabled) {
+  ScopedCSSAnchorSizeInsetsMarginsForTest enabled(false);
+
+  String anchor_size_value("anchor-size(width)");
+  EXPECT_EQ(Parse("top", anchor_size_value), nullptr);
+  EXPECT_EQ(Parse("left", anchor_size_value), nullptr);
+  EXPECT_EQ(Parse("bottom", anchor_size_value), nullptr);
+  EXPECT_EQ(Parse("right", anchor_size_value), nullptr);
+  EXPECT_EQ(Parse("inset-block-start", anchor_size_value), nullptr);
+  EXPECT_EQ(Parse("inset-block-end", anchor_size_value), nullptr);
+  EXPECT_EQ(Parse("inset-inline-start", anchor_size_value), nullptr);
+  EXPECT_EQ(Parse("inset-inline-end", anchor_size_value), nullptr);
+  EXPECT_EQ(Parse("margin-top", anchor_size_value), nullptr);
+  EXPECT_EQ(Parse("margin-left", anchor_size_value), nullptr);
+  EXPECT_EQ(Parse("margin-bottom", anchor_size_value), nullptr);
+  EXPECT_EQ(Parse("margin-right", anchor_size_value), nullptr);
+  EXPECT_EQ(Parse("margin-block-start", anchor_size_value), nullptr);
+  EXPECT_EQ(Parse("margin-block-end", anchor_size_value), nullptr);
+  EXPECT_EQ(Parse("margin-inline-start", anchor_size_value), nullptr);
+  EXPECT_EQ(Parse("margin-inline-end", anchor_size_value), nullptr);
 }
 
 }  // namespace blink

@@ -5,6 +5,7 @@
 #include "third_party/blink/renderer/core/editing/finder/find_buffer.h"
 
 #include "build/build_config.h"
+#include "third_party/blink/renderer/core/dom/text.h"
 #include "third_party/blink/renderer/core/editing/ephemeral_range.h"
 #include "third_party/blink/renderer/core/editing/selection_template.h"
 #include "third_party/blink/renderer/core/editing/testing/editing_test_base.h"
@@ -596,6 +597,15 @@ TEST_F(FindBufferTest, KanaDecomposed) {
   EXPECT_EQ(1u, buffer.FindMatches("ﾊ ゛", kCaseInsensitive).CountForTesting());
 }
 
+TEST_F(FindBufferTest, FindDecomposedKanaInComposed) {
+  // Hiragana Ba, composed
+  SetBodyInnerHTML(u"\u3070");
+  FindBuffer buffer(WholeDocumentRange());
+  // Hiragana Ba, decomposed
+  EXPECT_EQ(1u, buffer.FindMatches(String(u"\u306F\u3099"), kCaseInsensitive)
+                    .CountForTesting());
+}
+
 TEST_F(FindBufferTest, FindPlainTextInvalidTarget1) {
   static const char* body_content = "<div>foo bar test</div>";
   SetBodyContent(body_content);
@@ -899,6 +909,14 @@ TEST_F(FindBufferTest, GetFirstBlockLevelAncestorInclusive) {
             FindBuffer::GetFirstBlockLevelAncestorInclusive(*text_node_c));
   ASSERT_EQ(inner_div,
             FindBuffer::GetFirstBlockLevelAncestorInclusive(*text_node_b));
+}
+
+TEST_F(FindBufferTest, ForwardVisibleTextNode) {
+  SetBodyContent("\n<div>\n<p>a</p></div");
+  Node* text = FindBuffer::ForwardVisibleTextNode(*GetDocument().body());
+  ASSERT_TRUE(text);
+  EXPECT_TRUE(IsA<Text>(*text));
+  EXPECT_EQ(String("a"), To<Text>(text)->data());
 }
 
 }  // namespace blink

@@ -68,7 +68,8 @@ class MockBaseFetchContext final : public BaseFetchContext {
       const override {
     return SecurityOrigin::CreateUniqueOpaque();
   }
-  bool AllowScript() const override { return false; }
+  // FlyWeb: Brave's chromium_src gives AllowScript() a KURL argument.
+  bool AllowScript(const KURL&) const override { return false; }
   SubresourceFilter* GetSubresourceFilter() const override { return nullptr; }
   bool ShouldBlockRequestByInspector(const KURL&) const override {
     return false;
