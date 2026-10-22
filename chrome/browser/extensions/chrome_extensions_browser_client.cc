@@ -584,7 +584,10 @@ bool ChromeExtensionsBrowserClient::IsBackgroundUpdateAllowed() {
 
 bool ChromeExtensionsBrowserClient::IsMinBrowserVersionSupported(
     const std::string& min_version) {
-  const base::Version& browser_version = version_info::GetVersion();
+  // FlyWeb: same version as minimum_chrome_version_checker.cc (the declared
+  // one), so that updates of installed extensions are not refused.
+  const base::Version browser_version(
+      version_info::constants::kFlyWebEngineFullVersion);
   base::Version browser_min_version(min_version);
   return !browser_version.IsValid() || !browser_min_version.IsValid() ||
          browser_min_version.CompareTo(browser_version) <= 0;

@@ -6,6 +6,7 @@
 
 #include "base/check.h"
 #include "base/feature_list.h"
+#include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
 #include "base/system/sys_info.h"
 #include "build/branding_buildflags.h"
@@ -87,11 +88,18 @@ UpdateQueryParamsDelegate* g_delegate = nullptr;
 
 // static
 std::string UpdateQueryParams::Get(ProdId prod) {
+  std::string extra_params = g_delegate ? g_delegate->GetExtraParams() : "";
+  // FlyWeb: extension requests carry the declared version (see
+  // GetProdVersionForCrx()); components keep the real one.
+  if (prod == CRX) {
+    base::ReplaceFirstSubstringAfterOffset(
+        &extra_params, 0, "prodversion=" + GetProdVersion(),
+        "prodversion=" + GetProdVersionForCrx());
+  }
   return base::StringPrintf(
       "os=%s&arch=%s&os_arch=%s&nacl_arch=%s&prod=%s%s&acceptformat=crx3,puff",
       kOs, kArch, base::SysInfo().OperatingSystemArchitecture().c_str(),
-      GetNaclArch(), GetProdIdString(prod),
-      g_delegate ? g_delegate->GetExtraParams().c_str() : "");
+      GetNaclArch(), GetProdIdString(prod), extra_params.c_str());
 }
 
 // static
@@ -152,6 +160,11 @@ const char* UpdateQueryParams::GetNaclArch() {
 // static
 std::string UpdateQueryParams::GetProdVersion() {
   return std::string(version_info::GetVersionNumber());
+}
+
+// static
+std::string UpdateQueryParams::GetProdVersionForCrx() {
+  return version_info::constants::kFlyWebEngineFullVersion;
 }
 
 // static
