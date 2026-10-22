@@ -6,10 +6,15 @@
 
 #include "base/command_line.h"
 #include "base/containers/contains.h"
+#include "build/build_config.h"
 #include "ui/gl/gl_bindings.h"
 #include "ui/gl/gl_implementation.h"
 #include "ui/gl/gl_utils.h"
 #include "ui/gl/init/gl_factory.h"
+
+#if BUILDFLAG(IS_MAC)
+#include "base/mac/mac_util.h"
+#endif
 
 namespace gl::init {
 
@@ -41,6 +46,14 @@ void GetEGLInitDisplays(bool supports_angle_d3d,
       base::FeatureList::IsEnabled(features::kDefaultANGLEOpenGL);
   bool default_angle_metal =
       base::FeatureList::IsEnabled(features::kDefaultANGLEMetal);
+#if BUILDFLAG(IS_MAC)
+  // FlyWeb (FM.31): ANGLE's Metal backend by default from macOS 10.15, as
+  // Chromium 131 (bd08100342); on 10.14, the OpenGL backend that was tested on
+  // Mojave. --use-angle=metal still selects Metal there.
+  if (base::mac::MacOSVersion() < 10'15'00) {
+    default_angle_metal = false;
+  }
+#endif
   bool default_angle_vulkan = features::IsDefaultANGLEVulkan();
 
   // If we're already requesting software GL, make sure we don't fallback to the
