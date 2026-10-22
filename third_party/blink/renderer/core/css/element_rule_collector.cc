@@ -384,6 +384,7 @@ using SelectorStatisticsRuleMap =
     HashMap<CumulativeRulePerfKey, CumulativeRulePerfData>;
 SelectorStatisticsRuleMap& GetSelectorStatisticsRuleMap() {
   DEFINE_STATIC_LOCAL(SelectorStatisticsRuleMap, rule_map, {});
+  CHECK(IsMainThread());
   return rule_map;
 }
 

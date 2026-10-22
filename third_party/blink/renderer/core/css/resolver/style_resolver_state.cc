@@ -85,6 +85,7 @@ cssvalue::CSSColorImageValue& TransparentImage() {
       Persistent<cssvalue::CSSColorImageValue>, image,
       (MakeGarbageCollected<cssvalue::CSSColorImageValue>(
           CSSIdentifierValue::Create(CSSValueID::kTransparent))));
+  CHECK(IsMainThread());
   return *image;
 }
 
