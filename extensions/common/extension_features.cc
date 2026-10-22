@@ -114,6 +114,10 @@ BASE_FEATURE(kCheckingNoExtensionIdInExtensionIpcs,
 BASE_FEATURE(kComponentExtensionAllowWorkerChromeResources,
              base::FEATURE_ENABLED_BY_DEFAULT);
 
+BASE_FEATURE(kCrxInstallerVerifyReloadedManifest,
+             "CrxInstallerVerifyReloadedManifest",
+             base::FEATURE_ENABLED_BY_DEFAULT);
+
 BASE_FEATURE(kCWSReviewPromptingNativeUI,
              "CWSReviewPromptingNativeUI",
              base::FEATURE_DISABLED_BY_DEFAULT);
