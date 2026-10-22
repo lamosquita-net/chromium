@@ -303,16 +303,6 @@ bool ShowPredictions(const WebDocument& document,
   return true;
 }
 
-gfx::Rect GetCaretBounds(content::RenderFrame& frame) {
-  if (auto* frame_widget = frame.GetWebFrame()->LocalRoot()->FrameWidget()) {
-    gfx::Rect anchor;
-    gfx::Rect focus;
-    frame_widget->CalculateSelectionBounds(anchor, focus);
-    return frame.ConvertViewportToWindow(focus);
-  }
-  return gfx::Rect();
-}
-
 AutofillAgent::Config CreateConfig(bool uses_platform_autofill) {
   if (uses_platform_autofill) {
     return {
@@ -772,7 +762,7 @@ void AutofillAgent::HandleCaretMovedInFormField(WebElement element,
         !element.ContainsFrameSelection()) {
       return;
     }
-    gfx::Rect caret_bounds = GetCaretBounds(*self.unsafe_render_frame());
+    gfx::Rect caret_bounds = self.GetCaretBounds();
     if (WebFormControlElement control =
             element.DynamicTo<WebFormControlElement>()) {
       if (std::optional<form_util::FormAndField> form_and_field =
@@ -1700,12 +1690,10 @@ void AutofillAgent::ShowSuggestions(
 
   is_popup_possibly_visible_ = true;
   if (auto* autofill_driver = unsafe_autofill_driver()) {
-    if (auto* render_frame = unsafe_render_frame()) {
-      autofill_driver->AskForValuesToFill(form, field.renderer_id(),
-                                          GetCaretBounds(*render_frame),
-                                          trigger_source, password_request);
-      at_memory_handler_.MaybeUpdateAskForValuesToFill(element, trigger_source);
-    }
+    autofill_driver->AskForValuesToFill(form, field.renderer_id(),
+                                        GetCaretBounds(), trigger_source,
+                                        password_request);
+    at_memory_handler_.MaybeUpdateAskForValuesToFill(element, trigger_source);
   }
 }
 
@@ -1726,12 +1714,10 @@ void AutofillAgent::ShowSuggestionsForContentEditable(
 
   if (auto* autofill_driver = unsafe_autofill_driver()) {
     is_popup_possibly_visible_ = true;
-    if (auto* render_frame = unsafe_render_frame()) {
-      autofill_driver->AskForValuesToFill(*form, field.renderer_id(),
-                                          GetCaretBounds(*render_frame),
-                                          trigger_source, std::nullopt);
-      at_memory_handler_.MaybeUpdateAskForValuesToFill(element, trigger_source);
-    }
+    autofill_driver->AskForValuesToFill(*form, field.renderer_id(),
+                                        GetCaretBounds(), trigger_source,
+                                        std::nullopt);
+    at_memory_handler_.MaybeUpdateAskForValuesToFill(element, trigger_source);
   }
 }
 
@@ -1972,8 +1958,7 @@ void AutofillAgent::ExtractFormsAndNotifyPasswordAutofillAgent(
 void AutofillAgent::ExtractFormsUnthrottled(
     base::OnceCallback<void(bool)> callback,
     const CallTimerState& timer_state) {
-  content::RenderFrame* render_frame = unsafe_render_frame();
-  if (!render_frame) {
+  if (!unsafe_render_frame()) {
     if (!callback.is_null()) {
       std::move(callback).Run(/*success=*/false);
     }
@@ -1992,11 +1977,27 @@ void AutofillAgent::ExtractFormsUnthrottled(
     std::move(callback).Run(/*success=*/true);
   }
 
-  if (WebLocalFrame& frame = *render_frame->GetWebFrame();
-      frame.IsInspectorConnected()) {
-    form_issues::EmitFormIssues(frame.GetDocument(), cache.updated_forms,
-                                &form_issues::EmitToDevTools);
+  if (auto* render_frame = unsafe_render_frame()) {
+    if (WebLocalFrame& frame = *render_frame->GetWebFrame();
+        frame.IsInspectorConnected()) {
+      form_issues::EmitFormIssues(frame.GetDocument(), cache.updated_forms,
+                                  &form_issues::EmitToDevTools);
+    }
   }
+}
+
+gfx::Rect AutofillAgent::GetCaretBounds() const {
+  if (WebDocument doc = GetDocument()) {
+    if (auto* frame_widget = doc.GetFrame()->LocalRoot()->FrameWidget()) {
+      gfx::Rect anchor;
+      gfx::Rect focus;
+      frame_widget->CalculateSelectionBounds(anchor, focus);
+      if (auto* render_frame = unsafe_render_frame()) {
+        return render_frame->ConvertViewportToWindow(focus);
+      }
+    }
+  }
+  return gfx::Rect();
 }
 
 void AutofillAgent::HidePopup() {
