@@ -1502,6 +1502,49 @@ TEST_F(NigoriSyncBridgeImplTest,
   EXPECT_FALSE(bridge()->HasPendingKeysForTesting());
 }
 
+TEST_F(NigoriSyncBridgeImplTest,
+       ShouldFailOnInvalidRemoteKeyRotationForTrustedVault) {
+  const std::vector<uint8_t> kRotatedTrustedVaultKey = {7, 8, 9, 10};
+
+  EntityData entity_data;
+  *entity_data.specifics.mutable_nigori() =
+      BuildTrustedVaultNigoriSpecifics({kTrustedVaultKey});
+
+  ASSERT_TRUE(bridge()->SetKeystoreKeys({kRawKeystoreKey}));
+  ASSERT_THAT(bridge()->MergeFullSyncData(std::move(entity_data)),
+              Eq(std::nullopt));
+  bridge()->NotifyInitialStateToObservers();
+  ASSERT_TRUE(bridge()->HasPendingKeysForTesting());
+  bridge()->AddTrustedVaultDecryptionKeys({kTrustedVaultKey});
+  ASSERT_FALSE(bridge()->HasPendingKeysForTesting());
+
+  // Mimic an intermediate remote Trusted Vault update that can be decrypted
+  // inline using the existing cryptographer keys (regression test for
+  // crbug.com/556213137).
+  EntityData inline_decryptable_entity_data;
+  *inline_decryptable_entity_data.specifics.mutable_nigori() =
+      BuildTrustedVaultNigoriSpecifics({kTrustedVaultKey});
+  ASSERT_THAT(bridge()->ApplyIncrementalSyncChanges(
+                  std::move(inline_decryptable_entity_data)),
+              Eq(std::nullopt));
+  ASSERT_FALSE(bridge()->HasPendingKeysForTesting());
+
+  // Mimic an invalid remote key rotation whose keybag omits `kTrustedVaultKey`.
+  EntityData invalid_rotated_entity_data;
+  *invalid_rotated_entity_data.specifics.mutable_nigori() =
+      BuildTrustedVaultNigoriSpecifics({kRotatedTrustedVaultKey});
+  EXPECT_CALL(*observer(), OnTrustedVaultKeyRequired());
+  ASSERT_THAT(bridge()->ApplyIncrementalSyncChanges(
+                  std::move(invalid_rotated_entity_data)),
+              Eq(std::nullopt));
+  ASSERT_TRUE(bridge()->HasPendingKeysForTesting());
+
+  // Once the new decryption key is provided, the bridge should report a model
+  // error because `kTrustedVaultKey` is missing from the rotated keybag.
+  EXPECT_CALL(*processor(), ReportError);
+  bridge()->AddTrustedVaultDecryptionKeys({kRotatedTrustedVaultKey});
+}
+
 // Tests transitioning locally from trusted vault passphrase to custom
 // passphrase.
 TEST_F(NigoriSyncBridgeImplTest,
@@ -1709,6 +1752,17 @@ TEST_F(NigoriSyncBridgeImplTest,
               Eq(PassphraseType::kTrustedVaultPassphrase));
   ASSERT_THAT(bridge()->GetDataForDebugging(),
               Not(HasCustomPassphraseNigori()));
+
+  // Mimic an intermediate remote Trusted Vault update that is decrypted inline
+  // before the transition to custom passphrase (regression test for
+  // crbug.com/556213137).
+  EntityData inline_decryptable_entity_data;
+  *inline_decryptable_entity_data.specifics.mutable_nigori() =
+      BuildTrustedVaultNigoriSpecifics({kTrustedVaultKey});
+  ASSERT_THAT(bridge()->ApplyIncrementalSyncChanges(
+                  std::move(inline_decryptable_entity_data)),
+              Eq(std::nullopt));
+  ASSERT_FALSE(bridge()->HasPendingKeysForTesting());
 
   const KeyParamsForTesting kCustomPassphraseKeyParams =
       Pbkdf2PassphraseKeyParamsForTesting("custom_passphrase");
