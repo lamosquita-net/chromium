@@ -50,6 +50,12 @@ class UpdateQueryParams {
   // Returns the current version of Chrome/Chromium.
   static std::string GetProdVersion();
 
+  // FlyWeb: the version sent in extension requests (prod=CRX): the Chrome
+  // version FlyWeb declares, the one minimum_chrome_version is checked
+  // against. The Chrome Web Store only serves an extension whose
+  // minimum_chrome_version fits it (it answers 204 otherwise).
+  static std::string GetProdVersionForCrx();
+
   // Use this delegate.
   static void SetDelegate(UpdateQueryParamsDelegate* delegate);
 };

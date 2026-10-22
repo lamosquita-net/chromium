@@ -40,7 +40,11 @@ bool MinimumChromeVersionChecker::Parse(Extension* extension,
     return false;
   }
 
-  const base::Version& current_version = version_info::GetVersion();
+  // FlyWeb: compare with the Chrome version FlyWeb declares (the Web Store
+  // serves FlyWeb the extensions for that version), not with the real 128.
+  // softmac FlyWeb/docs/extensiones.md, option A.
+  const base::Version current_version(
+      version_info::constants::kFlyWebEngineFullVersion);
   if (!current_version.IsValid()) {
     NOTREACHED_IN_MIGRATION();
     return false;
