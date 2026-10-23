@@ -21,6 +21,7 @@
 #include "gpu/ipc/service/gpu_channel_manager.h"
 #include "gpu/ipc/service/gpu_channel_manager_delegate.h"
 #include "ui/accelerated_widget_mac/ca_layer_tree_coordinator.h"
+#include "ui/gfx/extension_set.h"
 #include "ui/gfx/geometry/rect_conversions.h"
 #include "ui/gfx/gpu_fence.h"
 #include "ui/gfx/overlay_plane_data.h"
@@ -121,8 +122,16 @@ void ImageTransportSurfaceOverlayMacEGL::Present(
                                    &angle_device_attrib)) {
         EGLDeviceEXT angle_device =
             reinterpret_cast<EGLDeviceEXT>(angle_device_attrib);
+        // FlyWeb: with ANGLE's OpenGL backend (macOS 10.14) the device is CGL
+        // and has no EGL_ANGLE_device_metal; asking for EGL_METAL_DEVICE_ANGLE
+        // there fails with EGL_BAD_ATTRIBUTE on every frame.
+        const char* device_extensions =
+            eglQueryDeviceStringEXT(angle_device, EGL_EXTENSIONS);
         EGLAttrib metal_device_attrib = 0;
-        if (eglQueryDeviceAttribEXT(angle_device, EGL_METAL_DEVICE_ANGLE,
+        if (device_extensions &&
+            gfx::HasExtension(gfx::MakeExtensionSet(device_extensions),
+                              "EGL_ANGLE_device_metal") &&
+            eglQueryDeviceAttribEXT(angle_device, EGL_METAL_DEVICE_ANGLE,
                                     &metal_device_attrib)) {
           id<MTLDevice> metal_device = (__bridge id)(void*)metal_device_attrib;
           ca_layer_tree_coordinator_->GetPendingCARendererLayerTree()
