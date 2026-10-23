@@ -1162,13 +1162,15 @@ void FileSystemAccessManagerImpl::BindObserverHost(
 }
 
 void FileSystemAccessManagerImpl::SerializeHandle(
+    const blink::StorageKey& storage_key,
     mojo::PendingRemote<blink::mojom::FileSystemAccessTransferToken> token,
     SerializeHandleCallback callback) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   ResolveTransferToken(
       std::move(token),
       base::BindOnce(&FileSystemAccessManagerImpl::DidResolveForSerializeHandle,
-                     weak_factory_.GetWeakPtr(), std::move(callback)));
+                     weak_factory_.GetWeakPtr(), storage_key,
+                     std::move(callback)));
 }
 
 namespace {
@@ -1229,6 +1231,7 @@ bool IsPlainRelativePath(const base::FilePath& path) {
 }
 
 std::string SerializeURLImpl(const storage::FileSystemURL& url,
+                             const url::Origin& origin,
                              FileSystemAccessPermissionContext::HandleType type,
                              base::FilePath root_permission_path,
                              const std::string& display_name) {
@@ -1269,6 +1272,9 @@ std::string SerializeURLImpl(const storage::FileSystemURL& url,
 
     file_data->set_relative_path(SerializePath(relative_path));
     file_data->set_display_name(display_name);
+    if (!origin.opaque()) {
+      file_data->set_origin(origin.Serialize());
+    }
   } else if (url.type() == storage::kFileSystemTypeTemporary) {
     base::FilePath virtual_path = url.virtual_path();
     data.mutable_sandboxed()->set_virtual_path(SerializePath(virtual_path));
@@ -1293,32 +1299,37 @@ std::string FileSystemAccessManagerImpl::SerializeURL(
     const storage::FileSystemURL& url,
     HandleType type) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-  return SerializeURLImpl(url, type,
+  return SerializeURLImpl(url, /*origin=*/url::Origin(), type,
                           /*root_permission_path=*/base::FilePath(),
                           /*display_name=*/std::string());
 }
 
 std::string FileSystemAccessManagerImpl::SerializeURLWithPermissionRoot(
     const storage::FileSystemURL& url,
+    const url::Origin& origin,
     HandleType type,
     const base::FilePath& root_permission_path,
     const std::string& display_name) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-  return SerializeURLImpl(url, type, root_permission_path, display_name);
+  return SerializeURLImpl(url, origin, type, root_permission_path,
+                          display_name);
 }
 
 void FileSystemAccessManagerImpl::DidResolveForSerializeHandle(
+    const blink::StorageKey& storage_key,
     SerializeHandleCallback callback,
     FileSystemAccessTransferTokenImpl* resolved_token) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
-  if (!resolved_token) {
+  if (!resolved_token || resolved_token->origin().opaque() ||
+      !IsValidTransferToken(resolved_token, storage_key,
+                            resolved_token->type())) {
     std::move(callback).Run({});
     return;
   }
 
   auto value = SerializeURLWithPermissionRoot(
-      resolved_token->url(), resolved_token->type(),
+      resolved_token->url(), resolved_token->origin(), resolved_token->type(),
       resolved_token->GetWriteGrant()->GetPath(),
       resolved_token->GetWriteGrant()->GetDisplayName());
   std::vector<uint8_t> result(value.begin(), value.end());
@@ -1410,6 +1421,12 @@ void FileSystemAccessManagerImpl::DeserializeHandle(
           data.data_case() == FileSystemAccessHandleData::kLocal
               ? data.local()
               : data.external();
+
+      if (storage_key.origin().opaque() || !file_data.has_origin() ||
+          file_data.origin() != storage_key.origin().Serialize()) {
+        // Drop `token`, and directly return.
+        return;
+      }
 
       base::FilePath root_path = DeserializePath(file_data.root_path());
       base::FilePath relative_path = DeserializePath(file_data.relative_path());
