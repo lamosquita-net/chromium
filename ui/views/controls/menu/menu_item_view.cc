@@ -131,6 +131,10 @@ MenuItemView::MenuItemView(MenuDelegate* delegate)
                    delegate) {}
 
 MenuItemView::~MenuItemView() {
+  CHECK(!inserting_into_menu_)
+      << "A menu item was synchronously destroyed while being inserted into a "
+         "menu, possibly by some consumer of the accessibility API. This "
+         "should never happen.";
   SetAnchorView(nullptr);
   // Only the root item holds `controller_`, so walk up to the root to also
   // cover destruction of a non-root subtree (e.g. via RemoveMenuItem()). This
@@ -454,6 +458,7 @@ MenuItemView* MenuItemView::AddMenuItemAt(
     item->SetVisible(false);
   }
 
+  base::AutoReset inserting_auto_reset(&item->inserting_into_menu_, true);
   auto* added_item = submenu_->AddChildViewAt(item, index);
 
   added_item->UpdateTooltipText();
