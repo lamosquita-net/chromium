@@ -246,8 +246,6 @@ class CORE_EXPORT ImageResourceContent final
     return is_preloaded_with_early_hints_;
   }
 
-  void SetAllocatedExternalMemory() { allocated_external_memory_ = true; }
-
  private:
   using CanDeferInvalidation = ImageResourceObserver::CanDeferInvalidation;
 
@@ -297,8 +295,6 @@ class CORE_EXPORT ImageResourceContent final
   Image::SizeAvailability size_available_ = Image::kSizeUnavailable;
 
   bool has_device_pixel_ratio_header_value_ = false;
-
-  bool allocated_external_memory_ = false;
 
   bool is_broken_ = false;
 

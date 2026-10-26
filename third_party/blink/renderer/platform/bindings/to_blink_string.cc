@@ -15,14 +15,16 @@ namespace {
 
 template <class StringClass>
 struct StringTraits {
-  static const StringClass& FromStringResource(StringResourceBase*);
+  static const StringClass& FromStringResource(v8::Isolate* isolate,
+                                               StringResourceBase*);
   template <typename V8StringTrait>
   static StringClass FromV8String(v8::Isolate*, v8::Local<v8::String>, int);
 };
 
 template <>
 struct StringTraits<String> {
-  static const String FromStringResource(StringResourceBase* resource) {
+  static const String FromStringResource(v8::Isolate* isolate,
+                                         StringResourceBase* resource) {
     return resource->GetWTFString();
   }
   template <typename V8StringTrait>
@@ -31,8 +33,9 @@ struct StringTraits<String> {
 
 template <>
 struct StringTraits<AtomicString> {
-  static const AtomicString FromStringResource(StringResourceBase* resource) {
-    return resource->GetAtomicString();
+  static const AtomicString FromStringResource(v8::Isolate* isolate,
+                                               StringResourceBase* resource) {
+    return resource->GetAtomicString(isolate);
   }
   template <typename V8StringTrait>
   static AtomicString FromV8String(v8::Isolate*, v8::Local<v8::String>, int);
@@ -158,15 +161,17 @@ ConvertAndExternalizeString(v8::Isolate* isolate,
   *was_externalized = false;
   if (LIKELY(can_externalize)) {
     if (result.Is8Bit()) {
-      StringResource8* string_resource = new StringResource8(result);
+      StringResource8* string_resource = new StringResource8(isolate, result);
       if (UNLIKELY(!v8_string->MakeExternal(string_resource))) {
+        string_resource->Unaccount(isolate);
         delete string_resource;
       } else {
         *was_externalized = true;
       }
     } else {
-      StringResource16* string_resource = new StringResource16(result);
+      StringResource16* string_resource = new StringResource16(isolate, result);
       if (UNLIKELY(!v8_string->MakeExternal(string_resource))) {
+        string_resource->Unaccount(isolate);
         delete string_resource;
       } else {
         *was_externalized = true;
@@ -194,7 +199,8 @@ StringType ToBlinkString(v8::Isolate* isolate,
   // strings on for platforms with v8 pointer compression.
   StringResourceBase* string_resource = GetExternalizedString(v8_string);
   if (string_resource)
-    return StringTraits<StringType>::FromStringResource(string_resource);
+    return StringTraits<StringType>::FromStringResource(isolate,
+                                                        string_resource);
 
   int length = v8_string->Length();
   if (UNLIKELY(!length)) {
@@ -231,7 +237,8 @@ StringView ToBlinkStringView(v8::Isolate* isolate,
   // to satisfy all RVO constraints.
   StringResourceBase* string_resource = GetExternalizedString(v8_string);
   if (string_resource) {
-    return StringTraits<AtomicString>::FromStringResource(string_resource)
+    return StringTraits<AtomicString>::FromStringResource(isolate,
+                                                          string_resource)
         .Impl();
   }
 
