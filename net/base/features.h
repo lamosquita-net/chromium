@@ -575,6 +575,9 @@ NET_EXPORT BASE_DECLARE_FEATURE(kOptimizeParsingDataUrls);
 // Keep whitespace for non-base64 encoded data: URLs.
 NET_EXPORT BASE_DECLARE_FEATURE(kKeepWhitespaceForDataUrls);
 
+// If enabled, ignore Strict-Transport-Security for [*.]localhost hosts.
+NET_EXPORT BASE_DECLARE_FEATURE(kIgnoreHSTSForLocalhost);
+
 }  // namespace net::features
 
 #endif  // NET_BASE_FEATURES_H_
