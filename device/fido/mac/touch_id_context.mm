@@ -108,9 +108,18 @@ bool TouchIdContext::TouchIdAvailableImpl(AuthenticatorConfig config) {
   return kHasSecureEnclave;
 }
 
+// FlyWeb (FM.42 d3): no platform authenticator on any Mac (FlyWeb decision,
+// 27-10-2026): its passkeys live in the Secure Enclave. New passkeys go to the
+// phone, security keys or a password manager. TouchIdCredentialStore is not
+// gated on this, so passkeys made by 2.0.0-2.0.2 can still be listed and
+// deleted (settings, clearing browsing data).
+static bool FlyWebTouchIdUnavailable(AuthenticatorConfig config) {
+  return false;
+}
+
 // Testing seam to allow faking Touch ID in tests.
 TouchIdContext::TouchIdAvailableFuncPtr TouchIdContext::g_touch_id_available_ =
-    &TouchIdContext::TouchIdAvailableImpl;
+    &FlyWebTouchIdUnavailable;
 
 // static
 void TouchIdContext::TouchIdAvailable(

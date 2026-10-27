@@ -11,9 +11,10 @@ namespace crypto {
 
 #if BUILDFLAG(IS_MAC)
 // Enabled in M124. Remove in or after M127.
+// FlyWeb (FM.42 d1): disabled; no Secure Enclave on any Mac.
 BASE_FEATURE(kEnableMacUnexportableKeys,
              "EnableMacUnexportableKeys",
-             base::FEATURE_ENABLED_BY_DEFAULT);
+             base::FEATURE_DISABLED_BY_DEFAULT);
 #endif  // BUILDFLAG(IS_MAC)
 
 }  // namespace crypto

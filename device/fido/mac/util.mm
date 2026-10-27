@@ -232,8 +232,8 @@ bool DeviceHasBiometricsAvailable() {
     return *flag;
   }
 
-  return crypto::AppleKeychainV2::GetInstance().LAContextCanEvaluatePolicy(
-      LAPolicyDeviceOwnerAuthenticationWithBiometrics, /*error=*/nil);
+  // FlyWeb (FM.42 d4): no Touch ID on any Mac (27-10-2026).
+  return false;
 }
 
 }  // namespace device::fido::mac

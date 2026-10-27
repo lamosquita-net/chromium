@@ -139,6 +139,11 @@ SecureEnclaveClientImpl::~SecureEnclaveClientImpl() = default;
 
 base::apple::ScopedCFTypeRef<SecKeyRef>
 SecureEnclaveClientImpl::CreatePermanentKey() {
+  // FlyWeb (FM.42 d8): no Secure Enclave on any Mac (27-10-2026), so
+  // no device trust key. Existing keys can still be read and deleted.
+  if (!VerifySecureEnclaveSupported()) {
+    return base::apple::ScopedCFTypeRef<SecKeyRef>();
+  }
   NSDictionary* attributes = CreateAttributesForKey();
   if (!attributes)
     return base::apple::ScopedCFTypeRef<SecKeyRef>();
@@ -278,7 +283,8 @@ bool SecureEnclaveClientImpl::SignDataWithKey(SecKeyRef key,
 }
 
 bool SecureEnclaveClientImpl::VerifySecureEnclaveSupported() {
-  return helper_->IsSecureEnclaveSupported();
+  // FlyWeb (FM.42 d8): never the Secure Enclave.
+  return false;
 }
 
 }  // namespace enterprise_connectors

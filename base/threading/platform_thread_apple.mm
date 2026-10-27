@@ -96,6 +96,14 @@ BASE_FEATURE(kOptimizedRealtimeThreadingMac,
 namespace {
 
 bool IsOptimizedRealtimeThreadingMacEnabled() {
+#if BUILDFLAG(IS_MAC)
+  // FlyWeb (FM.42 c1): "There is some platform bug on 10.14" (Chromium 116,
+  // removed with 10.14 support): audio threads keep the plain real-time
+  // policy there, as in FlyWeb 1.x.
+  if (mac::MacOSVersion() < 10'15'00) {
+    return false;
+  }
+#endif
   return FeatureList::IsEnabled(kOptimizedRealtimeThreadingMac);
 }
 

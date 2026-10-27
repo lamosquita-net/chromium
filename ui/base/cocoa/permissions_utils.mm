@@ -29,6 +29,12 @@ BASE_FEATURE(kWarmScreenCaptureSequoia,
 
 bool ShouldWarmScreenCapture() {
   const int macos_version = base::mac::MacOSVersion();
+  // FlyWeb (FM.42 c2): no Screen Recording permission before 10.15, so
+  // nothing to warm (as in Chromium 116).
+  if (macos_version < 10'15'00) {
+    return false;
+  }
+
   // On macOS < 14, we're using CGWindowListCreateImage to capture a screenshot.
   // Starting in macOS 14, CGWindowListCreateImage causes a "your screen is
   // being captured" chip to show in the menu bar while an app is capturing the
@@ -114,7 +120,7 @@ void CaptureScreenshot() {
 bool IsScreenCaptureAllowed() {
   if (@available(macOS 11.0, *)) {
     return CGPreflightScreenCaptureAccess();
-  } else {
+  } else if (@available(macOS 10.15, *)) {
     // Screen Capture is considered allowed if the name of at least one normal
     // or dock window running on another process is visible.
     // See https://crbug.com/993692.
@@ -145,13 +151,18 @@ bool IsScreenCaptureAllowed() {
       }
     }
     return false;
+  } else {
+    // FlyWeb (FM.42 c2): screen capture is always allowed before 10.15, as in
+    // Chromium 116; the window-name heuristic could deny getDisplayMedia and
+    // point to a Screen Recording setting that 10.14 does not have.
+    return true;
   }
 }
 
 bool TryPromptUserForScreenCapture() {
   if (@available(macOS 11.0, *)) {
     return CGRequestScreenCaptureAccess();
-  } else {
+  } else if (@available(macOS 10.15, *)) {
     // On 10.15+, macOS will show the permissions prompt for Screen Recording
     // if we request to create a display stream and our application is not
     // in the applications list in System permissions. Stream creation will
@@ -164,6 +175,9 @@ bool TryPromptUserForScreenCapture() {
               IOSurfaceRef frameSurface, CGDisplayStreamUpdateRef updateRef){
             }));
     return !!stream;
+  } else {
+    // FlyWeb (FM.42 c2): always allowed before 10.15 (Chromium 116).
+    return true;
   }
 }
 

@@ -303,8 +303,10 @@ void MeasureTpmOperationsInternalForTesting() {
 }  // namespace internal
 
 void MaybeMeasureTpmOperations(UnexportableKeyProvider::Config config) {
+  // FlyWeb (FM.42 d2): disabled; it created, used and deleted a Secure
+  // Enclave key on every launch on Macs with T2.
   static BASE_FEATURE(kTpmLatencyMetrics, "TpmLatencyMetrics",
-                      base::FEATURE_ENABLED_BY_DEFAULT);
+                      base::FEATURE_DISABLED_BY_DEFAULT);
   if (base::FeatureList::IsEnabled(kTpmLatencyMetrics)) {
     base::ThreadPool::PostTask(
         FROM_HERE,
