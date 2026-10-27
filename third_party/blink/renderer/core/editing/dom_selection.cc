@@ -48,6 +48,7 @@
 #include "third_party/blink/renderer/platform/bindings/exception_state.h"
 #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
 #include "third_party/blink/renderer/platform/instrumentation/use_counter.h"
+#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
 #include "third_party/blink/renderer/platform/wtf/text/wtf_string.h"
 
 namespace blink {
@@ -163,13 +164,15 @@ unsigned DOMSelection::extentOffset() const {
 bool DOMSelection::isCollapsed() const {
   if (!IsAvailable())
     return true;
-  Node* node = Selection()
-                   .ComputeVisibleSelectionInDOMTreeDeprecated()
-                   .Anchor()
-                   .AnchorNode();
-  if (node && node->IsInShadowTree() &&
-      DomWindow()->document()->AncestorInThisScope(node)) {
-    return true;
+  if (!RuntimeEnabledFeatures::SelectionIsCollapsedShadowDOMSupportEnabled()) {
+    Node* node = Selection()
+                     .ComputeVisibleSelectionInDOMTreeDeprecated()
+                     .Anchor()
+                     .AnchorNode();
+    if (node && node->IsInShadowTree() &&
+        DomWindow()->document()->AncestorInThisScope(node)) {
+      return true;
+    }
   }
 
   TemporaryRange temp_range(this, PrimaryRangeOrNull());

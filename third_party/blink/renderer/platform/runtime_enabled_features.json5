@@ -593,6 +593,12 @@
       base_feature: "none",
     },
     {
+      // Increase disabled color on calendar picker's month-popup-button to 0.9.
+      // Enabled by default on M132. Remove flag on or after M135.
+      name: "CalendarPickerMonthPopupButtonDisabledColor",
+      status: "stable",
+    },
+    {
       name: "CallExitNodeWithoutLayoutObject",
       status: "stable",
     },
@@ -2582,6 +2588,10 @@
       status: "stable",
     },
     {
+      name: "ListItemWithCounterSetNotSetExplicitValue",
+      status: "stable",
+    },
+    {
       name: "LockedMode",
       status: "test",
       // Enabled by features::kLockedMode.
@@ -3718,6 +3728,11 @@
       status: "experimental",
     },
     {
+      // See crbug.com/41321247 and crbug.com/376370642
+      name: "ScheduleSelectionChangeOnBackspace",
+      status: {"Android": "", "default": "stable"},
+    },
+    {
       // https://wicg.github.io/webcomponents/proposals/Scoped-Custom-Element-Registries
       name: "ScopedCustomElementRegistry",
       status: "experimental",
@@ -3819,6 +3834,14 @@
       // See https://w3c.github.io/selection-api/
       name: "SelectionAcrossShadowDOM",
       status: "experimental",
+    },
+    {
+      // selection.isCollapsed should return false if anchor and focus nodes
+      // are different, including in shadow tree.
+      // https://crbug.com/40400558
+      // This feature was shipped in M131, so this flag can be removed in M133.
+      name: "SelectionIsCollapsedShadowDOMSupport",
+      status: "stable",
     },
     {
       // Maintain author-defined ::selection highlight colors, even if they
@@ -4255,6 +4278,13 @@
       status: "stable",
     },
     {
+      // Ensures correct segment boundary for floating elements
+      // so that the selection does not get expanded for them.
+      // See https://crbug.com/40711666.
+      name: "TextSegmentBoundaryForElementWithFloatStyle",
+      status: "stable",
+    },
+    {
       // New implementation of text-size-adjust that applies during style rather
       // than via the text autosizer. This also includes changes such as
       // directly using percentage values without heuristics, and fully
@@ -4291,6 +4321,13 @@
       name: "TopicsDocumentAPI",
       base_feature: "none",
       public: true,
+      status: "stable",
+    },
+    // This is a killswitch for the behavior where popover.showPopover() and
+    // dialog.showModal() throw DOM exceptions if the document isn't active.
+    // This landed in M132, and can be removed in M134.
+    {
+      name: "TopLayerInactiveDocumentExceptions",
       status: "stable",
     },
     {
