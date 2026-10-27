@@ -194,7 +194,7 @@ bool WriteRootCppFile(const RootStore& root_store,
                               "kChromeRootConstraint%dNames%d[] = {",
                               i, constraint_num);
           for (const auto& name : constraint.permitted_dns_names()) {
-            base::StringAppendF(&string_to_write, "\"%s\",", name);
+            base::StringAppendF(&string_to_write, "\"%s\",", name.c_str());
           }
           string_to_write += "};\n";
         }
