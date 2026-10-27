@@ -16,6 +16,9 @@
 #include "mojo/public/cpp/bindings/self_owned_receiver.h"
 
 #if BUILDFLAG(IS_MAC)
+#include <fcntl.h>
+#include <sys/stat.h>
+
 #include "base/mac/mac_util.h"
 #endif
 
@@ -60,6 +63,23 @@ void FileUtilitiesHostImpl::SetLength(base::File file,
     mojo::ReportBadMessage("SetLength() disabled on this OS.");
     // No error message is specified as the ReportBadMessage() call should close
     // the pipe and kill the renderer.
+    std::move(callback).Run(std::move(file), false);
+    return;
+  }
+  // FlyWeb (FS.26): a compromised renderer can pass any descriptor it holds,
+  // and on 10.14 its own sandbox would not let it ftruncate() any of them.
+  // Only act on what OPFS hands out: a valid, regular file open for writing
+  // and not in append mode (stderr redirected to a log file, for example).
+  if (!file.IsValid() || length < 0) {
+    mojo::ReportBadMessage("SetLength() with an invalid file or length.");
+    std::move(callback).Run(std::move(file), false);
+    return;
+  }
+  const int fd = file.GetPlatformFile();
+  struct stat st;
+  const int flags = fcntl(fd, F_GETFL);
+  if (fstat(fd, &st) != 0 || !S_ISREG(st.st_mode) || flags == -1 ||
+      (flags & O_ACCMODE) == O_RDONLY || (flags & O_APPEND)) {
     std::move(callback).Run(std::move(file), false);
     return;
   }
