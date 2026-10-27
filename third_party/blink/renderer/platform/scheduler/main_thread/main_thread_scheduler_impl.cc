@@ -93,21 +93,6 @@ constexpr base::TimeDelta kDefaultPrioritizeCompositingAfterDelay =
 constexpr base::TimeDelta kRenderBlockingStarvationThreshold =
     base::Milliseconds(500);
 
-v8::RAILMode RAILModeToV8RAILMode(RAILMode rail_mode) {
-  switch (rail_mode) {
-    case RAILMode::kResponse:
-      return v8::RAILMode::PERFORMANCE_RESPONSE;
-    case RAILMode::kAnimation:
-      return v8::RAILMode::PERFORMANCE_ANIMATION;
-    case RAILMode::kIdle:
-      return v8::RAILMode::PERFORMANCE_IDLE;
-    case RAILMode::kLoad:
-      return v8::RAILMode::PERFORMANCE_LOAD;
-    default:
-      NOTREACHED_IN_MIGRATION();
-  }
-}
-
 void AddRAILModeToProto(perfetto::protos::pbzero::TrackEvent* event,
                         RAILMode mode) {
   perfetto::protos::pbzero::ChromeRAILMode proto_mode;
@@ -1517,7 +1502,7 @@ void MainThreadSchedulerImpl::UpdatePolicyLocked(UpdateType update_type) {
   main_thread_only().rail_mode_for_tracing = new_policy.rail_mode;
   if (new_policy.rail_mode != main_thread_only().current_policy.rail_mode) {
     if (isolate()) {
-      isolate()->SetRAILMode(RAILModeToV8RAILMode(new_policy.rail_mode));
+      isolate()->SetIsLoading(new_policy.rail_mode == RAILMode::kLoad);
     }
     for (auto& observer : main_thread_only().rail_mode_observers) {
       observer.OnRAILModeChanged(new_policy.rail_mode);
@@ -1934,7 +1919,7 @@ void MainThreadSchedulerImpl::DidCommitProvisionalLoad(
       new_rail_mode = main_thread_only().current_policy.rail_mode;
     }
     if (old_rail_mode == new_rail_mode && isolate())
-      isolate()->UpdateLoadStartTime();
+      isolate()->SetIsLoading(true);
   }
 }
 
