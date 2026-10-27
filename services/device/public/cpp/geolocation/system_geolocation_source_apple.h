@@ -51,6 +51,10 @@ class COMPONENT_EXPORT(GEOLOCATION) SystemGeolocationSourceApple
   SEQUENCE_CHECKER(sequence_checker_);
   PermissionUpdateCallback permission_update_callback_;
   scoped_refptr<PositionObserverList> position_observers_;
+  // FlyWeb (FM.42 b4): on 10.14 the permission is asked by starting location
+  // updates; these keep them running until the user answers.
+  bool watching_position_ = false;
+  bool requesting_permission_ = false;
   base::WeakPtrFactory<SystemGeolocationSourceApple> weak_ptr_factory_{this};
 };
 
