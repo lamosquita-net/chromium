@@ -9,9 +9,15 @@
 #include <utility>
 
 #include "base/files/file_util.h"
+#include "build/build_config.h"
 #include "content/browser/child_process_security_policy_impl.h"
+#include "mojo/public/cpp/bindings/message.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
 #include "mojo/public/cpp/bindings/self_owned_receiver.h"
+
+#if BUILDFLAG(IS_MAC)
+#include "base/mac/mac_util.h"
+#endif
 
 namespace content {
 
@@ -44,5 +50,22 @@ void FileUtilitiesHostImpl::GetFileInfo(const base::FilePath& path,
     std::move(callback).Run(std::nullopt);
   }
 }
+
+#if BUILDFLAG(IS_MAC)
+// FlyWeb (FM.42 c3, from 116).
+void FileUtilitiesHostImpl::SetLength(base::File file,
+                                      const int64_t length,
+                                      SetLengthCallback callback) {
+  if (base::mac::MacOSVersion() >= 10'15'00) {
+    mojo::ReportBadMessage("SetLength() disabled on this OS.");
+    // No error message is specified as the ReportBadMessage() call should close
+    // the pipe and kill the renderer.
+    std::move(callback).Run(std::move(file), false);
+    return;
+  }
+  bool result = file.SetLength(length);
+  std::move(callback).Run(std::move(file), result);
+}
+#endif  // BUILDFLAG(IS_MAC)
 
 }  // namespace content

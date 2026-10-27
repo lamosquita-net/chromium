@@ -9,12 +9,18 @@
 #include "base/memory/scoped_refptr.h"
 #include "base/numerics/checked_math.h"
 #include "base/task/sequenced_task_runner.h"
+#include "build/build_config.h"
 #include "mojo/public/cpp/bindings/pending_remote.h"
 #include "third_party/blink/public/mojom/file_system_access/file_system_access_file_handle.mojom-blink.h"
 #include "third_party/blink/public/mojom/file_system_access/file_system_access_file_modification_host.mojom-blink.h"
 #include "third_party/blink/renderer/core/execution_context/execution_context.h"
 #include "third_party/blink/renderer/modules/file_system_access/file_system_access_capacity_tracker.h"
 #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
+
+#if BUILDFLAG(IS_MAC)
+#include "base/mac/mac_util.h"
+#include "third_party/blink/public/common/browser_interface_broker_proxy.h"
+#endif
 
 namespace blink {
 
@@ -39,7 +45,12 @@ FileSystemAccessRegularFileDelegate::FileSystemAccessRegularFileDelegate(
     mojo::PendingRemote<mojom::blink::FileSystemAccessFileModificationHost>
         file_modification_host_remote,
     base::PassKey<FileSystemAccessFileDelegate>)
-    : backing_file_(std::move(backing_file)),
+    :
+#if BUILDFLAG(IS_MAC)
+      context_(context),
+      file_utilities_host_(context),
+#endif  // BUILDFLAG(IS_MAC)
+      backing_file_(std::move(backing_file)),
       capacity_tracker_(MakeGarbageCollected<FileSystemAccessCapacityTracker>(
           context,
           std::move(file_modification_host_remote),
@@ -111,6 +122,34 @@ base::FileErrorOr<bool> FileSystemAccessRegularFileDelegate::SetLength(
 
   if (!capacity_tracker_->RequestFileCapacityChangeSync(new_length))
     return base::unexpected(base::File::FILE_ERROR_NO_SPACE);
+
+#if BUILDFLAG(IS_MAC)
+  // FlyWeb (FM.42 c3, from 116): on macOS < 10.15, a sandboxing limitation
+  // causes failures in ftruncate() syscalls issued from renderers. For this
+  // reason, base::File::SetLength() fails in the renderer. We work around this
+  // problem by calling ftruncate() in the browser process. See
+  // https://crbug.com/1084565.
+  if (base::mac::MacOSVersion() < 10'15'00) {
+    if (!file_utilities_host_.is_bound()) {
+      context_->GetBrowserInterfaceBroker().GetInterface(
+          file_utilities_host_.BindNewPipeAndPassReceiver(task_runner_));
+    }
+    bool result = false;
+    if (!file_utilities_host_->SetLength(std::move(backing_file_), new_length,
+                                         &backing_file_, &result)) {
+      // The pipe broke (the browser rejected the call); the handle is gone.
+      return base::unexpected(base::File::Error::FILE_ERROR_FAILED);
+    }
+    if (result) {
+      capacity_tracker_->OnFileContentsModified(new_length);
+      return true;
+    }
+    // Unfortunately we don't have access to the error code when using
+    // the FileUtilitiesHost, so we can say the operation failed but
+    // not why (ex: out of quota).
+    return base::unexpected(base::File::Error::FILE_ERROR_FAILED);
+  }
+#endif  // BUILDFLAG(IS_MAC)
 
   if (backing_file_.SetLength(new_length)) {
     capacity_tracker_->OnFileContentsModified(new_length);
