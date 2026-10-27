@@ -4393,9 +4393,6 @@ static_library("ui") {
       "//chrome/browser/enterprise/connectors/device_trust/key_management/core/mac",
       "//chrome/browser/updater:browser_updater_client",
       "//chrome/updater:browser_sources",
-
-      # FlyWeb (FM.42 b2): the generic eye dropper is used on macOS 10.14.
-      "//components/eye_dropper",
       "//components/remote_cocoa/app_shim",
       "//components/remote_cocoa/browser",
       "//device/fido/strings:strings_grit",

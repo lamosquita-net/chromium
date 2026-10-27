@@ -8,18 +8,10 @@ static_library("eye_dropper") {
   sources = [
     "eye_dropper_view.cc",
     "eye_dropper_view.h",
+    "eye_dropper_view_aura.cc",
     "features.cc",
     "features.h",
   ]
-
-  # FlyWeb (FM.42 b2): macOS 10.14 has no NSColorSampler, so Chrome uses this
-  # generic eye dropper there, as 116 did.
-  if (use_aura) {
-    sources += [ "eye_dropper_view_aura.cc" ]
-  }
-  if (is_mac) {
-    sources += [ "eye_dropper_view_mac.mm" ]
-  }
 
   deps = [
     "//base",

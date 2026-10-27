@@ -9,10 +9,7 @@
 
 #include <memory>
 
-#include "components/eye_dropper/eye_dropper_view.h"
 #include "content/public/browser/render_frame_host.h"
-#include "content/public/browser/render_widget_host_view.h"
-#include "content/public/browser/web_contents.h"
 #include "skia/ext/skia_utils_mac.h"
 #include "ui/base/ui_base_features.h"
 
@@ -22,7 +19,7 @@ EyeDropperViewMac::EyeDropperViewMac(content::EyeDropperListener* listener)
     return;
   }
   // FlyWeb (LOCAL-8): NSColorSampler is macOS 10.15+; ShowEyeDropper() does not
-  // create this view on 10.14 (FM.42 b2: it uses eye_dropper::EyeDropperView).
+  // create this view on 10.14 (the 116 generic fallback is gone in 128).
   if (@available(macOS 10.15, *)) {
     color_sampler_ = [[NSColorSampler alloc] init];
     // Used to ensure that EyeDropperViewMac is still alive when the handler is
@@ -54,12 +51,5 @@ std::unique_ptr<content::EyeDropper> ShowEyeDropper(
   if (@available(macOS 10.15, *)) {
     return std::make_unique<EyeDropperViewMac>(listener);
   }
-  // FlyWeb (FM.42 b2): on 10.14, the generic eye dropper (screen capture and
-  // magnifier), as in 116.
-  if (!frame->GetView() || !frame->GetView()->HasFocus()) {
-    return nullptr;
-  }
-  auto* web_contents = content::WebContents::FromRenderFrameHost(frame);
-  return std::make_unique<eye_dropper::EyeDropperView>(
-      web_contents->GetNativeView(), web_contents->GetNativeView(), listener);
+  return nullptr;
 }

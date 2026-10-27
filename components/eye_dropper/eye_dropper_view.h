@@ -26,7 +26,7 @@
 
 namespace eye_dropper {
 
-// EyeDropperView is used on Aura platforms and, in FlyWeb, on macOS 10.14.
+// EyeDropperView is used on Aura platforms.
 class EyeDropperView : public content::EyeDropper,
 #if BUILDFLAG(IS_CHROMEOS_ASH)
                        public aura::WindowObserver,
@@ -80,11 +80,6 @@ class EyeDropperView : public content::EyeDropper,
     void OnTouchEvent(ui::TouchEvent* event) override;
 
     raw_ptr<EyeDropperView> view_;
-#if BUILDFLAG(IS_MAC)
-    // FlyWeb (FM.42 b2): event monitor and observer (eye_dropper_view_mac.mm).
-    struct ObjCStorage;
-    std::unique_ptr<ObjCStorage> objc_storage_;
-#endif
 #if defined(USE_AURA)
     class KeyboardHandler;
     class FocusObserver;
