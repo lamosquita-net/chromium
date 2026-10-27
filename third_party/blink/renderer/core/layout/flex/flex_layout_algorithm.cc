@@ -1984,7 +1984,15 @@ FlexLayoutAlgorithm::GiveItemsFinalPositionAndSizeForFragmentation(
     }
     baseline_accumulator.AccumulateItem(fragment, offset.block_offset,
                                         is_first_line, is_last_line);
-    if (last_item_in_line) {
+
+    // In a row container, an item may complete layout before an earlier
+    // item in the same line because that item fragmented. In such cases, we
+    // also need to check if the next item to be processed is in the same line,
+    // as well, to tell it if is the last item in the line in the current
+    // fragmentainer.
+    // FlyWeb: upstream 4cb760d3ddf (crbug 440474985).
+    if (last_item_in_line ||
+        (!is_column_ && !item_iterator.HasNextItemInLine(flex_line_idx))) {
       if (!has_inflow_child_break_inside_line[flex_line_idx])
         line_output.has_seen_all_children = true;
       if (!has_processed_first_line_)
