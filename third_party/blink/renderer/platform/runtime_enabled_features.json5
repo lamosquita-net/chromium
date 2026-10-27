@@ -1342,6 +1342,12 @@
       },
     },
     {
+      // Shipping in M130.  Flag should be removed after M130 has been
+      // shipping to stable for a few weeks.
+      name: "DirAutoFixSlotExclusions",
+      status: "stable",
+    },
+    {
       name: "DirectSockets",
       public: true,
       status: "experimental",
@@ -4213,6 +4219,10 @@
     {
       name: "TextFragmentTapOpensContextMenu",
       status: {"Android": "stable"},
+    },
+    {
+      name: "TextInputNotAlwaysDirAuto",
+      status: "stable",
     },
     {
       name: "TextMetricsBaselines",
