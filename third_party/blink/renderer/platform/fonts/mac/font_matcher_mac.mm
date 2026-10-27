@@ -223,6 +223,20 @@ bool BetterChoiceCT(CTFontSymbolicTraits desired_traits,
   return candidate_weight_delta_magnitude < chosen_weight_delta_magnitude;
 }
 
+// FlyWeb (FM.47): true if the renderer cannot read the font's data, so that
+// CoreText backs it with LastResort ("?" glyphs) although its name is right
+// (compare `CanLoadInProcess` in font_platform_data_mac.mm). Seen on Sequoia
+// with "Futura": a family member the sandbox cannot read was chosen over the
+// system faces.
+bool IsBackedByLastResort(CTFontRef ct_font) {
+  ScopedCFTypeRef<CGFontRef> cg_font(
+      CTFontCopyGraphicsFont(ct_font, /*attributes=*/nullptr));
+  ScopedCFTypeRef<CFStringRef> font_name(
+      CGFontCopyPostScriptName(cg_font.get()));
+  return font_name && CFStringCompare(font_name.get(), CFSTR("LastResort"),
+                                      0) == kCFCompareEqualTo;
+}
+
 // This function is similar to `BestStyleMatchForFamily` except
 // it uses AppKit `availableMembersOfFontFamily` instead of CoreText API
 // to retrieve information about the fonts from the desired family.
@@ -239,45 +253,57 @@ ScopedCFTypeRef<CTFontRef> BestStyleMatchForFamilyNS(
     float size) {
   DCHECK(!RuntimeEnabledFeatures::FontFamilyStyleMatchingCTMigrationEnabled());
   NSFontManager* font_manager = NSFontManager.sharedFontManager;
-  NSArray<NSArray*>* fonts =
-      [font_manager availableMembersOfFontFamily:CFToNSPtrCast(family_name)];
+  NSMutableArray<NSArray*>* fonts = [[font_manager
+      availableMembersOfFontFamily:CFToNSPtrCast(family_name)] mutableCopy];
 
-  NSString* matched_font_name;
-  CTFontSymbolicTraits chosen_traits;
-  int chosen_weight;
-  for (NSArray* font_info in fonts) {
-    int candidate_weight = kNormalWeightValue;
-    NSNumber* candidate_weight_ns = font_info[2];
-    if (candidate_weight_ns) {
-      candidate_weight = AppKitToCSSFontWeight(candidate_weight_ns.intValue);
-    }
+  // FlyWeb (FM.47): if the best member cannot be loaded in the renderer, drop
+  // it and take the next best one instead of drawing LastResort glyphs.
+  while (fonts.count) {
+    NSString* matched_font_name;
+    NSUInteger matched_index = 0;
+    CTFontSymbolicTraits chosen_traits;
+    int chosen_weight;
+    for (NSUInteger i = 0; i < fonts.count; ++i) {
+      NSArray* font_info = fonts[i];
+      int candidate_weight = kNormalWeightValue;
+      NSNumber* candidate_weight_ns = font_info[2];
+      if (candidate_weight_ns) {
+        candidate_weight = AppKitToCSSFontWeight(candidate_weight_ns.intValue);
+      }
 
-    CTFontSymbolicTraits candidate_traits = kCTNormalTraitsValue;
-    NSNumber* candidate_traits_ns = font_info[3];
-    if (candidate_traits_ns) {
-      candidate_traits = candidate_traits_ns.intValue & kImportantTraitsMask;
-    }
+      CTFontSymbolicTraits candidate_traits = kCTNormalTraitsValue;
+      NSNumber* candidate_traits_ns = font_info[3];
+      if (candidate_traits_ns) {
+        candidate_traits = candidate_traits_ns.intValue & kImportantTraitsMask;
+      }
 
-    if (!matched_font_name ||
-        BetterChoiceCT(desired_traits, desired_weight, chosen_traits,
-                       chosen_weight, candidate_traits, candidate_weight)) {
-      matched_font_name = font_info[0];
-      chosen_traits = candidate_traits;
-      chosen_weight = candidate_weight;
+      if (!matched_font_name ||
+          BetterChoiceCT(desired_traits, desired_weight, chosen_traits,
+                         chosen_weight, candidate_traits, candidate_weight)) {
+        matched_font_name = font_info[0];
+        matched_index = i;
+        chosen_traits = candidate_traits;
+        chosen_weight = candidate_weight;
 
-      if (chosen_weight == desired_weight &&
-          (chosen_traits & kImportantTraitsMask) ==
-              (desired_traits & kImportantTraitsMask)) {
-        break;
+        if (chosen_weight == desired_weight &&
+            (chosen_traits & kImportantTraitsMask) ==
+                (desired_traits & kImportantTraitsMask)) {
+          break;
+        }
       }
     }
-  }
-  if (!matched_font_name) {
-    return ScopedCFTypeRef<CTFontRef>(nullptr);
-  }
+    if (!matched_font_name) {
+      return ScopedCFTypeRef<CTFontRef>(nullptr);
+    }
 
-  return ScopedCFTypeRef<CTFontRef>(
-      CTFontCreateWithName(NSToCFPtrCast(matched_font_name), size, nullptr));
+    ScopedCFTypeRef<CTFontRef> matched_font(
+        CTFontCreateWithName(NSToCFPtrCast(matched_font_name), size, nullptr));
+    if (!matched_font || !IsBackedByLastResort(matched_font.get())) {
+      return matched_font;
+    }
+    [fonts removeObjectAtIndex:matched_index];
+  }
+  return ScopedCFTypeRef<CTFontRef>(nullptr);
 }
 
 ScopedCFTypeRef<CTFontRef> BestStyleMatchForFamily(
