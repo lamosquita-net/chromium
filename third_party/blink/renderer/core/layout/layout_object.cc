@@ -702,7 +702,8 @@ void LayoutObject::AddChild(LayoutObject* new_child,
       children->InsertChildNode(this, table, before_child);
     }
     table->AddChild(new_child);
-  } else if (LIKELY(new_child->IsHorizontalWritingMode()) ||
+  } else if (LIKELY(!LayoutTextCombine::IsSupportedMode(
+                 new_child->StyleRef().GetWritingMode())) ||
              !new_child->IsText()) {
     children->InsertChildNode(this, new_child, before_child);
   } else if (IsA<LayoutTextCombine>(*this)) {
