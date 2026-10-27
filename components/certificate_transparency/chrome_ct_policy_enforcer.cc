@@ -29,12 +29,16 @@
 #include "net/log/net_log_capture_mode.h"
 #include "net/log/net_log_event_type.h"
 #include "net/log/net_log_with_source.h"
+#include "third_party/boringssl/src/include/openssl/bytestring.h"
 
 using net::ct::CTPolicyCompliance;
 
 namespace certificate_transparency {
 
 namespace {
+
+// Type of a leaf index extension in an SCT from a Static CT API log.
+const uint8_t kExtensionTypeLeafIndex = 0;
 
 base::Value::Dict NetLogCertComplianceCheckResultParams(
     net::X509Certificate* cert,
@@ -44,6 +48,58 @@ base::Value::Dict NetLogCertComplianceCheckResultParams(
   dict.Set("build_timely", build_timely);
   dict.Set("ct_compliance_status", CTPolicyComplianceToString(compliance));
   return dict;
+}
+
+// Returns true if the extension is a leaf index extension from a Static CT API
+// log. See
+// https://github.com/C2SP/C2SP/blob/main/static-ct-api.md#sct-extension
+bool IsValidLeafIndexExtension(CBS* in) {
+  uint8_t bytes[5];
+  if (!CBS_copy_bytes(in, bytes, 5)) {
+    return false;
+  }
+  // Any value is a valid leaf index.
+  return true;
+}
+
+// Returns true if the SCT has only one valid leaf index extension.
+bool HasValidLeafIndex(
+    const scoped_refptr<net::ct::SignedCertificateTimestamp> sct) {
+  CBS extension_cbs;
+  CBS_init(&extension_cbs, reinterpret_cast<uint8_t*>(sct->extensions.data()),
+           sct->extensions.size());
+  enum class LeafIndexStatus {
+    kFoundValid,
+    kFoundInvalid,
+    kNotFound,
+  };
+  LeafIndexStatus status = LeafIndexStatus::kNotFound;
+
+  // Look for a valid leaf index extension. The extension can be anywhere, so
+  // keep looking until we can find one. There must not be more than one leaf
+  // index extension.
+  while (CBS_len(&extension_cbs) != 0) {
+    uint8_t extension_type;
+    if (!CBS_get_u8(&extension_cbs, &extension_type)) {
+      return false;
+    }
+
+    CBS extension_data;
+    if (!CBS_get_u16_length_prefixed(&extension_cbs, &extension_data)) {
+      return false;
+    }
+
+    if (extension_type == kExtensionTypeLeafIndex) {
+      if (status != LeafIndexStatus::kNotFound) {
+        // Must not have multiple leaf index extensions.
+        return false;
+      }
+      status = IsValidLeafIndexExtension(&extension_data)
+                   ? LeafIndexStatus::kFoundValid
+                   : LeafIndexStatus::kFoundInvalid;
+    }
+  }
+  return status == LeafIndexStatus::kFoundValid;
 }
 
 }  // namespace
@@ -56,20 +112,24 @@ OperatorHistoryEntry::OperatorHistoryEntry(const OperatorHistoryEntry& other) =
 ChromeCTPolicyEnforcer::ChromeCTPolicyEnforcer(
     base::Time log_list_date,
     std::vector<std::pair<std::string, base::Time>> disqualified_logs,
-    std::map<std::string, OperatorHistoryEntry> log_operator_history)
+    std::map<std::string, OperatorHistoryEntry> log_operator_history,
+    std::map<std::string, network::mojom::CTLogInfo::LogType> log_types)
     : ChromeCTPolicyEnforcer(log_list_date,
                              std::move(disqualified_logs),
                              std::move(log_operator_history),
-                             base::DefaultClock::GetInstance()) {}
+                             base::DefaultClock::GetInstance(),
+                             std::move(log_types)) {}
 
 ChromeCTPolicyEnforcer::ChromeCTPolicyEnforcer(
     base::Time log_list_date,
     std::vector<std::pair<std::string, base::Time>> disqualified_logs,
     std::map<std::string, OperatorHistoryEntry> log_operator_history,
-    const base::Clock* clock)
+    const base::Clock* clock,
+    std::map<std::string, network::mojom::CTLogInfo::LogType> log_types)
     : disqualified_logs_(std::move(disqualified_logs)),
       log_operator_history_(std::move(log_operator_history)),
       clock_(clock),
+      log_types_(std::move(log_types)),
       log_list_date_(log_list_date) {}
 
 ChromeCTPolicyEnforcer::~ChromeCTPolicyEnforcer() {}
@@ -180,6 +240,14 @@ CTPolicyCompliance ChromeCTPolicyEnforcer::CheckCTPolicyCompliance(
       continue;
     }
 
+    // SCTs from Static CT API logs must carry exactly one well-formed leaf
+    // index extension; otherwise they are ignored.
+    if (GetLogType(sct->log_id) ==
+            network::mojom::CTLogInfo::LogType::kStaticCTAPI &&
+        !HasValidLeafIndex(sct)) {
+      continue;
+    }
+
     if (sct->origin != net::ct::SignedCertificateTimestamp::SCT_EMBEDDED) {
       has_valid_nonembedded_sct = true;
     } else {
@@ -281,6 +349,15 @@ std::string ChromeCTPolicyEnforcer::GetOperatorForLog(
   // Either the log has only ever had one operator, or the timestamp is after
   // the last operator change.
   return log_history.current_operator_;
+}
+
+network::mojom::CTLogInfo::LogType ChromeCTPolicyEnforcer::GetLogType(
+    const std::string& log_id) const {
+  auto it = log_types_.find(log_id);
+  if (it == log_types_.end()) {
+    return network::mojom::CTLogInfo::LogType::kUnspecified;
+  }
+  return it->second;
 }
 
 }  // namespace certificate_transparency

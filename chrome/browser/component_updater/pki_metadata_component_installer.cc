@@ -58,7 +58,7 @@ namespace {
 // if it is set). This should never be decreased since that will cause CT
 // enforcement to eventually stop. This should also only be increased if Chrome
 // is compatible with the version it is being incremented to.
-const uint64_t kMaxSupportedCTCompatibilityVersion = 2;
+const uint64_t kMaxSupportedCTCompatibilityVersion = 4;
 
 // This is the last version of key pins lists that this version of Chrome will
 // accept. If a list is delivered with a compatibility version higher than this,
@@ -100,6 +100,26 @@ std::string LoadBinaryProtoFromDisk(const base::FilePath& pb_path) {
   }
   return result;
 }
+
+#if BUILDFLAG(IS_CT_SUPPORTED)
+// Ideally we'd use EnumTraits for this method, but the conversion is only done
+// once here so it's not worth it.
+network::mojom::CTLogInfo::LogType ProtoLogTypeToLogType(
+    ::chrome_browser_certificate_transparency::CTLog_LogType log_type) {
+  switch (log_type) {
+    case ::chrome_browser_certificate_transparency::CTLog::LOG_TYPE_UNSPECIFIED:
+      return network::mojom::CTLogInfo::LogType::kUnspecified;
+    case ::chrome_browser_certificate_transparency::CTLog::RFC6962:
+      return network::mojom::CTLogInfo::LogType::kRFC6962;
+    case ::chrome_browser_certificate_transparency::CTLog::STATIC_CT_API:
+      return network::mojom::CTLogInfo::LogType::kStaticCTAPI;
+    default:
+      // FlyWeb: upstream has NOTREACHED(); a log type from a newer list must
+      // not crash the browser.
+      return network::mojom::CTLogInfo::LogType::kUnspecified;
+  }
+}
+#endif  // BUILDFLAG(IS_CT_SUPPORTED)
 
 }  // namespace
 
@@ -331,6 +351,7 @@ void PKIMetadataComponentInstallerService::UpdateNetworkServiceCTListOnUI(
     }
 
     log_ptr->mmd = base::Seconds(log.mmd_secs());
+    log_ptr->log_type = ProtoLogTypeToLogType(log.log_type());
     log_list_mojo_clone_network_service.push_back(log_ptr.Clone());
     log_list_mojo.push_back(std::move(log_ptr));
   }

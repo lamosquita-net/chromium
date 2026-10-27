@@ -161,12 +161,14 @@ scoped_refptr<net::CRLSet> ParseCRLSet(mojo_base::BigBuffer crl_set) {
 #if BUILDFLAG(IS_CT_SUPPORTED)
 // Filters `log_list` for disqualified logs, returning them as sorted vectors
 // in `disqualified_logs`, and stores the operator history of all logs in
-// `operator_history`, suitable for use with a `CTPolicyEnforcer`.
+// `operator_history` and their type in `log_types`, suitable for use with a
+// `CTPolicyEnforcer`.
 void GetCTPolicyConfigForCTLogInfo(
     const std::vector<network::mojom::CTLogInfoPtr>& log_list,
     std::vector<std::pair<std::string, base::Time>>* disqualified_logs,
     std::map<std::string, certificate_transparency::OperatorHistoryEntry>*
-        operator_history) {
+        operator_history,
+    std::map<std::string, network::mojom::CTLogInfo::LogType>* log_types) {
   for (const auto& log : log_list) {
     std::string log_id = crypto::SHA256HashString(log->public_key);
     if (log->disqualified_at) {
@@ -179,6 +181,7 @@ void GetCTPolicyConfigForCTLogInfo(
                                              previous_operator->end_time);
     }
     (*operator_history)[log_id] = entry;
+    (*log_types)[log_id] = log->log_type;
   }
 
   std::sort(std::begin(*disqualified_logs), std::end(*disqualified_logs));
@@ -259,13 +262,14 @@ void CertVerifierServiceFactoryImpl::UpdateCtLogList(
   std::vector<std::pair<std::string, base::Time>> disqualified_logs;
   std::map<std::string, certificate_transparency::OperatorHistoryEntry>
       log_operator_history;
+  std::map<std::string, network::mojom::CTLogInfo::LogType> log_types;
   GetCTPolicyConfigForCTLogInfo(log_list, &disqualified_logs,
-                                &log_operator_history);
+                                &log_operator_history, &log_types);
 
   proc_params_.ct_policy_enforcer =
       base::MakeRefCounted<certificate_transparency::ChromeCTPolicyEnforcer>(
           update_time, std::move(disqualified_logs),
-          std::move(log_operator_history));
+          std::move(log_operator_history), std::move(log_types));
 
   UpdateVerifierServices();
 
