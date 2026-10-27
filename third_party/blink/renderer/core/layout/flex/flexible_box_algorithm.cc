@@ -1122,14 +1122,19 @@ LayoutUnit FlexibleBoxAlgorithm::InitialContentPositionOffset(
     const StyleContentAlignmentData& data,
     unsigned number_of_items,
     bool is_reversed) {
-  // Safe-alignment with negative free-space does nothing.
-  if (available_free_space <= LayoutUnit() &&
-      (style.IsDeprecatedWebkitBox() ||
-       data.Overflow() == OverflowAlignment::kSafe)) {
+  // -webkit-box with negative free-space does nothing.
+  if (available_free_space <= LayoutUnit() && style.IsDeprecatedWebkitBox()) {
     return LayoutUnit();
   }
 
   ContentPosition position = data.GetPosition();
+  // FlyWeb (2.1.1, from upstream 6c616ac76fb and 8543c83fc67): safe alignment
+  // with negative free-space falls back to 'start', so the content overflows
+  // past the end edge even with a reversed direction or wrap-reverse.
+  if (available_free_space <= LayoutUnit() &&
+      data.Overflow() == OverflowAlignment::kSafe) {
+    position = ContentPosition::kStart;
+  }
   DCHECK_NE(position, ContentPosition::kLeft)
       << "ResolvedJustifyContent was supposed to translate this to kStart/End";
   DCHECK_NE(position, ContentPosition::kRight)
@@ -1139,7 +1144,7 @@ LayoutUnit FlexibleBoxAlgorithm::InitialContentPositionOffset(
       (position == ContentPosition::kStart && is_reversed)) {
     return available_free_space;
   }
-  if (data.GetPosition() == ContentPosition::kCenter)
+  if (position == ContentPosition::kCenter)
     return available_free_space / 2;
   if (data.Distribution() == ContentDistributionType::kSpaceAround) {
     if (available_free_space > 0 && number_of_items)
