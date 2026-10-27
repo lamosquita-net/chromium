@@ -1414,8 +1414,8 @@ void Element::scrollIntoViewWithOptions(const ScrollIntoViewOptions* options) {
   }
 
   mojom::blink::ScrollIntoViewParamsPtr params =
-      ScrollAlignment::CreateScrollIntoViewParams(*options,
-                                                  *GetComputedStyle());
+      scroll_into_view_util::CreateScrollIntoViewParams(*options,
+                                                        *GetComputedStyle());
 
   ScrollIntoViewNoVisualUpdate(std::move(params));
 }
@@ -1450,13 +1450,13 @@ void Element::scrollIntoViewIfNeeded(bool center_if_needed) {
   if (center_if_needed) {
     scroll_into_view_util::ScrollRectToVisible(
         *GetLayoutObject(), bounds,
-        ScrollAlignment::CreateScrollIntoViewParams(
+        scroll_into_view_util::CreateScrollIntoViewParams(
             ScrollAlignment::CenterIfNeeded(),
             ScrollAlignment::CenterIfNeeded()));
   } else {
     scroll_into_view_util::ScrollRectToVisible(
         *GetLayoutObject(), bounds,
-        ScrollAlignment::CreateScrollIntoViewParams(
+        scroll_into_view_util::CreateScrollIntoViewParams(
             ScrollAlignment::ToEdgeIfNeeded(),
             ScrollAlignment::ToEdgeIfNeeded()));
   }
@@ -6415,7 +6415,7 @@ void Element::UpdateSelectionOnFocus(
   } else if (GetLayoutObject() &&
              !GetLayoutObject()->IsLayoutEmbeddedContent()) {
     if (!options->preventScroll()) {
-      auto params = ScrollAlignment::CreateScrollIntoViewParams();
+      auto params = scroll_into_view_util::CreateScrollIntoViewParams();
 
       // It's common to have menus and list controls that have items slightly
       // overflowing horizontally but the control isn't horizontally
