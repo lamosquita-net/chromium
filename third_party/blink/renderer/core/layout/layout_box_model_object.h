@@ -308,11 +308,14 @@ class CORE_EXPORT LayoutBoxModelObject : public LayoutObject {
   }
   DISABLE_CFI_PERF LayoutUnit BorderAndPaddingLogicalLeft() const {
     NOT_DESTROYED();
-    return BorderInlineStart() + PhysicalPaddingToLogical().InlineStart();
+    return StyleRef().IsHorizontalWritingMode() ? BorderLeft() + PaddingLeft()
+                                                : BorderTop() + PaddingTop();
   }
   DISABLE_CFI_PERF LayoutUnit BorderAndPaddingLogicalRight() const {
     NOT_DESTROYED();
-    return BorderInlineEnd() + PaddingInlineEnd();
+    return StyleRef().IsHorizontalWritingMode()
+               ? BorderRight() + PaddingRight()
+               : BorderBottom() + PaddingBottom();
   }
 
   LayoutUnit PaddingLogicalHeight() const {

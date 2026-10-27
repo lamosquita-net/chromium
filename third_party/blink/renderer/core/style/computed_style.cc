@@ -2581,11 +2581,7 @@ TextEmphasisMark ComputedStyle::GetTextEmphasisMark() const {
     return mark;
   }
 
-  // https://drafts.csswg.org/css-text-decor/#propdef-text-emphasis-style
-  // If only `filled` or `open` is specified, the shape keyword computes to
-  // `circle` in horizontal typographic modes and `sesame` in vertical
-  // typographic modes.
-  if (IsHorizontalTypographicMode()) {
+  if (IsHorizontalWritingMode()) {
     return TextEmphasisMark::kDot;
   }
 

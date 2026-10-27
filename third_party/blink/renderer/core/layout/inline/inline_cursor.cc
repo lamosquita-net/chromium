@@ -552,14 +552,12 @@ PhysicalRect InlineCursor::CurrentRectInBlockFlow() const {
   // consumed in previous fragments.
   auto writing_direction = ContainerFragment().Style().GetWritingDirection();
   switch (writing_direction.GetWritingMode()) {
-    case WritingMode::kHorizontalTb:
+    default:
       rect.offset.top += previously_consumed_block_size_;
       break;
-    case WritingMode::kSidewaysLr:
     case WritingMode::kVerticalLr:
       rect.offset.left += previously_consumed_block_size_;
       break;
-    case WritingMode::kSidewaysRl:
     case WritingMode::kVerticalRl: {
       // For vertical-rl writing-mode it's a bit more complicated. We need to
       // convert to logical coordinates in the containing box fragment, in order

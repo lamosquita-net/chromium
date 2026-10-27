@@ -1435,9 +1435,8 @@ void BoxFragmentPainter::PaintColumnRules(const PaintInfo& paint_info,
       rule.size.width = rule_thickness;
     } else {
       // Vertical writing-mode.
-      const auto writing_direction = style.GetWritingDirection();
       LayoutUnit center;
-      if (writing_direction.InlineEnd() == PhysicalDirection::kDown) {
+      if (style.IsLeftToRightDirection()) {
         // Top to bottom.
         center = (previous_column.Y() + current_column.Bottom()) / 2;
         box_side = BoxSide::kTop;
@@ -1450,7 +1449,7 @@ void BoxFragmentPainter::PaintColumnRules(const PaintInfo& paint_info,
       LayoutUnit rule_length;
       LayoutUnit rule_left = previous_column.offset.left;
       if (!span_count) {
-        if (writing_direction.BlockEnd() == PhysicalDirection::kRight) {
+        if (style.GetWritingMode() == WritingMode::kVerticalLr) {
           const LayoutUnit column_box_right = box_fragment_.Size().width -
                                               box_fragment_.Borders().right -
                                               box_fragment_.Padding().right -
@@ -1459,7 +1458,7 @@ void BoxFragmentPainter::PaintColumnRules(const PaintInfo& paint_info,
                                                   .block_end;
           rule_length = column_box_right - previous_column.offset.left;
         } else {
-          // Vertical-rl or sideways-rl writing-mode
+          // Vertical-rl writing-mode
           const LayoutUnit column_box_left = box_fragment_.ContentOffset().left;
           rule_length = previous_column.Width() +
                         (previous_column.offset.left - column_box_left);

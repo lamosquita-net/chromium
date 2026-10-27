@@ -163,13 +163,6 @@ class CORE_EXPORT LayoutInputNode {
            (box_->IsBody() || box_->IsTableCell());
   }
 
-  bool IsHorizontalWritingMode() const {
-    return box_->IsHorizontalWritingMode();
-  }
-  bool IsHorizontalTypographicMode() const {
-    return box_->IsHorizontalTypographicMode();
-  }
-
   // Return true if this node is monolithic for block fragmentation.
   bool IsMonolithic() const {
     // Lines are always monolithic. We cannot block-fragment inside them.

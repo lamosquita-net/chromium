@@ -3059,42 +3059,6 @@ PhysicalRect LayoutBox::LocalCaretRect(
   // before/after elements.
   LayoutUnit caret_width = GetFrameView()->CaretWidth();
   LogicalSize size(LogicalWidth(), LogicalHeight());
-  // FlyWeb (level 132, sideways 0b24096ebe): logical caret rect, which also
-  // covers sideways-lr. Same block size and border/padding rules as below.
-  if (RuntimeEnabledFeatures::SidewaysWritingModesEnabled()) {
-    LayoutUnit caret_block_size = size.block_size;
-    const SimpleFontData* font_data = StyleRef().GetFont().PrimaryFont();
-    LayoutUnit font_height =
-        LayoutUnit(font_data ? font_data->GetFontMetrics().Height() : 0);
-    if (font_height > size.block_size ||
-        (!IsAtomicInlineLevel() && !IsTable())) {
-      caret_block_size = font_height;
-    }
-    const bool apply_border_padding =
-        GetNode() &&
-        !(EditingIgnoresContent(*GetNode()) || IsDisplayInsideTable(GetNode()));
-    WritingDirectionMode writing_direction = Style()->GetWritingDirection();
-    LogicalOffset offset;
-    LayoutUnit content_inline_size = size.inline_size;
-    if (apply_border_padding) {
-      BoxStrut border_padding = (BorderOutsets() + PaddingOutsets())
-                                    .ConvertToLogical(writing_direction);
-      offset.inline_offset = border_padding.inline_start;
-      offset.block_offset = border_padding.block_start;
-      content_inline_size -= border_padding.InlineSum();
-    }
-    LayoutUnit extra_width;
-    if (caret_offset) {
-      offset.inline_offset += content_inline_size - caret_width;
-    } else {
-      extra_width = content_inline_size - caret_width;
-    }
-    if (extra_width_to_end_of_line) {
-      *extra_width_to_end_of_line = extra_width;
-    }
-    LogicalRect rect(offset, LogicalSize(caret_width, caret_block_size));
-    return WritingModeConverter(writing_direction, Size()).ToPhysical(rect);
-  }
   const bool is_horizontal = IsHorizontalWritingMode();
   PhysicalOffset offset = PhysicalLocation();
   PhysicalRect rect(offset, is_horizontal

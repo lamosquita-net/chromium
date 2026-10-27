@@ -306,14 +306,14 @@ void ThemePainter::PaintSliderTicks(const LayoutObject& o,
   if (min >= max)
     return;
 
-  const ComputedStyle& style = o.StyleRef();
-  ControlPart part = style.EffectiveAppearance();
+  ControlPart part = o.StyleRef().EffectiveAppearance();
   // We don't support ticks on alternate sliders like MediaVolumeSliders.
   bool is_slider_vertical =
       RuntimeEnabledFeatures::
           NonStandardAppearanceValueSliderVerticalEnabled() &&
       part == kSliderVerticalPart;
-  bool is_writing_mode_vertical = !style.IsHorizontalWritingMode();
+  bool is_writing_mode_vertical =
+      !IsHorizontalWritingMode(o.StyleRef().GetWritingMode());
   if (!(part == kSliderHorizontalPart || is_slider_vertical)) {
     return;
   }
@@ -328,7 +328,7 @@ void ThemePainter::PaintSliderTicks(const LayoutObject& o,
     thumb_size = ToFlooredSize(To<LayoutBox>(thumb_layout_object)->Size());
 
   gfx::Size tick_size = LayoutTheme::GetTheme().SliderTickSize();
-  float zoom_factor = style.EffectiveZoom();
+  float zoom_factor = o.StyleRef().EffectiveZoom();
   gfx::RectF tick_rect;
   int tick_region_side_margin = 0;
   int tick_region_width = 0;
@@ -357,34 +357,21 @@ void ThemePainter::PaintSliderTicks(const LayoutObject& o,
   } else {
     tick_rect.set_width(floor(tick_size.height() * zoom_factor));
     tick_rect.set_height(floor(tick_size.width() * zoom_factor));
-    // FlyWeb (level 132, sideways 187b73019b): in sideways-lr the ticks go on
-    // the other side of the track.
-    const float tick_offset_from_center =
-        LayoutTheme::GetTheme().SliderTickOffsetFromTrackCenter() *
-        zoom_factor;
-    const float slider_center = rect.x() + rect.width() / 2.0;
-    const float tick_x =
-        (style.IsHorizontalTypographicMode() &&
-         style.GetWritingDirection().LineUnder() == PhysicalDirection::kLeft)
-            ? (slider_center - tick_offset_from_center -
-               floor(tick_size.height() * zoom_factor))
-            : (slider_center + tick_offset_from_center);
-    tick_rect.set_x(floor(tick_x));
+    tick_rect.set_x(
+        floor(rect.x() + rect.width() / 2.0 +
+              LayoutTheme::GetTheme().SliderTickOffsetFromTrackCenter() *
+                  zoom_factor));
     tick_region_side_margin =
         track_bounds.y() +
         (thumb_size.height() - tick_size.width() * zoom_factor) / 2.0;
     tick_region_width = track_bounds.height() - thumb_size.height();
   }
   HTMLDataListOptionsCollection* options = data_list->options();
-  // FlyWeb (level 132, sideways f9d07c3d30 and 187b73019b): by the physical
-  // inline end, so sideways-lr (inline end up) is not flipped. 128 flips when
-  // the inline end is right or down (upstream later inverted the convention).
-  const PhysicalDirection inline_end = style.GetWritingDirection().InlineEnd();
   bool flip_tick_direction =
-      (is_horizontal && inline_end == PhysicalDirection::kRight) ||
+      (is_horizontal && o.StyleRef().IsLeftToRightDirection()) ||
       (RuntimeEnabledFeatures::
            FormControlsVerticalWritingModeDirectionSupportEnabled() &&
-       is_writing_mode_vertical && inline_end == PhysicalDirection::kDown);
+       is_writing_mode_vertical && o.StyleRef().IsLeftToRightDirection());
   for (unsigned i = 0; HTMLOptionElement* option_element = options->Item(i);
        i++) {
     String value = option_element->value();
@@ -396,7 +383,7 @@ void ThemePainter::PaintSliderTicks(const LayoutObject& o,
         ParseToDoubleForNumberType(input->SanitizeValue(value));
     double tick_fraction = (parsed_value - min) / (max - min);
     double tick_ratio =
-        flip_tick_direction ? 1.0 - tick_fraction : tick_fraction;
+        flip_tick_direction ? tick_fraction : 1.0 - tick_fraction;
     double tick_position =
         round(tick_region_side_margin + tick_region_width * tick_ratio);
     if (is_horizontal)
@@ -405,7 +392,8 @@ void ThemePainter::PaintSliderTicks(const LayoutObject& o,
       tick_rect.set_y(tick_position);
     paint_info.context.FillRect(
         tick_rect, o.ResolveColor(GetCSSPropertyColor()),
-        PaintAutoDarkMode(style, DarkModeFilter::ElementRole::kBackground));
+        PaintAutoDarkMode(o.StyleRef(),
+                          DarkModeFilter::ElementRole::kBackground));
   }
 }
 

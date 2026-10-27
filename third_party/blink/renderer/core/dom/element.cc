@@ -361,9 +361,11 @@ bool HasLeftwardDirection(const Element& element) {
     return false;
   }
 
-  const auto writing_direction = style->GetWritingDirection();
-  return writing_direction.InlineEnd() == PhysicalDirection::kLeft ||
-         writing_direction.BlockEnd() == PhysicalDirection::kLeft;
+  WritingMode writing_mode = style->GetWritingMode();
+  bool is_rtl = !style->IsLeftToRightDirection();
+  return (writing_mode == WritingMode::kHorizontalTb && is_rtl) ||
+         writing_mode == WritingMode::kVerticalRl ||
+         writing_mode == WritingMode::kSidewaysRl;
 }
 
 bool HasUpwardDirection(const Element& element) {
@@ -372,9 +374,12 @@ bool HasUpwardDirection(const Element& element) {
     return false;
   }
 
-  const auto writing_direction = style->GetWritingDirection();
-  return writing_direction.InlineEnd() == PhysicalDirection::kUp ||
-         writing_direction.BlockEnd() == PhysicalDirection::kUp;
+  WritingMode writing_mode = style->GetWritingMode();
+  bool is_rtl = !style->IsLeftToRightDirection();
+  return (is_rtl && (writing_mode == WritingMode::kVerticalRl ||
+                     writing_mode == WritingMode::kVerticalLr ||
+                     writing_mode == WritingMode::kSidewaysRl)) ||
+         (!is_rtl && writing_mode == WritingMode::kSidewaysLr);
 }
 
 // TODO(meredithl): Automatically generate this method once the IDL compiler has

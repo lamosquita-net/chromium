@@ -22,7 +22,6 @@ PhysicalScrollRange LogicalScrollRange::SlowToPhysical(
       return PhysicalScrollRange{Negate(inline_max), Negate(inline_min),
                                  block_min, block_max};
     case WritingMode::kVerticalRl:
-    case WritingMode::kSidewaysRl:
       if (mode.IsLtr()) {
         return PhysicalScrollRange{Negate(block_max), Negate(block_min),
                                    inline_min, inline_max};
@@ -37,11 +36,10 @@ PhysicalScrollRange LogicalScrollRange::SlowToPhysical(
       return PhysicalScrollRange{block_min, block_max, Negate(inline_max),
                                  Negate(inline_min)};
     case WritingMode::kSidewaysLr:
-      if (mode.IsLtr()) {
-        return PhysicalScrollRange{block_min, block_max, Negate(inline_max),
-                                   Negate(inline_min)};
-      }
-      return PhysicalScrollRange{block_min, block_max, inline_min, inline_max};
+    case WritingMode::kSidewaysRl:
+      // Blink doesn't support these writing modes yet.
+      NOTREACHED_IN_MIGRATION();
+      return PhysicalScrollRange();
   }
 }
 
