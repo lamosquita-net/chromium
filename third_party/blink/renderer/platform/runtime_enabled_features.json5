@@ -2488,7 +2488,7 @@
       // TODO(crbug.com/40113891): This feature allows scrollers to be
       // keyboard focusable by default.
       name: "KeyboardFocusableScrollers",
-      status: "experimental",
+      status: "stable",
       public: true,
     },
     {
