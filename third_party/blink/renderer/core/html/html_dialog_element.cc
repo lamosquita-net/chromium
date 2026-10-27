@@ -153,6 +153,10 @@ void HTMLDialogElement::close(const String& return_value,
   Document& document = GetDocument();
   HTMLDialogElement* old_modal_dialog = document.ActiveModalDialog();
 
+  DispatchToggleEvents(/*opening=*/false);
+  if (!ignore_open_attribute && !FastHasAttribute(html_names::kOpenAttr)) {
+    return;
+  }
   SetBooleanAttribute(html_names::kOpenAttr, false);
   bool was_modal = is_modal_;
   SetIsModal(false);
@@ -269,6 +273,9 @@ void HTMLDialogElement::show(ExceptionState& exception_state) {
     return;
   }
 
+  if (!DispatchToggleEvents(/*opening=*/true)) {
+    return;
+  }
   SetBooleanAttribute(html_names::kOpenAttr, true);
 
   // The layout must be updated here because setFocusForDialog calls
@@ -346,6 +353,9 @@ void HTMLDialogElement::showModal(ExceptionState& exception_state) {
         DOMExceptionCode::kInvalidStateError,
         "The dialog is already open as a Popover, and therefore cannot be "
         "opened as a modal dialog.");
+  }
+  if (!DispatchToggleEvents(/*opening=*/true, /*asModal=*/true)) {
+    return;
   }
 
   Document& document = GetDocument();
@@ -465,9 +475,56 @@ void HTMLDialogElement::SetFocusForDialog() {
   doc.TopDocument().FinalizeAutofocus();
 }
 
+// Returns false if beforetoggle was canceled, otherwise true. Queues a toggle
+// event if beforetoggle was not canceled.
+bool HTMLDialogElement::DispatchToggleEvents(bool opening, bool asModal) {
+  if (!RuntimeEnabledFeatures::DialogElementToggleEventsEnabled()) {
+    return true;
+  }
+
+  String old_state = opening ? "closed" : "open";
+  String new_state = opening ? "open" : "closed";
+
+  if (DispatchEvent(*ToggleEvent::Create(
+          event_type_names::kBeforetoggle,
+          opening ? Event::Cancelable::kYes : Event::Cancelable::kNo, old_state,
+          new_state)) != DispatchEventResult::kNotCanceled) {
+    return false;
+  }
+  if (opening) {
+    if (FastHasAttribute(html_names::kOpenAttr)) {
+      return false;
+    }
+    if (asModal &&
+        (!isConnected() || (HasPopoverAttribute() && popoverOpen()))) {
+      return false;
+    }
+  }
+
+  if (pending_toggle_event_) {
+    old_state = pending_toggle_event_->oldState();
+  }
+  pending_toggle_event_ = ToggleEvent::Create(
+      event_type_names::kToggle, Event::Cancelable::kNo, old_state, new_state);
+  pending_toggle_event_task_ = PostCancellableTask(
+      *GetDocument().GetTaskRunner(TaskType::kDOMManipulation), FROM_HERE,
+      WTF::BindOnce(&HTMLDialogElement::DispatchPendingToggleEvent,
+                    WrapPersistent(this)));
+  return true;
+}
+
+void HTMLDialogElement::DispatchPendingToggleEvent() {
+  if (!pending_toggle_event_) {
+    return;
+  }
+  DispatchEvent(*pending_toggle_event_);
+  pending_toggle_event_ = nullptr;
+}
+
 void HTMLDialogElement::Trace(Visitor* visitor) const {
   visitor->Trace(previously_focused_element_);
   visitor->Trace(close_watcher_);
+  visitor->Trace(pending_toggle_event_);
   HTMLElement::Trace(visitor);
 }
 
