@@ -203,12 +203,16 @@ gfx::Rect DeterminateProgressValueRectFor(const LayoutProgress& layout_progress,
                                           const gfx::Rect& rect) {
   int dx = rect.width();
   int dy = rect.height();
+  int y = rect.y();
   if (IsHorizontalWritingMode(layout_progress.StyleRef().GetWritingMode())) {
     dx *= layout_progress.GetPosition();
   } else {
+    // FlyWeb: keep the 128 bottom anchor; DirectionFlippingScope above still
+    // flips when the inline end is down, as in 128 (upstream moved both).
     dy *= layout_progress.GetPosition();
+    y += rect.height() - dy;
   }
-  return gfx::Rect(rect.x(), rect.y(), dx, dy);
+  return gfx::Rect(rect.x(), y, dx, dy);
 }
 
 gfx::Rect IndeterminateProgressValueRectFor(
