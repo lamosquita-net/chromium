@@ -739,6 +739,29 @@ void FlexLayoutAlgorithm::ConstructAndAppendFlexItems(
       return layout_result->IntrinsicBlockSize();
     };
 
+    // FlyWeb (2.1.1, from upstream b534cd43421): an intrinsic max-block-size
+    // (min-content, max-content, fit-content) in the main axis resolves
+    // against the item's intrinsic block size instead of being ignored.
+    if (!MainAxisIsInlineAxis(child)) {
+      switch (max_property_in_main_axis.GetType()) {
+        case Length::kMinContent:
+        case Length::kMaxContent:
+        case Length::kMinIntrinsic:
+        case Length::kFitContent:
+          min_max_sizes_in_main_axis_direction.max_size =
+              ResolveBlockLengthInternal(
+                  flex_basis_space, child_style,
+                  border_padding_in_child_writing_mode,
+                  max_property_in_main_axis, /* auto_length */ &Length::Auto(),
+                  /* override_available_size */ kIndefiniteSize,
+                  /* override_percentage_resolution_size */ nullptr,
+                  IntrinsicBlockSizeFunc);
+          break;
+        default:
+          break;
+      }
+    }
+
     const Length& flex_basis = child_style.FlexBasis();
     if (is_column_ && flex_basis.MayHavePercentDependence()) {
       has_column_percent_flex_basis_ = true;
