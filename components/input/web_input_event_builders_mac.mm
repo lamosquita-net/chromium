@@ -147,17 +147,22 @@ void SetWebEventLocationFromEventInView(blink::WebMouseEvent* result,
     // compatible OS before asking for unaccelerated movement.
     // See RenderWidgetHostViewMac::IsUnadjustedMouseMovementSupported
     // for the OS validation.
-#if DCHECK_IS_ON()
-    if (@available(macOS 10.15.1, *)) { /* nop */
-    } else {
-      NOTREACHED_IN_MIGRATION();
-    }
-#endif
-    result->movement_x = CGEventGetIntegerValueField(
-        cgEvent, kCGEventUnacceleratedPointerMovementX);
-    result->movement_y = CGEventGetIntegerValueField(
-        cgEvent, kCGEventUnacceleratedPointerMovementY);
+    // FlyWeb (FM.42 b6): supported from 10.14. The fields are read by their
+    // raw values (kCGEventUnacceleratedPointerMovementX/Y = 170/171), which
+    // exist at runtime on 10.14 although the names are 10.15.1+ in the SDK.
+    constexpr CGEventField kUnacceleratedX = static_cast<CGEventField>(170);
+    constexpr CGEventField kUnacceleratedY = static_cast<CGEventField>(171);
+    result->movement_x = CGEventGetIntegerValueField(cgEvent, kUnacceleratedX);
+    result->movement_y = CGEventGetIntegerValueField(cgEvent, kUnacceleratedY);
     result->is_raw_movement_event = true;
+    if (@available(macOS 10.15.1, *)) {
+    } else if (result->movement_x == 0 && result->movement_y == 0 &&
+               ([event deltaX] != 0 || [event deltaY] != 0)) {
+      // FlyWeb: if 10.14 leaves the fields empty, keep the pointer moving.
+      result->movement_x = [event deltaX];
+      result->movement_y = [event deltaY];
+      result->is_raw_movement_event = false;
+    }
   } else {
     result->movement_x = [event deltaX];
     result->movement_y = [event deltaY];

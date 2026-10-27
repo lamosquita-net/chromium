@@ -1384,13 +1384,11 @@ bool RenderWidgetHostViewMac::IsUnadjustedMouseMovementSupported() {
   // kCGEventUnacceleratedPointerMovementX/Y were first added as CGEventField
   // enum values in the 10.15.1 SDK.
   //
-  // While they do seem to work at runtime back to 10.14, the safest approach is
-  // to limit their use to 10.15.1 and newer to avoid relying on private or
-  // undocumented APIs on earlier OSes.
-  if (@available(macOS 10.15.1, *)) {
-    return true;
-  }
-  return false;
+  // FlyWeb (FM.42 b6): they work at runtime back to 10.14, the minimum FlyWeb
+  // supports, so Pointer Lock unadjustedMovement is offered there too.
+  // web_input_event_builders_mac.mm falls back to the accelerated deltas on
+  // 10.14 if the fields come back empty.
+  return true;
 }
 
 bool RenderWidgetHostViewMac::CanBePointerLocked() {
