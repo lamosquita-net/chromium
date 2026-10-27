@@ -62,6 +62,16 @@ class FontFamilyResolver {
                                        normalized_descriptors.get());
   }
 
+  // FlyWeb (FM.42 c5, from 116): true if the font should be hidden.
+  //
+  // On macOS 10.15, CTFontManagerCopyAvailableFontFamilyNames() filters hidden
+  // fonts. Older macOS versions (10.14, which FlyWeb supports) include names
+  // that start with . (period). These fonts should not be shown to users.
+  static bool IsHiddenFontFamily(NSString* family_name) {
+    DCHECK(family_name);
+    return family_name.length > 0 && [family_name characterAtIndex:0] == '.';
+  }
+
  private:
   // Returns the first font descriptor matching the given family name.
   //
@@ -195,6 +205,10 @@ base::Value::List GetFontList_SlowBlocking() {
       DCHECK(family_name != nil)
           << "CTFontManagerCopyAvailableFontFamilyNames returned an array with "
           << "a null element";
+
+      if (FontFamilyResolver::IsHiddenFontFamily(family_name)) {
+        continue;
+      }
 
       base::apple::ScopedCFTypeRef<CFStringRef> cf_normalized_family_name =
           resolver.CopyLocalizedFamilyName(
