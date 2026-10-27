@@ -247,7 +247,9 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
   // When enabled, converts captured frames to NV12.
   std::unique_ptr<media::SampleBufferTransformer> _sampleBufferTransformer;
 
-  AVCapturePhotoOutput* __strong _photoOutput;
+  // FlyWeb (FM.42 a2): AVCapturePhotoOutput on macOS 10.15+; on 10.14 it is an
+  // AVCaptureStillImageOutput, as in 116.
+  id __strong _photoOutput;
 
   // Only accessed on the main thread. The takePhoto() operation is considered
   // pending until we're ready to take another photo, which involves a PostTask
@@ -622,23 +624,16 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
   // https://crbug.com/1116241. This procedure is purposefully delayed by 3
   // seconds because the camera needs to ramp up after re-configuring itself in
   // order for 3A to stabilize or else the photo is dark/black.
-  // FlyWeb (LOCAL-8): AVCapturePhotoOutput is macOS 10.15+ (nil on 10.14); the
-  // 116 AVCaptureStillImageOutput path is gone in 128, so no photos on 10.14.
-  if (@available(macOS 10.15, *)) {
-  } else {
-    {
-      base::AutoLock lock(_lock);
-      if (_frameReceiver) {
-        _frameReceiver->OnPhotoError();
-      }
-    }
-    [self takePhotoResolved];
-    return;
-  }
   {
     // `_lock` is needed since `_photoOutput` may be read from non-main thread.
     base::AutoLock lock(_lock);
-    _photoOutput = [[AVCapturePhotoOutput alloc] init];
+    if ([self useLegacyStillImageApi]) {
+      // FlyWeb (FM.42 a2): AVCapturePhotoOutput is macOS 10.15+; the 116
+      // AVCaptureStillImageOutput path (10.7) on 10.14.
+      _photoOutput = [[AVCaptureStillImageOutput alloc] init];
+    } else if (@available(macOS 10.15, *)) {
+      _photoOutput = [[AVCapturePhotoOutput alloc] init];
+    }
   }
   if (![_captureSession canAddOutput:_photoOutput]) {
     {
@@ -675,12 +670,80 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
 
 #pragma mark Private methods
 
+// FlyWeb (FM.42 a2): true on macOS 10.14, where only AVCaptureStillImageOutput
+// exists.
+- (bool)useLegacyStillImageApi {
+#if BUILDFLAG(IS_MAC)
+  if (@available(macOS 10.15, *)) {
+    return false;
+  }
+  return true;
+#else
+  return false;
+#endif
+}
+
 - (void)takePhotoInternal {
   DCHECK(_mainThreadTaskRunner->BelongsToCurrentThread());
   DCHECK(_captureSession.running);
   // takePhotoInternal() can only happen when we have a `_photoOutput` because
   // stopPhotoOutput() cancels in-flight operations by invalidating weak ptrs.
   DCHECK(_photoOutput);
+#if BUILDFLAG(IS_MAC)
+  if ([self useLegacyStillImageApi]) {
+    // FlyWeb (FM.42 a2, from 116): `_photoOutput` is an
+    // AVCaptureStillImageOutput. This block retains `self`, which is fine
+    // because it is called one time and then discarded.
+    const auto handler = ^(CMSampleBufferRef sampleBuffer, NSError* error) {
+      {
+        base::AutoLock lock(self->_lock);
+        if (self->_frameReceiver) {
+          char* baseAddress = nullptr;
+          size_t length = 0;
+          // The default output settings are JPEG.
+          if (!error && sampleBuffer &&
+              media::ExtractBaseAddressAndLength(&baseAddress, &length,
+                                                 sampleBuffer)) {
+            self->_frameReceiver->OnPhotoTaken(
+                reinterpret_cast<uint8_t*>(baseAddress), length,
+                "image/jpeg");
+          } else {
+            self->_frameReceiver->OnPhotoError();
+          }
+        }
+      }
+      // Whether we succeeded or failed, we need to resolve the pending
+      // takePhoto() operation.
+      self->_mainThreadTaskRunner->PostTask(
+          FROM_HERE,
+          base::BindOnce(
+              [](base::WeakPtr<SelfHolder> weakSelf) {
+                if (!weakSelf.get()) {
+                  return;
+                }
+                [weakSelf.get()->the_self takePhotoResolved];
+              },
+              self->_weakPtrHolderForTakePhoto.weak_ptr_factory.GetWeakPtr()));
+    };
+    AVCaptureStillImageOutput* image_output =
+        static_cast<AVCaptureStillImageOutput*>(_photoOutput);
+    AVCaptureConnection* const connection =
+        image_output.connections.firstObject;
+    if (!connection) {
+      {
+        base::AutoLock lock(_lock);
+        if (_frameReceiver) {
+          _frameReceiver->OnPhotoError();
+        }
+      }
+      [self takePhotoResolved];
+      return;
+    }
+    [image_output captureStillImageAsynchronouslyFromConnection:connection
+                                              completionHandler:handler];
+    return;
+  }
+#endif
   @try {
     // Asynchronous success or failure is handled inside
     // captureOutput:didFinishProcessingPhoto:error on an unknown thread.
