@@ -1814,6 +1814,12 @@
       public: true,
     },
     {
+      // Add Request.bytes() and Response.bytes()
+      // https://chromestatus.com/feature/5239268180754432
+      name: "FetchBodyBytes",
+      status: "stable",
+    },
+    {
       // The Blink runtime-enabled feature name for the API's IDL.
       name: "FetchLaterAPI",
       status: "experimental",
@@ -3432,6 +3438,12 @@
       origin_trial_feature_name: "FrobulateImplied",
       implied_by: ["ProtectedOriginTrialsSampleAPI"],
       is_protected_feature: "true",
+    },
+    {
+      name: "PushMessageDataBytes",
+      depends_on: ["PushMessaging"],
+      status: "stable",
+      base_feature: "none",
     },
     {
       name: "PushMessaging",
