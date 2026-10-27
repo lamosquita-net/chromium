@@ -32,7 +32,11 @@ class GpuMojoMediaClientMac final : public GpuMojoMediaClient {
   std::optional<SupportedAudioDecoderConfigs>
   GetPlatformSupportedAudioDecoderConfigs() final {
     SupportedAudioDecoderConfigs audio_configs;
-    audio_configs.emplace_back(AudioCodec::kAAC, AudioCodecProfile::kXHE_AAC);
+    // FlyWeb: AudioToolbox decodes xHE-AAC only on macOS 10.15+ (Chromium 116
+    // checked this too); on Mojave it was advertised and then failed.
+    if (__builtin_available(macOS 10.15, *)) {
+      audio_configs.emplace_back(AudioCodec::kAAC, AudioCodecProfile::kXHE_AAC);
+    }
 #if BUILDFLAG(ENABLE_PLATFORM_AC3_EAC3_AUDIO)
     audio_configs.emplace_back(AudioCodec::kAC3, AudioCodecProfile::kUnknown);
     audio_configs.emplace_back(AudioCodec::kEAC3, AudioCodecProfile::kUnknown);
