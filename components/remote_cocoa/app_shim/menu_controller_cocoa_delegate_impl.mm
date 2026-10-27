@@ -123,6 +123,26 @@ NSImage* IPHDotImage(const remote_cocoa::mojom::MenuControllerParams& params) {
 
 // --- Private API end ---
 
+// FlyWeb (FM.42 c4): in macOS 10.13-10.14 Carbon menus ignore the flipped flag
+// of -[NSImage imageWithSize:flipped:drawingHandler:] when the image is set
+// with NSTextAttachment.image, so the [New] badge came out upside down. 116
+// used an NSTextAttachmentCell there; do the same on 10.14.
+@interface FlyWebNewTagAttachmentCell : NSTextAttachmentCell
+@end
+
+@implementation FlyWebNewTagAttachmentCell
+
+- (NSPoint)cellBaselineOffset {
+  // The same baseline offset as attachment.bounds below.
+  return NSMakePoint(0, -3);
+}
+
+- (NSSize)cellSize {
+  return self.image.size;
+}
+
+@end
+
 @implementation MenuControllerCocoaDelegateImpl {
   NSMutableArray* __strong _menuObservers;
   remote_cocoa::mojom::MenuControllerParamsPtr _params;
@@ -149,13 +169,20 @@ NSImage* IPHDotImage(const remote_cocoa::mojom::MenuControllerParams& params) {
   if (model->IsNewFeatureAt(index)) {
     NSTextAttachment* attachment = [[NSTextAttachment alloc] initWithData:nil
                                                                    ofType:nil];
-    attachment.image = NewTagImage(*_params);
-    NSSize newTagSize = attachment.image.size;
+    if (@available(macOS 10.15, *)) {
+      attachment.image = NewTagImage(*_params);
+      NSSize newTagSize = attachment.image.size;
 
-    // The baseline offset of the badge image to the menu text baseline.
-    const int kBadgeBaselineOffset = -3;
-    attachment.bounds = NSMakeRect(0, kBadgeBaselineOffset, newTagSize.width,
-                                   newTagSize.height);
+      // The baseline offset of the badge image to the menu text baseline.
+      const int kBadgeBaselineOffset = -3;
+      attachment.bounds = NSMakeRect(0, kBadgeBaselineOffset, newTagSize.width,
+                                     newTagSize.height);
+    } else {
+      FlyWebNewTagAttachmentCell* cell =
+          [[FlyWebNewTagAttachmentCell alloc] init];
+      cell.image = NewTagImage(*_params);
+      attachment.attachmentCell = cell;
+    }
 
     NSMutableAttributedString* attrTitle =
         [[NSMutableAttributedString alloc] initWithString:menuItem.title];
