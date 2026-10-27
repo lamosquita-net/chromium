@@ -499,11 +499,13 @@ class PathBuilderDelegateImpl : public bssl::SimplePathBuilderDelegate {
       }
     }
 
-    // FlyWeb: version constraints are checked against the declared engine
-    // version (flyweb_engine_full_version), not the 128 base, so that Chrome
-    // Root Store distrusts up to that Chrome level apply.
-    static const base::NoDestructor<base::Version> kCrsVersion(
-        FLYWEB_ENGINE_FULL_VERSION);
+    // FlyWeb: Chrome Root Store version constraints are checked against this
+    // fixed version, not the 128 base nor the declared engine level, so that
+    // CA distrusts up to Chrome 139 apply (Titin, 27-10-2026). Review it every
+    // time it is raised: a constraint set gated on a version up to this one
+    // may use constraint fields newer than this code understands (as
+    // permitted_dns_names was for 128), and ignoring a field widens the set.
+    static const base::NoDestructor<base::Version> kCrsVersion("139.0.0.0");
     if (constraint.min_version.has_value() &&
         *kCrsVersion < constraint.min_version.value()) {
       return false;
