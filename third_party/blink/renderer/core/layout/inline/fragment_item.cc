@@ -398,10 +398,23 @@ gfx::RectF FragmentItem::ObjectBoundingBox(const FragmentItems& items) const {
     ink_bounds.Offset(0.0f, font_data->GetFontMetrics().FloatAscent());
   ink_bounds.Scale(GetSvgFragmentData()->length_adjust_scale, 1.0f);
   const gfx::RectF& scaled_rect = GetSvgFragmentData()->rect;
-  if (!IsHorizontal()) {
-    ink_bounds =
-        gfx::RectF(scaled_rect.width() - ink_bounds.bottom(), ink_bounds.x(),
-                   ink_bounds.height(), ink_bounds.width());
+  // Convert a logical ink_bounds to physical. We don't use WiringModeConverter,
+  // which has no ToPhysical() for gfx::RectF.
+  switch (GetWritingMode()) {
+    case WritingMode::kHorizontalTb:
+      break;
+    case WritingMode::kVerticalLr:
+    case WritingMode::kVerticalRl:
+    case WritingMode::kSidewaysRl:
+      ink_bounds =
+          gfx::RectF(scaled_rect.width() - ink_bounds.bottom(), ink_bounds.x(),
+                     ink_bounds.height(), ink_bounds.width());
+      break;
+    case WritingMode::kSidewaysLr:
+      ink_bounds =
+          gfx::RectF(ink_bounds.y(), scaled_rect.height() - ink_bounds.right(),
+                     ink_bounds.height(), ink_bounds.width());
+      break;
   }
   ink_bounds.Offset(scaled_rect.OffsetFromOrigin());
   ink_bounds.Union(scaled_rect);
@@ -670,6 +683,9 @@ AffineTransform FragmentItem::BuildSvgTransformForLengthAdjust() const {
       scale_transform.SetMatrix(
           scale, 0, 0, 1, with_text_path_transform ? 0 : x - scale * x, 0);
     } else {
+      // svg_data.rect is a physical bounding rectangle including lengthAdjust
+      // scaling.  So all vertical writing modes including sideways-lr need the
+      // same transform.
       float y = svg_data.rect.y();
       scale_transform.SetMatrix(1, 0, 0, scale, 0,
                                 with_text_path_transform ? 0 : y - scale * y);
@@ -698,12 +714,22 @@ AffineTransform FragmentItem::BuildSvgTransformForTextPath(
   // PositionOnPath()|.
   float x = svg_data.rect.x();
   float y = svg_data.rect.y();
-  if (IsHorizontal()) {
-    y += font_data->GetFontMetrics().FixedAscent(font_baseline);
-    transform.Translate(-svg_data.rect.width() / 2, svg_data.baseline_shift);
-  } else {
-    x += font_data->GetFontMetrics().FixedDescent(font_baseline);
-    transform.Translate(svg_data.baseline_shift, -svg_data.rect.height() / 2);
+  switch (GetWritingMode()) {
+    case WritingMode::kHorizontalTb:
+      y += font_data->GetFontMetrics().FixedAscent(font_baseline);
+      transform.Translate(-svg_data.rect.width() / 2, svg_data.baseline_shift);
+      break;
+    case WritingMode::kVerticalLr:
+    case WritingMode::kVerticalRl:
+    case WritingMode::kSidewaysRl:
+      x += font_data->GetFontMetrics().FixedDescent(font_baseline);
+      transform.Translate(svg_data.baseline_shift, -svg_data.rect.height() / 2);
+      break;
+    case WritingMode::kSidewaysLr:
+      x += font_data->GetFontMetrics().FixedAscent(font_baseline);
+      y = svg_data.rect.bottom();
+      transform.Translate(-svg_data.baseline_shift, svg_data.rect.height() / 2);
+      break;
   }
   transform.PreConcat(length_adjust);
   transform.SetE(transform.E() + x);
