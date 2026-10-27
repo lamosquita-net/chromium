@@ -551,8 +551,8 @@ void FlexLine::ComputeLineItemsPosition(LayoutUnit main_axis_start_offset,
     main_axis_offset += available_free_space;
   }
 
-  LayoutUnit max_major_descent;
-  LayoutUnit max_minor_descent;
+  LayoutUnit max_major_descent = LayoutUnit::Min();
+  LayoutUnit max_minor_descent = LayoutUnit::Min();
 
   LayoutUnit max_child_cross_axis_extent;
   for (wtf_size_t i = 0; i < line_items_.size(); ++i) {
