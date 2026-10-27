@@ -41,7 +41,12 @@ void EncodePinnedTabs(Browser* browser, base::Value::List& serialized_tabs) {
     content::WebContents* web_contents = tab_model->GetWebContentsAt(i);
     NavigationEntry* entry =
         web_contents->GetController().GetLastCommittedEntry();
-    if (entry)
+    // FlyWeb: with shared pinned tabs, the other windows hold dummy contents
+    // that never navigate (their entry is the initial one, with an empty URL).
+    // Writing them added a pinned about:blank per dummy on the next start
+    // without session restore. The shared contents is written once, from the
+    // window that holds it.
+    if (entry && !entry->IsInitialEntry())
       serialized_tabs.Append(EncodeTab(entry->GetURL()));
   }
 }
@@ -50,6 +55,11 @@ void EncodePinnedTabs(Browser* browser, base::Value::List& serialized_tabs) {
 // on success.
 std::optional<StartupTab> DecodeTab(const base::Value::Dict& value) {
   const std::string* const url_string = value.FindString(kURL);
+  // FlyWeb: skip the empty entries that the dummy contents of shared pinned
+  // tabs left in profiles of 2.0.x (see EncodePinnedTabs()).
+  if (url_string && url_string->empty()) {
+    return std::nullopt;
+  }
   return url_string ? std::make_optional(StartupTab(GURL(*url_string),
                                                     StartupTab::Type::kPinned))
                     : std::nullopt;
