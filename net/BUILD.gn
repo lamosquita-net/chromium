@@ -1143,6 +1143,7 @@ component("net") {
     ]
   }
   sources += brave_net_sources
+  configs += [ "//brave/build:flyweb_engine_version" ]
 
   if (enable_device_bound_sessions) {
     sources += [
