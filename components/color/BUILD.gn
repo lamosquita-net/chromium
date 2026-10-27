@@ -21,7 +21,8 @@ static_library("color") {
     "//ui/color",
   ]
 
-  if (use_aura) {
+  # FlyWeb (FM.42 b2): the generic eye dropper is also used on macOS 10.14.
+  if (use_aura || is_mac) {
     deps += [ "//components/eye_dropper:color_mixer" ]
   }
 }
