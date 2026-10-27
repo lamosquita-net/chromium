@@ -193,6 +193,7 @@ uint64_t FileSystemSyncAccessHandle::write(
   size_t write_size = buffer_span.size();
   if (!base::CheckedNumeric<int>(write_size).IsValid()) {
     exception_state.ThrowTypeError("Cannot write more than 2GB");
+    return 0;
   }
 
   int64_t write_end_offset;
