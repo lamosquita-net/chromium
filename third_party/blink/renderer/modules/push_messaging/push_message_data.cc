@@ -87,7 +87,7 @@ Blob* PushMessageData::blob() const {
 }
 
 DOMUint8Array* PushMessageData::bytes() const {
-  return DOMUint8Array::Create(data_);
+  return DOMUint8Array::Create(base::as_byte_span(data_));
 }
 
 ScriptValue PushMessageData::json(ScriptState* script_state,
