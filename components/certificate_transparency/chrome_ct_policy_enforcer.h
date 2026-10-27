@@ -18,6 +18,7 @@
 #include "base/time/clock.h"
 #include "base/time/time.h"
 #include "net/cert/ct_policy_enforcer.h"
+#include "services/network/public/mojom/ct_log_info.mojom.h"
 
 namespace certificate_transparency {
 
@@ -49,16 +50,22 @@ class COMPONENT_EXPORT(CERTIFICATE_TRANSPARENCY) ChromeCTPolicyEnforcer
   // to disqualification date.  (Log IDs are the SHA-256 hash of the log's
   // DER-encoded SubjectPublicKeyInfo.)  |log_list_date| is the time at which
   // the other two arguments were generated.  Both lists of logs must be sorted
-  // by log ID.
-  ChromeCTPolicyEnforcer(
-      base::Time log_list_date,
-      std::vector<std::pair<std::string, base::Time>> disqualified_logs,
-      std::map<std::string, OperatorHistoryEntry> log_operator_history);
+  // by log ID. |log_types| maps log IDs to their spec type (FlyWeb: Static
+  // CT API support from M144, crrev.com/c/7205206); logs not in it are treated
+  // as kUnspecified.
   ChromeCTPolicyEnforcer(
       base::Time log_list_date,
       std::vector<std::pair<std::string, base::Time>> disqualified_logs,
       std::map<std::string, OperatorHistoryEntry> log_operator_history,
-      const base::Clock* clock);
+      std::map<std::string, network::mojom::CTLogInfo::LogType> log_types =
+          {});
+  ChromeCTPolicyEnforcer(
+      base::Time log_list_date,
+      std::vector<std::pair<std::string, base::Time>> disqualified_logs,
+      std::map<std::string, OperatorHistoryEntry> log_operator_history,
+      const base::Clock* clock,
+      std::map<std::string, network::mojom::CTLogInfo::LogType> log_types =
+          {});
 
   net::ct::CTPolicyCompliance CheckCompliance(
       net::X509Certificate* cert,
@@ -111,12 +118,18 @@ class COMPONENT_EXPORT(CERTIFICATE_TRANSPARENCY) ChromeCTPolicyEnforcer
 
   std::string GetOperatorForLog(std::string log_id, base::Time timestamp) const;
 
+  network::mojom::CTLogInfo::LogType GetLogType(
+      const std::string& log_id) const;
+
   // Map of SHA-256(SPKI) to log disqualification date.
   const std::vector<std::pair<std::string, base::Time>> disqualified_logs_;
 
   const std::map<std::string, OperatorHistoryEntry> log_operator_history_;
 
   const raw_ptr<const base::Clock> clock_;
+
+  // Map of SHA-256(SPKI) to the log's spec type.
+  const std::map<std::string, network::mojom::CTLogInfo::LogType> log_types_;
 
   // The time at which |disqualified_logs_| and |log_operator_history_| were
   // generated.

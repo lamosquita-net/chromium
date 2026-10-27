@@ -11,6 +11,8 @@ import json
 import math
 import sys
 
+LogTypeRFC6962 = 1
+LogTypeStaticCTAPI = 2
 
 def _write_cpp_header(f):
   f.write("// This file is auto-generated, DO NOT EDIT.\n\n")
@@ -89,6 +91,17 @@ def _escape_c_string(s):
   return "".join(_escape_char(c) for c in s)
 
 
+def _get_log_type(log):
+  if "log_type" not in log:
+    # Default to RFC 6962 until we have log_type in the log_list.
+    return "LogType::kRFC6962"
+  if log["log_type"] == LogTypeRFC6962:
+    return "LogType::kRFC6962"
+  if log["log_type"] == LogTypeStaticCTAPI:
+    return "LogType::kStaticCTAPI"
+  raise ValueError("log_type should be specified in the embedded log list")
+
+
 def _to_loginfo_struct(log, index):
   """Converts the given log to a CTLogInfo initialization code."""
   log_key = base64.b64decode(log["key"])
@@ -97,6 +110,7 @@ def _to_loginfo_struct(log, index):
   s += "\n     ".join(split_hex_key)
   s += ',\n     %d' % (len(log_key))
   s += ',\n     "%s"' % (_escape_c_string(log["description"]))
+  s += ',\n     %s' % (_get_log_type(log))
   s += ',\n     "'
   if "current_operator" in log:
     s += (_escape_c_string(log["current_operator"]))
@@ -217,6 +231,15 @@ def generate_cpp_file(input_file, f):
     for log in operator["logs"]:
       if _is_log_once_or_currently_qualified(log):
         log["current_operator"] = operator["name"]
+        assert "log_type" not in log
+        log["log_type"] = LogTypeRFC6962
+        logs.append(log)
+    # FlyWeb: the embedded log list of the 128 base has no "tiled_logs" key.
+    for log in operator.get("tiled_logs", []):
+      if _is_log_once_or_currently_qualified(log):
+        log["current_operator"] = operator["name"]
+        assert "log_type" not in log
+        log["log_type"] = LogTypeStaticCTAPI
         logs.append(log)
 
   # Write the timestamp value.
