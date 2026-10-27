@@ -14,6 +14,8 @@
 #include "base/logging.h"
 #include "base/memory/raw_ptr.h"
 #include "base/metrics/histogram_functions.h"
+#include "base/no_destructor.h"
+#include "base/version.h"
 #include "base/values.h"
 #include "crypto/sha2.h"
 #include "net/base/features.h"
@@ -473,14 +475,44 @@ class PathBuilderDelegateImpl : public bssl::SimplePathBuilderDelegate {
       }
     }
 
+    if (!constraint.permitted_dns_names.empty()) {
+      bssl::GeneralNames permitted_names;
+      for (const auto& dns_name : constraint.permitted_dns_names) {
+        permitted_names.dns_names.push_back(dns_name);
+      }
+      permitted_names.present_name_types |=
+          bssl::GeneralNameTypes::GENERAL_NAME_DNS_NAME;
+
+      std::unique_ptr<bssl::NameConstraints> nc =
+          bssl::NameConstraints::CreateFromPermittedSubtrees(
+              std::move(permitted_names));
+
+      const std::shared_ptr<const bssl::ParsedCertificate>& leaf_cert =
+          path->certs[0];
+      bssl::CertErrors name_constraint_errors;
+      nc->IsPermittedCert(leaf_cert->normalized_subject(),
+                          leaf_cert->subject_alt_names(),
+                          &name_constraint_errors);
+      if (name_constraint_errors.ContainsAnyErrorWithSeverity(
+              bssl::CertError::SEVERITY_HIGH)) {
+        return false;
+      }
+    }
+
+    // FlyWeb: Chrome Root Store version constraints are checked against this
+    // fixed version, not the 128 base nor the declared engine level, so that
+    // CA distrusts up to Chrome 139 apply (Titin, 27-10-2026). Review it every
+    // time it is raised: a constraint set gated on a version up to this one
+    // may use constraint fields newer than this code understands (as
+    // permitted_dns_names was for 128), and ignoring a field widens the set.
+    static const base::NoDestructor<base::Version> kCrsVersion("139.0.0.0");
     if (constraint.min_version.has_value() &&
-        version_info::GetVersion() < constraint.min_version.value()) {
+        *kCrsVersion < constraint.min_version.value()) {
       return false;
     }
 
     if (constraint.max_version_exclusive.has_value() &&
-        version_info::GetVersion() >=
-            constraint.max_version_exclusive.value()) {
+        *kCrsVersion >= constraint.max_version_exclusive.value()) {
       return false;
     }
 
