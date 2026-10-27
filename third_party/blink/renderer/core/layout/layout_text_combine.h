@@ -105,6 +105,11 @@ class CORE_EXPORT LayoutTextCombine final : public LayoutBlockFlow {
   // Returns true if |layout_object| is a child of |LayoutTextCombine|.
   static bool ShouldBeParentOf(const LayoutObject& layout_object);
 
+  // Returns true if `mode` is a supported writing-mode.
+  // FlyWeb: upstream 475cb03ab90 (crbug 461332428) without its flag: with
+  // sideways-*, the writing mode is vertical but the typography horizontal.
+  static bool IsSupportedMode(WritingMode mode);
+
  private:
   bool IsLayoutTextCombine() const final {
     NOT_DESTROYED();
@@ -137,9 +142,14 @@ class CORE_EXPORT LayoutTextCombine final : public LayoutBlockFlow {
 };
 
 // static
+inline bool LayoutTextCombine::IsSupportedMode(WritingMode mode) {
+  return !blink::IsHorizontalTypographicMode(mode);
+}
+
+// static
 inline bool LayoutTextCombine::ShouldBeParentOf(
     const LayoutObject& layout_object) {
-  if (LIKELY(layout_object.IsHorizontalWritingMode()) ||
+  if (LIKELY(!IsSupportedMode(layout_object.StyleRef().GetWritingMode())) ||
       !layout_object.IsText() || layout_object.IsSVGInlineText()) {
     return false;
   }
