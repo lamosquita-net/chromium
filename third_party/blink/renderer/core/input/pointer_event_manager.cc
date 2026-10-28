@@ -21,6 +21,7 @@
 #include "third_party/blink/renderer/core/frame/local_frame.h"
 #include "third_party/blink/renderer/core/frame/local_frame_view.h"
 #include "third_party/blink/renderer/core/html/canvas/html_canvas_element.h"
+#include "third_party/blink/renderer/core/html/html_dialog_element.h"
 #include "third_party/blink/renderer/core/input/event_handler.h"
 #include "third_party/blink/renderer/core/input/event_handling_util.h"
 #include "third_party/blink/renderer/core/input/mouse_event_manager.h"
@@ -190,7 +191,11 @@ WebInputEventResult PointerEventManager::DispatchPointerEvent(
   if (Node* target_node = target->ToNode()) {
     if (event_type == event_type_names::kPointerdown ||
         event_type == event_type_names::kPointerup) {
+      // Per spec, run the popover light dismiss actions first, which will take
+      // care of light dismissing popovers, including nested popovers. Then run
+      // dialog light dismiss.
       HTMLElement::HandlePopoverLightDismiss(*pointer_event, *target_node);
+      HTMLDialogElement::HandleDialogLightDismiss(*pointer_event, *target_node);
     }
   }
 
