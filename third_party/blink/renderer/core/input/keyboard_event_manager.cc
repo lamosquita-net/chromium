@@ -656,11 +656,9 @@ void KeyboardEventManager::DefaultEscapeEventHandler(KeyboardEvent* event) {
     }
   }
 
-  if (!RuntimeEnabledFeatures::CloseWatcherEnabled()) {
-    auto* target_node = event->GetEventPath()[0].Target()->ToNode();
-    DCHECK(target_node);
-    HTMLElement::HandlePopoverLightDismiss(*event, *target_node);
-  }
+  // FlyWeb: CloseWatcher is stable, so the popover keydown path that
+  // HandlePopoverLightDismiss() had is gone (it takes a PointerEvent since
+  // c8cc637fc4); Escape reaches popovers through their close watcher.
 }
 
 void KeyboardEventManager::DefaultEnterEventHandler(KeyboardEvent* event) {
