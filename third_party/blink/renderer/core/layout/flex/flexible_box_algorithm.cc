@@ -820,7 +820,11 @@ void FlexibleBoxAlgorithm::AlignFlexLines(
     LayoutUnit cross_axis_content_extent,
     HeapVector<NGFlexLine>* flex_line_outputs) {
   const StyleContentAlignmentData align_content = ResolvedAlignContent(*style_);
+  // FlyWeb (2.1.1): 'safe flex-start' still has to go through
+  // InitialContentPositionOffset, which makes it fall back to 'start' when the
+  // lines overflow (flexbox-safe-overflow-position-002/005 with wrap-reverse).
   if (align_content.GetPosition() == ContentPosition::kFlexStart &&
+      align_content.Overflow() != OverflowAlignment::kSafe &&
       gap_between_lines_ == 0) {
     return;
   }
