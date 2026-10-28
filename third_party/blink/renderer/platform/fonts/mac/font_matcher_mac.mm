@@ -223,18 +223,70 @@ bool BetterChoiceCT(CTFontSymbolicTraits desired_traits,
   return candidate_weight_delta_magnitude < chosen_weight_delta_magnitude;
 }
 
-// FlyWeb (FM.47): true if the renderer cannot read the font's data, so that
-// CoreText backs it with LastResort ("?" glyphs) although its name is right
-// (compare `CanLoadInProcess` in font_platform_data_mac.mm). Seen on Sequoia
-// with "Futura": a family member the sandbox cannot read was chosen over the
-// system faces.
-bool IsBackedByLastResort(CTFontRef ct_font) {
-  ScopedCFTypeRef<CGFontRef> cg_font(
-      CTFontCopyGraphicsFont(ct_font, /*attributes=*/nullptr));
-  ScopedCFTypeRef<CFStringRef> font_name(
-      CGFontCopyPostScriptName(cg_font.get()));
-  return font_name && CFStringCompare(font_name.get(), CFSTR("LastResort"),
-                                      0) == kCFCompareEqualTo;
+// FlyWeb (FM.47): the font the renderer can actually draw for
+// `postscript_name`, or null. A face whose data the renderer cannot load (seen
+// on Sequoia with old Type 1 "Futura" suitcases next to the system Futura.ttc)
+// keeps its name in the CTFont, but its CGFont is LastResort or a substitute
+// (Times). When the name is ambiguous, try the other faces with that name.
+ScopedCFTypeRef<CTFontRef> CreateLoadableFontWithName(NSString* postscript_name,
+                                                      float size) {
+  // The CTFont must be the face asked for (CoreText substitutes unknown names)
+  // and draw with its own family. Compare the drawn family, not the CGFont
+  // name: a named instance of a variable font has the CGFont of its base font.
+  auto is_loadable = [postscript_name](CTFontRef ct_font) {
+    ScopedCFTypeRef<CFStringRef> name(CTFontCopyPostScriptName(ct_font));
+    if (!name ||
+        CFStringCompare(name.get(), NSToCFPtrCast(postscript_name),
+                        kCFCompareCaseInsensitive) != kCFCompareEqualTo) {
+      return false;
+    }
+    ScopedCFTypeRef<CGFontRef> cg_font(
+        CTFontCopyGraphicsFont(ct_font, /*attributes=*/nullptr));
+    if (!cg_font) {
+      return false;
+    }
+    ScopedCFTypeRef<CTFontRef> drawn_font(CTFontCreateWithGraphicsFont(
+        cg_font.get(), /*size=*/0, /*matrix=*/nullptr,
+        /*attributes=*/nullptr));
+    if (!drawn_font) {
+      return false;
+    }
+    ScopedCFTypeRef<CFStringRef> family(CTFontCopyFamilyName(ct_font));
+    ScopedCFTypeRef<CFStringRef> drawn_family(
+        CTFontCopyFamilyName(drawn_font.get()));
+    return family && drawn_family &&
+           CFStringCompare(family.get(), drawn_family.get(),
+                           kCFCompareCaseInsensitive) == kCFCompareEqualTo;
+  };
+
+  ScopedCFTypeRef<CTFontRef> font(
+      CTFontCreateWithName(NSToCFPtrCast(postscript_name), size, nullptr));
+  if (font && is_loadable(font.get())) {
+    return font;
+  }
+
+  NSDictionary* attributes =
+      @{CFToNSPtrCast(kCTFontNameAttribute) : postscript_name};
+  ScopedCFTypeRef<CTFontDescriptorRef> descriptor(
+      CTFontDescriptorCreateWithAttributes(NSToCFPtrCast(attributes)));
+  NSSet* mandatory = [NSSet setWithObject:CFToNSPtrCast(kCTFontNameAttribute)];
+  ScopedCFTypeRef<CFArrayRef> matches(
+      CTFontDescriptorCreateMatchingFontDescriptors(descriptor.get(),
+                                                    NSToCFPtrCast(mandatory)));
+  if (matches) {
+    for (CFIndex i = 0; i < CFArrayGetCount(matches.get()); ++i) {
+      CTFontDescriptorRef match =
+          CFCast<CTFontDescriptorRef>(CFArrayGetValueAtIndex(matches.get(), i));
+      if (!match) {
+        continue;
+      }
+      font.reset(CTFontCreateWithFontDescriptor(match, size, nullptr));
+      if (font && is_loadable(font.get())) {
+        return font;
+      }
+    }
+  }
+  return ScopedCFTypeRef<CTFontRef>(nullptr);
 }
 
 // This function is similar to `BestStyleMatchForFamily` except
@@ -257,7 +309,9 @@ ScopedCFTypeRef<CTFontRef> BestStyleMatchForFamilyNS(
       availableMembersOfFontFamily:CFToNSPtrCast(family_name)] mutableCopy];
 
   // FlyWeb (FM.47): if the best member cannot be loaded in the renderer, drop
-  // it and take the next best one instead of drawing LastResort glyphs.
+  // it and take the next best one of the family instead of drawing LastResort
+  // or a substitute font.
+  NSString* first_choice;
   while (fonts.count) {
     NSString* matched_font_name;
     NSUInteger matched_index = 0;
@@ -293,17 +347,25 @@ ScopedCFTypeRef<CTFontRef> BestStyleMatchForFamilyNS(
       }
     }
     if (!matched_font_name) {
-      return ScopedCFTypeRef<CTFontRef>(nullptr);
+      break;
+    }
+    if (!first_choice) {
+      first_choice = matched_font_name;
     }
 
-    ScopedCFTypeRef<CTFontRef> matched_font(
-        CTFontCreateWithName(NSToCFPtrCast(matched_font_name), size, nullptr));
-    if (!matched_font || !IsBackedByLastResort(matched_font.get())) {
+    ScopedCFTypeRef<CTFontRef> matched_font =
+        CreateLoadableFontWithName(matched_font_name, size);
+    if (matched_font) {
       return matched_font;
     }
     [fonts removeObjectAtIndex:matched_index];
   }
-  return ScopedCFTypeRef<CTFontRef>(nullptr);
+  // No member passed the check: keep the 128 result for the best one.
+  if (!first_choice) {
+    return ScopedCFTypeRef<CTFontRef>(nullptr);
+  }
+  return ScopedCFTypeRef<CTFontRef>(
+      CTFontCreateWithName(NSToCFPtrCast(first_choice), size, nullptr));
 }
 
 ScopedCFTypeRef<CTFontRef> BestStyleMatchForFamily(
