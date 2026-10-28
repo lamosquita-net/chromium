@@ -792,6 +792,7 @@
     //
     // text-box-edge
     //
+    // "auto"
     // "alphabetic",
     // "text"
     //
@@ -800,7 +801,14 @@
     // "ideographic-ink",
     "cap",
     "ex",
-    "leading",
+
+    //
+    // text-box-trim
+    //
+    // "none"
+    "trim-both",
+    "trim-end",
+    "trim-start",
 
     //
     // text-overflow
@@ -832,7 +840,7 @@
     // normal
     "space-all",
     "space-first",
-    "trim-start",
+    // "trim-start",
 
     // text-underline-position
     // auto

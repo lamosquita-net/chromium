@@ -5442,6 +5442,12 @@
       runtime_flag: "CSSTextAutoSpace",
     },
     {
+      name: "text-box",
+      longhands: ["text-box-trim", "text-box-edge"],
+      property_methods: ["ParseShorthand", "CSSValueFromComputedStyleInternal"],
+      runtime_flag: "CSSTextBoxTrim",
+    },
+    {
       name: "text-box-edge",
       property_methods: ["ParseSingleValue", "CSSValueFromComputedStyleInternal"],
       inherited: true,
@@ -5461,7 +5467,7 @@
       field_group: "box",
       field_template: "keyword",
       default_value: "none",
-      keywords: ["none", "start", "end", "both"],
+      keywords: ["none", "trim-start", "trim-end", "trim-both"],
       typedom_types: ["Keyword"],
       invalidate: ["layout"],
       runtime_flag: "CSSTextBoxTrim",

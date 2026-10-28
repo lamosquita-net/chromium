@@ -250,11 +250,8 @@ LayoutResult::LayoutResult(const PhysicalFragment* physical_fragment,
   if (builder->has_content_after_line_clamp_) {
     EnsureRareData()->set_has_content_after_line_clamp();
   }
-  if (builder->is_block_start_trimmed_) {
-    EnsureRareData()->set_is_block_start_trimmed();
-  }
-  if (builder->is_block_end_trimmed_) {
-    EnsureRareData()->set_is_block_end_trimmed();
+  if (builder->is_block_end_trimmable_line_) {
+    EnsureRareData()->set_is_block_end_trimmable_line();
   }
 
   if (builder->tallest_unbreakable_block_size_ >= LayoutUnit()) {

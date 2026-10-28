@@ -799,13 +799,28 @@ class CORE_EXPORT ConstraintSpace final {
                          : MarginStrut();
   }
 
-  // Return true if `text-box-trim` is in effect for the block-start/end.
-  bool ShouldTextBoxTrimStart() const {
-    return HasRareData() && rare_data_->should_text_box_trim_start;
+  // Return true if `text-box-trim:trim-start` is in effect at the beginning of
+  // a node.
+  bool ShouldTextBoxTrimNodeStart() const {
+    return HasRareData() && rare_data_->should_text_box_trim_node_start;
   }
-  bool ShouldTextBoxTrimEnd() const {
-    return HasRareData() && rare_data_->should_text_box_trim_end;
+  // Return true if `text-box-trim:trim-end` is in effect at the end of a node.
+  bool ShouldTextBoxTrimNodeEnd() const {
+    return HasRareData() && rare_data_->should_text_box_trim_node_end;
   }
+  // Return true if `text-box-trim:trim-start` is in effect at the beginning of
+  // a fragmentainer.
+  bool ShouldTextBoxTrimFragmentainerStart() const {
+    return HasRareData() &&
+           rare_data_->should_text_box_trim_fragmentainer_start;
+  }
+  // Return true if `text-box-trim:trim-end` is in effect at the end of a
+  // fragmentainer.
+  bool ShouldTextBoxTrimFragmentainerEnd() const {
+    return HasRareData() && rare_data_->should_text_box_trim_fragmentainer_end;
+  }
+
+  // Apply `text-box-trim` to the block-end even if there are following content.
   bool ShouldForceTextBoxTrimEnd() const {
     return HasRareData() && rare_data_->should_force_text_box_trim_end;
   }
@@ -978,8 +993,13 @@ class CORE_EXPORT ConstraintSpace final {
           is_at_fragmentainer_start(other.is_at_fragmentainer_start),
           should_repeat(other.should_repeat),
           is_inside_repeatable_content(other.is_inside_repeatable_content),
-          should_text_box_trim_start(other.should_text_box_trim_start),
-          should_text_box_trim_end(other.should_text_box_trim_end),
+          should_text_box_trim_node_start(
+              other.should_text_box_trim_node_start),
+          should_text_box_trim_node_end(other.should_text_box_trim_node_end),
+          should_text_box_trim_fragmentainer_start(
+              other.should_text_box_trim_fragmentainer_start),
+          should_text_box_trim_fragmentainer_end(
+              other.should_text_box_trim_fragmentainer_end),
           should_force_text_box_trim_end(other.should_force_text_box_trim_end),
           decoration_percentage_resolution_type(
               other.decoration_percentage_resolution_type) {
@@ -1064,8 +1084,14 @@ class CORE_EXPORT ConstraintSpace final {
           propagate_child_break_values != other.propagate_child_break_values ||
           should_repeat != other.should_repeat ||
           is_inside_repeatable_content != other.is_inside_repeatable_content ||
-          should_text_box_trim_start != other.should_text_box_trim_start ||
-          should_text_box_trim_end != other.should_text_box_trim_end ||
+          should_text_box_trim_node_start !=
+              other.should_text_box_trim_node_start ||
+          should_text_box_trim_node_end !=
+              other.should_text_box_trim_node_end ||
+          should_text_box_trim_fragmentainer_start !=
+              other.should_text_box_trim_fragmentainer_start ||
+          should_text_box_trim_fragmentainer_end !=
+              other.should_text_box_trim_fragmentainer_end ||
           should_force_text_box_trim_end !=
               other.should_force_text_box_trim_end ||
           decoration_percentage_resolution_type !=
@@ -1108,7 +1134,9 @@ class CORE_EXPORT ConstraintSpace final {
           min_break_appeal != kBreakAppealLastResort ||
           propagate_child_break_values || is_at_fragmentainer_start ||
           should_repeat || is_inside_repeatable_content ||
-          should_text_box_trim_start || should_text_box_trim_end ||
+          should_text_box_trim_node_start || should_text_box_trim_node_end ||
+          should_text_box_trim_fragmentainer_start ||
+          should_text_box_trim_fragmentainer_end ||
           should_force_text_box_trim_end ||
           decoration_percentage_resolution_type) {
         return false;
@@ -1375,8 +1403,10 @@ class CORE_EXPORT ConstraintSpace final {
     unsigned is_at_fragmentainer_start : 1 = false;
     unsigned should_repeat : 1 = false;
     unsigned is_inside_repeatable_content : 1 = false;
-    unsigned should_text_box_trim_start : 1 = false;
-    unsigned should_text_box_trim_end : 1 = false;
+    unsigned should_text_box_trim_node_start : 1 = false;
+    unsigned should_text_box_trim_node_end : 1 = false;
+    unsigned should_text_box_trim_fragmentainer_start : 1 = false;
+    unsigned should_text_box_trim_fragmentainer_end : 1 = false;
     unsigned should_force_text_box_trim_end : 1 = false;
     unsigned decoration_percentage_resolution_type : 1 = static_cast<unsigned>(
         DecorationPercentageResolutionType::kContainingBlockInlineSize);
@@ -1686,12 +1716,6 @@ class CORE_EXPORT ConstraintSpace final {
     EnsureRareData()->is_monolithic_overflow_propagation_disabled = true;
   }
 
-  void SetShouldTextBoxTrimStart() {
-    EnsureRareData()->should_text_box_trim_start = true;
-  }
-  void SetShouldTextBoxTrimEnd(bool value = true) {
-    EnsureRareData()->should_text_box_trim_end = value;
-  }
   void SetShouldForceTextBoxTrimEnd(bool value = true) {
     EnsureRareData()->should_force_text_box_trim_end = value;
   }
