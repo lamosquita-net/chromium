@@ -326,7 +326,7 @@
     },
     {
       name: "AnimationProgressAPI",
-      status: "test",
+      status: "stable",
     },
     {
       name: "AnimationWorklet",
@@ -3755,7 +3755,7 @@
     {
       // See crbug.com/41321247 and crbug.com/376370642
       name: "ScheduleSelectionChangeOnBackspace",
-      status: {"Android": "", "default": "stable"},
+      status: "stable",
     },
     {
       // https://wicg.github.io/webcomponents/proposals/Scoped-Custom-Element-Registries
@@ -4324,7 +4324,7 @@
       // disabling automatic size adjustments when non-auto values are used.
       // See: https://crbug.com/340389272.
       name: "TextSizeAdjustImprovements",
-      status: "experimental",
+      status: "stable",
     },
     {
       // Support for the timeline-scope property.
