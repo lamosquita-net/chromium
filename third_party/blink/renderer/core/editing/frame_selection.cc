@@ -537,8 +537,19 @@ bool FrameSelection::SelectionHasFocus() const {
     return false;
   }
 
-  if (focused_element->IsTextControl())
-    return focused_element->ContainsIncludingHostElements(*current);
+  if (RuntimeEnabledFeatures::SelectionOnShadowDOMWithDelegatesFocusEnabled()) {
+    // If focus is on the delegated target of a shadow host with delegatesFocus,
+    // selection could be on focus even if focused element does not contain
+    // current selection start.
+    if (focused_element->IsTextControl() &&
+        focused_element->ContainsIncludingHostElements(*current)) {
+      return true;
+    }
+  } else {
+    if (focused_element->IsTextControl()) {
+      return focused_element->ContainsIncludingHostElements(*current);
+    }
+  }
 
   // Selection has focus if it contains the focused element.
   const PositionInFlatTree& focused_position =
@@ -557,6 +568,16 @@ bool FrameSelection::SelectionHasFocus() const {
     // Selection has focus if its sub tree has focus.
     if (current == focused_element)
       return true;
+    if (RuntimeEnabledFeatures::
+            SelectionOnShadowDOMWithDelegatesFocusEnabled()) {
+      // If current is a shadow host with delegatesFocus, then it cannot be the
+      // focused element and we should compare with its focusable area instead.
+      if (const Element* el = DynamicTo<Element>(current);
+          el && el->IsShadowHostWithDelegatesFocus() &&
+          el->GetFocusableArea() == focused_element) {
+        return true;
+      }
+    }
     current = current->ParentOrShadowHostNode();
   } while (current);
 

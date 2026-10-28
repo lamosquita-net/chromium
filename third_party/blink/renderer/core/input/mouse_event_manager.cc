@@ -560,7 +560,10 @@ WebInputEventResult MouseEventManager::HandleMouseFocus(
   // default behavior).
   if (element && !element->IsFocusable() &&
       SlideFocusOnShadowHostIfNecessary(*element)) {
-    return WebInputEventResult::kHandledSystem;
+    return RuntimeEnabledFeatures::
+                   SelectionOnShadowDOMWithDelegatesFocusEnabled()
+               ? WebInputEventResult::kNotHandled
+               : WebInputEventResult::kHandledSystem;
   }
 
   // We call setFocusedElement even with !element in order to blur
