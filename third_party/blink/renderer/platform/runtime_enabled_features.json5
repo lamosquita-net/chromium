@@ -697,6 +697,10 @@
       status: "experimental",
     },
     {
+      name: "ClipboardItemWithDOMStringSupport",
+      status: "stable",
+    },
+    {
       name: "ClipboardSvg",
       status: "stable",
     },

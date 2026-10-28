@@ -7,6 +7,7 @@
 #include <memory>
 #include <utility>
 
+#include "base/containers/span.h"
 #include "base/functional/callback_helpers.h"
 #include "base/metrics/histogram_functions.h"
 #include "base/task/single_thread_task_runner.h"
@@ -18,6 +19,7 @@
 #include "third_party/blink/renderer/bindings/core/v8/script_function.h"
 #include "third_party/blink/renderer/bindings/core/v8/script_promise_resolver.h"
 #include "third_party/blink/renderer/bindings/core/v8/to_v8_traits.h"
+#include "third_party/blink/renderer/bindings/core/v8/v8_blob.h"
 #include "third_party/blink/renderer/bindings/modules/v8/v8_clipboard_unsanitized_formats.h"
 #include "third_party/blink/renderer/core/clipboard/clipboard_mime_types.h"
 #include "third_party/blink/renderer/core/clipboard/system_clipboard.h"
@@ -82,20 +84,46 @@ class ClipboardPromise::BlobPromiseResolverFunction final
   }
 
   ScriptValue Call(ScriptState* script_state, ScriptValue value) final {
-    ExceptionState exception_state(script_state->GetIsolate(),
-                                   ExceptionContextType::kOperationInvoke,
-                                   "Clipboard", "write");
     if (type_ == ResolveType::kReject) {
       clipboard_promise_->RejectBlobPromise("Promises to Blobs were rejected.");
     } else {
+      // FlyWeb level 133 (d72d71316f2): a ClipboardItem promise may resolve
+      // to a DOMString as well as a Blob. The 128 has no typed promises, so
+      // each string is turned into a Blob of its item type here and the rest
+      // of the write path stays Blob-only.
       HeapVector<Member<Blob>>* blob_list =
-          MakeGarbageCollected<HeapVector<Member<Blob>>>(
-              NativeValueTraits<IDLSequence<Blob>>::NativeValue(
-                  script_state->GetIsolate(), value.V8Value(),
-                  exception_state));
-      if (exception_state.HadException()) {
-        // Clear the exception here as it'll be fired in `RejectBlobPromise`.
-        exception_state.ClearException();
+          MakeGarbageCollected<HeapVector<Member<Blob>>>();
+      v8::Isolate* isolate = script_state->GetIsolate();
+      v8::Local<v8::Value> v8_value = value.V8Value();
+      if (v8_value->IsArray()) {
+        v8::Local<v8::Array> array = v8_value.As<v8::Array>();
+        v8::Local<v8::Context> context = script_state->GetContext();
+        const auto& types = clipboard_promise_->write_clipboard_item_types_;
+        for (uint32_t i = 0; i < array->Length(); ++i) {
+          v8::Local<v8::Value> element;
+          if (!array->Get(context, i).ToLocal(&element) ||
+              i >= types.size()) {
+            blob_list = nullptr;
+            break;
+          }
+          if (element->IsString()) {
+            std::string utf8 =
+                ToCoreString(isolate, element.As<v8::String>()).Utf8();
+            blob_list->push_back(Blob::Create(
+                base::as_bytes(base::make_span(utf8)), types[i]));
+            continue;
+          }
+          Blob* blob = V8Blob::ToWrappable(isolate, element);
+          if (!blob) {
+            blob_list = nullptr;
+            break;
+          }
+          blob_list->push_back(blob);
+        }
+      } else {
+        blob_list = nullptr;
+      }
+      if (!blob_list) {
         clipboard_promise_->RejectBlobPromise("Invalid Blob types.");
       } else {
         clipboard_promise_->HandlePromiseBlobsWrite(blob_list);
@@ -363,6 +391,10 @@ void ClipboardPromise::ResolveRead() {
   items.ReserveInitialCapacity(clipboard_item_data_.size());
 
   for (const auto& item : clipboard_item_data_) {
+    // FlyWeb level 133 (586423e8031): leave out formats that failed to read.
+    if (!item.second) {
+      continue;
+    }
     ScriptPromiseUntyped promise =
         ToResolvedPromise<IDLNullable<Blob>>(script_state, item.second);
     items.emplace_back(item.first, promise);
