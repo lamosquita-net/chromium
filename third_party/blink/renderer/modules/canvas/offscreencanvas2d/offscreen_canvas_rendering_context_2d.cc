@@ -19,7 +19,6 @@
 #include "third_party/blink/renderer/core/frame/settings.h"
 #include "third_party/blink/renderer/core/html/canvas/text_metrics.h"
 #include "third_party/blink/renderer/bindings/modules/v8/v8_canvas_rendering_context_2d_settings.h"
-#include "third_party/blink/renderer/bindings/modules/v8/v8_canvas_will_read_frequently.h"
 #include "third_party/blink/renderer/core/imagebitmap/image_bitmap.h"
 #include "third_party/blink/renderer/core/workers/worker_global_scope.h"
 #include "third_party/blink/renderer/core/workers/worker_settings.h"
@@ -156,14 +155,12 @@ OffscreenCanvasRenderingContext2D::getContextAttributes() const {
   settings->setDesynchronized(CreationAttributes().desynchronized);
   switch (CreationAttributes().will_read_frequently) {
     case CanvasContextCreationAttributesCore::WillReadFrequently::kTrue:
-      settings->setWillReadFrequently(V8CanvasWillReadFrequently::Enum::kTrue);
+      settings->setWillReadFrequently(true);
       break;
     case CanvasContextCreationAttributesCore::WillReadFrequently::kFalse:
-      settings->setWillReadFrequently(V8CanvasWillReadFrequently::Enum::kFalse);
-      break;
     case CanvasContextCreationAttributesCore::WillReadFrequently::kUndefined:
-      settings->setWillReadFrequently(
-          V8CanvasWillReadFrequently::Enum::kUndefined);
+      settings->setWillReadFrequently(false);
+      break;
   }
   return settings;
 }

@@ -54,7 +54,6 @@
 #include "third_party/blink/public/mojom/scroll/scroll_into_view_params.mojom-blink.h"
 #include "third_party/blink/public/platform/task_type.h"
 #include "third_party/blink/renderer/bindings/modules/v8/v8_canvas_rendering_context_2d_settings.h"
-#include "third_party/blink/renderer/bindings/modules/v8/v8_canvas_will_read_frequently.h"
 #include "third_party/blink/renderer/bindings/modules/v8/v8_typedefs.h"
 #include "third_party/blink/renderer/bindings/modules/v8/v8_union_canvasrenderingcontext2d_gpucanvascontext_imagebitmaprenderingcontext_webgl2renderingcontext_webglrenderingcontext.h"
 #include "third_party/blink/renderer/core/accessibility/ax_object_cache.h"
@@ -753,14 +752,12 @@ CanvasRenderingContext2D::getContextAttributes() const {
   settings->setDesynchronized(Host()->LowLatencyEnabled());
   switch (CreationAttributes().will_read_frequently) {
     case CanvasContextCreationAttributesCore::WillReadFrequently::kTrue:
-      settings->setWillReadFrequently(V8CanvasWillReadFrequently::Enum::kTrue);
+      settings->setWillReadFrequently(true);
       break;
     case CanvasContextCreationAttributesCore::WillReadFrequently::kFalse:
-      settings->setWillReadFrequently(V8CanvasWillReadFrequently::Enum::kFalse);
-      break;
     case CanvasContextCreationAttributesCore::WillReadFrequently::kUndefined:
-      settings->setWillReadFrequently(
-          V8CanvasWillReadFrequently::Enum::kUndefined);
+      settings->setWillReadFrequently(false);
+      break;
   }
   return settings;
 }
