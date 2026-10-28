@@ -117,14 +117,23 @@ BoxBackgroundPaintContext::BoxBackgroundPaintContext(
   } else if (fragment.IsTable()) {
     auto stitched_background_rect = ComputeStitchedTableGridRect(fragment);
     positioning_size_override_ = stitched_background_rect.size;
-    element_positioning_area_offset_ = -stitched_background_rect.offset;
+    // Set the start offset into the background image if box decorations are
+    // sliced (default), so that one fragment will resume where the previous one
+    // left off. Otherwise (if they are to be cloned, the offset will remain the
+    // same for every fragment).
+    if (fragment.Style().BoxDecorationBreak() == EBoxDecorationBreak::kSlice) {
+      element_positioning_area_offset_ = -stitched_background_rect.offset;
+    }
     box_has_multiple_fragments_ = !fragment.IsOnlyForNode();
   } else if (!fragment.IsOnlyForNode()) {
     // The element is block-fragmented. We need to calculate the correct
     // background offset within an imaginary box where all the fragments have
     // been stitched together.
-    element_positioning_area_offset_ =
+    PhysicalOffset offset =
         OffsetInStitchedFragments(fragment, &positioning_size_override_);
+    if (fragment.Style().BoxDecorationBreak() == EBoxDecorationBreak::kSlice) {
+      element_positioning_area_offset_ = offset;
+    }
     box_has_multiple_fragments_ = true;
   }
 }
