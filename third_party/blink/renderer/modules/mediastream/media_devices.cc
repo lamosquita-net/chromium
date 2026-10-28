@@ -941,6 +941,7 @@ void MediaDevices::ContextDestroyed() {
 
   stopped_ = true;
   enumerate_device_requests_.clear();
+  StopObserving();
 }
 
 void MediaDevices::OnDevicesChanged(
@@ -948,6 +949,7 @@ void MediaDevices::OnDevicesChanged(
     const Vector<WebMediaDeviceInfo>& device_infos) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   DCHECK(GetExecutionContext());
+  DCHECK(!stopped_);
   if (base::ranges::equal(current_device_infos_[static_cast<wtf_size_t>(type)],
                           device_infos, EqualDeviceForDeviceChange)) {
     return;
@@ -961,6 +963,10 @@ void MediaDevices::OnDevicesChanged(
 
 void MediaDevices::ScheduleDispatchEvent(Event* event) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  if (stopped_) {
+    return;
+  }
+
   scheduled_events_.push_back(event);
   if (dispatch_scheduled_events_task_handle_.IsActive()) {
     return;
