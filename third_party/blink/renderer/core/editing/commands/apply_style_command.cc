@@ -465,7 +465,12 @@ void ApplyStyleCommand::ApplyRelativeFontStyleChange(
       // style this text node. To make this possible, add a style span to
       // surround this text node.
       auto* span = MakeGarbageCollected<HTMLSpanElement>(GetDocument());
-      SurroundNodeRangeWithElement(node, node, span, editing_state);
+      // Prevent merging the span with adjacent siblings, to ensure the DOM
+      // structure and traversal order do not change.
+      // FlyWeb: upstream b3afe3118a (crbug 471876082) without its runtime
+      // flag.
+      SurroundNodeRangeWithElement(node, node, span, editing_state,
+                                   kDoNotMergeSiblings);
       if (editing_state->IsAborted())
         return;
       element = span;
@@ -1782,7 +1787,8 @@ void ApplyStyleCommand::SurroundNodeRangeWithElement(
     Node* passed_start_node,
     Node* end_node,
     Element* element_to_insert,
-    EditingState* editing_state) {
+    EditingState* editing_state,
+    MergeSiblings merge_siblings) {
   DCHECK(passed_start_node);
   DCHECK(end_node);
   DCHECK(element_to_insert);
@@ -1807,6 +1813,10 @@ void ApplyStyleCommand::SurroundNodeRangeWithElement(
     if (node == end_node)
       break;
     node = next;
+  }
+
+  if (merge_siblings == kDoNotMergeSiblings) {
+    return;
   }
 
   Node* next_sibling = element->nextSibling();

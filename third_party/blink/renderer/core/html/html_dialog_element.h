@@ -66,10 +66,12 @@ class CORE_EXPORT HTMLDialogElement final : public HTMLElement {
   void requestClose(const String& return_value, ExceptionState&);
   void show(ExceptionState&);
   void showModal(ExceptionState&);
+  InsertionNotificationRequest InsertedInto(ContainerNode&) override;
   void RemovedFrom(ContainerNode&) override;
 
   bool IsModal() const { return is_modal_; }
   bool IsOpen() const { return FastHasAttribute(html_names::kOpenAttr); }
+  bool IsOpenAndActive() const { return IsOpen() && InActiveDocument(); }
 
   String returnValue() const { return return_value_; }
   void setReturnValue(const String& return_value) {
