@@ -899,20 +899,35 @@ void WindowPerformance::AddElementTiming(const AtomicString& name,
   if (!DomWindow()) {
     return;
   }
+
+  DOMHighResTimeStamp coarsened_load_time =
+      MonotonicTimeToDOMHighResTimeStamp(load_time);
+
+  DOMHighResTimeStamp coarsened_render_time =
+      RenderTimeToDOMHighResTimeStamp(start_time);
+
   PerformanceElementTiming* entry = PerformanceElementTiming::Create(
-      name, url, rect, MonotonicTimeToDOMHighResTimeStamp(start_time),
-      MonotonicTimeToDOMHighResTimeStamp(load_time), identifier,
+      name, url, rect, coarsened_render_time, coarsened_load_time, identifier,
       intrinsic_size.width(), intrinsic_size.height(), id, element,
       DomWindow());
   TRACE_EVENT2("loading", "PerformanceElementTiming", "data",
                entry->ToTracedValue(), "frame",
                GetFrameIdForTracing(DomWindow()->GetFrame()));
-  if (HasObserverFor(PerformanceEntry::kElement)) {
-    NotifyObserversOfEntry(*entry);
-  }
-  if (!IsElementTimingBufferFull()) {
-    AddToElementTimingBuffer(*entry);
-  }
+
+  AddRenderCoarsenedEntry(
+      WTF::BindOnce(
+          [](Persistent<PerformanceElementTiming> entry,
+             Performance& performance) {
+            if (performance.HasObserverFor(PerformanceEntry::kElement)) {
+              static_cast<WindowPerformance&>(performance)
+                  .NotifyObserversOfEntry(*entry);
+            }
+            if (!performance.IsElementTimingBufferFull()) {
+              performance.AddToElementTimingBuffer(*entry);
+            }
+          },
+          WrapPersistent(entry)),
+      coarsened_render_time);
 }
 
 void WindowPerformance::DispatchFirstInputTiming(
@@ -1018,23 +1033,43 @@ void WindowPerformance::OnLargestContentfulPaintUpdated(
     const String& url,
     Element* element,
     bool is_triggered_by_soft_navigation) {
-  DOMHighResTimeStamp start_timestamp =
-      MonotonicTimeToDOMHighResTimeStamp(start_time);
-  DOMHighResTimeStamp render_timestamp =
-      MonotonicTimeToDOMHighResTimeStamp(render_time);
   DOMHighResTimeStamp load_timestamp =
       MonotonicTimeToDOMHighResTimeStamp(load_time);
+  DOMHighResTimeStamp start_timestamp =
+      RenderTimeToDOMHighResTimeStamp(start_time);
+  DOMHighResTimeStamp render_timestamp =
+      RenderTimeToDOMHighResTimeStamp(render_time);
   DOMHighResTimeStamp first_animated_frame_timestamp =
-      MonotonicTimeToDOMHighResTimeStamp(first_animated_frame_time);
+      RenderTimeToDOMHighResTimeStamp(first_animated_frame_time);
+
   // TODO(yoav): Should we modify start to represent the animated frame?
   auto* entry = MakeGarbageCollected<LargestContentfulPaint>(
       start_timestamp, render_timestamp, paint_size, load_timestamp,
       first_animated_frame_timestamp, id, url, element, DomWindow(),
       is_triggered_by_soft_navigation);
-  if (HasObserverFor(PerformanceEntry::kLargestContentfulPaint)) {
-    NotifyObserversOfEntry(*entry);
-  }
-  AddLargestContentfulPaint(entry);
+
+  AddRenderCoarsenedEntry(
+      WTF::BindOnce(
+          [](Persistent<LargestContentfulPaint> entry,
+             Performance& performance) {
+            WindowPerformance& window_performance =
+                static_cast<WindowPerformance&>(performance);
+            if (!window_performance.DomWindow()) {
+              return;
+            }
+
+            if (performance.HasObserverFor(
+                    PerformanceEntry::kLargestContentfulPaint)) {
+              window_performance.NotifyObserversOfEntry(*entry);
+            }
+            performance.AddLargestContentfulPaint(entry);
+            window_performance.DomWindow()
+                ->document()
+                ->OnLargestContentfulPaintUpdated();
+          },
+          WrapPersistent(entry)),
+      render_timestamp);
+
   if (HTMLImageElement* image_element = DynamicTo<HTMLImageElement>(element)) {
     image_element->SetIsLCPElement();
     if (image_element->HasLazyLoadingAttribute()) {
@@ -1043,8 +1078,6 @@ void WindowPerformance::OnLargestContentfulPaintUpdated(
   }
 
   if (element) {
-    element->GetDocument().OnLargestContentfulPaintUpdated();
-
     if (LocalFrame* local_frame = element->GetDocument().GetFrame()) {
       if (LCPCriticalPathPredictor* lcpp = local_frame->GetLCPP()) {
         std::optional<KURL> maybe_url = std::nullopt;
