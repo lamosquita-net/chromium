@@ -10,6 +10,7 @@
 #include "third_party/blink/renderer/core/css/resolver/style_cascade.h"
 
 #include <bit>
+#include <optional>
 
 #include "base/notreached.h"
 #include "third_party/blink/renderer/core/animation/css/css_animations.h"
@@ -19,6 +20,8 @@
 #include "third_party/blink/renderer/core/animation/property_handle.h"
 #include "third_party/blink/renderer/core/animation/transition_interpolation.h"
 #include "third_party/blink/renderer/core/css/css_appearance_auto_base_select_value_pair.h"
+#include "third_party/blink/renderer/core/css/css_attr_type.h"
+#include "third_party/blink/renderer/core/css/css_attr_value_tainting.h"
 #include "third_party/blink/renderer/core/css/css_cyclic_variable_value.h"
 #include "third_party/blink/renderer/core/css/css_flip_revert_value.h"
 #include "third_party/blink/renderer/core/css/css_font_selector.h"
@@ -219,33 +222,53 @@ std::optional<CSSParserToken> GetAttrSubstitutionValue(
     const String& attribute_value,
     const CSSAttrType& attribute_type,
     const CSSParserContext& context) {
-  if (attribute_value.IsNull()) {
+  // Unknown attr() types should be handled during parse time.
+  DCHECK(attribute_type.category != CSSAttrType::Category::kUnknown);
+
+  if (attribute_value.IsNull() ||
+      attribute_type.category == CSSAttrType::Category::kFrequency) {
+    // TODO(crbug.com/40320391): <frequency> is not yet supported in chrome.
     return std::nullopt;
   }
 
+  // For kString, the substitution value is the literal attribute value
+  // without any parsing or other processing.
+  // https://drafts.csswg.org/css-values-5/#attr-types
   if (attribute_type.category == CSSAttrType::Category::kString) {
     return CSSParserToken(kStringToken, attribute_value);
   }
 
+  CSSTokenizer tokenizer(attribute_value);
+  CSSParserTokenStream stream(tokenizer);
+
   std::optional<CSSSyntaxDefinition> syntax_definition =
       attribute_type.ConvertToCSSSyntaxDefinition();
-  if (!syntax_definition.has_value()) {
+  if (syntax_definition.has_value()) {
+    if (!syntax_definition->Parse(CSSTokenizedValue{range, attribute_value},
+                                  context, false)) {
+      return std::nullopt;
+    }
+  } else {
+    // <flex> has special handling because it's not supported
+    // by CSSSyntaxDefinition.
+    CHECK_EQ(attribute_type.category, CSSAttrType::Category::kFlex);
+    stream.ConsumeWhitespace();
+    CSSParserToken token = stream.ConsumeIncludingWhitespace();
+    if (!stream.AtEnd() || token.GetType() != kDimensionToken ||
+        token.GetUnitType() != CSSPrimitiveValue::UnitType::kFlex) {
+      return std::nullopt;
+    }
+    return token;
+  }
+
+  stream.ConsumeWhitespace();
+  CSSParserToken token = stream.ConsumeIncludingWhitespaceRaw();
+  if (!stream.AtEnd()) {
+    // Only single token is allowed, see
+    // https://drafts.csswg.org/css-values-5/#attr-notation.
     return std::nullopt;
   }
 
-  CSSTokenizer tokenizer(attribute_value);
-  auto tokens = tokenizer.TokenizeToEOF();
-  CSSParserTokenRange range(tokens);
-  if (!syntax_definition->Parse(CSSTokenizedValue{range, attribute_value},
-                                context, false)) {
-    return std::nullopt;
-  }
-
-  range.ConsumeWhitespace();
-  CSSParserToken token = range.ConsumeIncludingWhitespace();
-  if (!range.AtEnd()) {
-    return std::nullopt;
-  }
   if (attribute_type.category == CSSAttrType::Category::kDimensionUnit) {
     token.ConvertToDimensionWithUnit(
         CSSPrimitiveValue::UnitTypeToString(attribute_type.dimension_unit));
@@ -962,9 +985,23 @@ bool StyleCascade::TokenSequence::AppendFallback(const TokenSequence& sequence,
 
   base::span<const CSSParserToken> other_tokens(sequence.tokens_.begin(),
                                                 sequence.tokens_.end());
+  String new_text;
+
   StringView other_text = sequence.original_text_;
-  other_text =
+  StringView stripped_text =
       CSSVariableParser::StripTrailingWhitespaceAndComments(other_text);
+
+  StringView trailer = StringView(other_text, stripped_text.length());
+  if (IsAttrTainted(trailer)) {
+    // We stripped away the taint token from the fallback value,
+    // so add it back here. This is a somewhat slower path,
+    // but should be rare.
+    StringBuilder sb;
+    sb.Append(stripped_text);
+    sb.Append(GetCSSAttrTaintToken());
+    new_text = sb.ReleaseString();
+    stripped_text = new_text;
+  }
   while (!other_tokens.empty() &&
          other_tokens.front().GetType() == kWhitespaceToken) {
     other_tokens = other_tokens.subspan(1);
@@ -980,7 +1017,7 @@ bool StyleCascade::TokenSequence::AppendFallback(const TokenSequence& sequence,
   }
   tokens_.Append(other_tokens.data(),
                  static_cast<wtf_size_t>(other_tokens.size()));
-  original_text_.Append(other_text);
+  original_text_.Append(stripped_text);
 
   is_animation_tainted_ |= sequence.is_animation_tainted_;
   has_font_units_ |= sequence.has_font_units_;
@@ -1704,6 +1741,14 @@ bool StyleCascade::ResolveArgInto(CSSParserTokenStream& stream,
                            FunctionContext{}, out);
 }
 
+// Mark the value as tainted, so that ConsumeUrl() and similar can check
+// that they should not create URLs from it. Note that we do this _after_
+// the value, not before, so that we are sure that lookahead does not
+// accidentally consume it.
+void StyleCascade::AppendTaintToken(TokenSequence& out) {
+  out.Append(CSSParserToken(kCommentToken), GetCSSAttrTaintToken());
+}
+
 bool StyleCascade::ResolveAttrInto(CSSParserTokenStream& stream,
                                    CascadeResolver& resolver,
                                    CSSTokenizer* parent_tokenizer,
@@ -1725,6 +1770,7 @@ bool StyleCascade::ResolveAttrInto(CSSParserTokenStream& stream,
       return false;
     }
     if (!substitution_value.has_value()) {
+      AppendTaintToken(out);
       return out.AppendFallback(fallback, CSSVariableData::kMaxVariableBytes);
     }
   }
@@ -1735,6 +1781,7 @@ bool StyleCascade::ResolveAttrInto(CSSParserTokenStream& stream,
     // the empty string if omitted.
     // https://drafts.csswg.org/css-values-5/#funcdef-attr
     out.Append(CSSParserToken(kStringToken, g_empty_atom), g_empty_atom);
+    AppendTaintToken(out);
     return true;
   }
 
@@ -1742,6 +1789,7 @@ bool StyleCascade::ResolveAttrInto(CSSParserTokenStream& stream,
     StringBuilder serialized_substitution_value;
     substitution_value->Serialize(serialized_substitution_value);
     out.Append(*substitution_value, serialized_substitution_value);
+    AppendTaintToken(out);
     return true;
   }
 

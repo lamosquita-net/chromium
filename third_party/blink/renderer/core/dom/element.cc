@@ -8070,10 +8070,35 @@ LayoutObject* Element::PseudoElementLayoutObject(PseudoId pseudo_id) const {
 
 bool Element::PseudoElementStylesDependOnFontMetrics() const {
   const ComputedStyle* style = GetComputedStyle();
+  const ElementRareDataVector* rare_data = GetElementRareData();
+  if (style && rare_data &&
+      rare_data->ScrollbarPseudoElementStylesDependOnFontMetrics()) {
+    return true;
+  }
+
+  auto func = [](const ComputedStyle& style) {
+    return style.DependsOnFontMetrics();
+  };
+  return PseudoElementStylesDependOnFunc(func);
+}
+
+bool Element::PseudoElementStylesDependOnAttr() const {
+  DCHECK(RuntimeEnabledFeatures::CSSAdvancedAttrFunctionEnabled());
+
+  auto func = [](const ComputedStyle& style) {
+    return style.HasAttrFunction();
+  };
+  return PseudoElementStylesDependOnFunc(func);
+}
+
+template <typename Functor>
+bool Element::PseudoElementStylesDependOnFunc(Functor& func) const {
+  const ComputedStyle* style = GetComputedStyle();
   if (!style) {
     return false;
   }
-  if (style->CachedPseudoElementStylesDependOnFontMetrics()) {
+
+  if (style->HasCachedPseudoElementStyle(func)) {
     return true;
   }
 
@@ -8085,10 +8110,6 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
     return false;
   }
 
-  if (rare_data->ScrollbarPseudoElementStylesDependOnFontMetrics()) {
-    return true;
-  }
-
   // Note that |HasAnyPseudoElementStyles()| counts public pseudo elements only.
   // ::-webkit-scrollbar-*  are internal, and hence are not counted. So we must
   // perform this check after checking scrollbar pseudo element styles.
@@ -8097,7 +8118,7 @@ bool Element::PseudoElementStylesDependOnFontMetrics() const {
   }
 
   for (PseudoElement* pseudo_element : rare_data->GetPseudoElements()) {
-    if (pseudo_element->GetComputedStyle()->DependsOnFontMetrics()) {
+    if (func(*pseudo_element->GetComputedStyle())) {
       return true;
     }
   }
