@@ -326,7 +326,7 @@
     },
     {
       name: "AnimationProgressAPI",
-      status: "test",
+      status: "stable",
     },
     {
       name: "AnimationWorklet",
@@ -3734,9 +3734,9 @@
       status: "stable",
     },
     {
-      // See crbug.com/41321247
+      // See crbug.com/41321247 and crbug.com/376370642
       name: "ScheduleSelectionChangeOnBackspace",
-      status: "stable",
+      status: {"Android": "", "default": "stable"},
     },
     {
       // https://wicg.github.io/webcomponents/proposals/Scoped-Custom-Element-Registries

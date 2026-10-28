@@ -152,8 +152,8 @@ class CORE_EXPORT Animation : public EventTarget,
 
   std::optional<AnimationTimeDelta> UnlimitedCurrentTime() const;
 
-  // https://drafts.csswg.org/web-animations-2/#the-progress-of-an-animation
-  std::optional<double> progress() const;
+  // https://drafts.csswg.org/web-animations-2/#the-overall-progress-of-an-animation
+  std::optional<double> overallProgress() const;
 
   // https://w3.org/TR/web-animations-1/#play-states
   String PlayStateString() const;
