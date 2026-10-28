@@ -210,8 +210,11 @@ bool LookupAlgorithmIdByName(const String& algorithm_name,
 
   id = it->algorithm_id;
 
-  if (id == kWebCryptoAlgorithmIdEd25519 || id == kWebCryptoAlgorithmIdX25519) {
+  if (id == kWebCryptoAlgorithmIdX25519) {
     return RuntimeEnabledFeatures::WebCryptoCurve25519Enabled();
+  }
+  if (id == kWebCryptoAlgorithmIdEd25519) {
+    return RuntimeEnabledFeatures::WebCryptoEd25519Enabled();
   }
 
   return true;

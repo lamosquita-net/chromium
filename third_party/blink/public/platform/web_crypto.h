@@ -269,7 +269,7 @@ class WebCrypto {
   virtual void DeriveBits(
       const WebCryptoAlgorithm&,
       const WebCryptoKey&,
-      unsigned length,
+      std::optional<unsigned> length,
       WebCryptoResult result,
       scoped_refptr<base::SingleThreadTaskRunner> task_runner) {
     result.CompleteWithError(kWebCryptoErrorTypeNotSupported, "");

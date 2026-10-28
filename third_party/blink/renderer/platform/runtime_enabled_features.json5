@@ -4291,7 +4291,7 @@
       // disabling automatic size adjustments when non-auto values are used.
       // See: https://crbug.com/340389272.
       name: "TextSizeAdjustImprovements",
-      status: "stable",
+      status: "experimental",
     },
     {
       // Support for the timeline-scope property.
@@ -4759,6 +4759,10 @@
     },
     {
       name: "WebCryptoCurve25519",
+      status: "stable",
+    },
+    {
+      name: "WebCryptoEd25519",
       status: "experimental",
     },
     {
