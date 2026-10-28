@@ -2460,10 +2460,17 @@ void AXObject::SerializeComputedDetailsRelation(
   // Add aria-details for a popover invoker.
   // TODO(https://crbug.com/1426607) Support this for non-plain hint popovers.
   if (AXObject* popover = GetTargetPopoverForInvoker()) {
-    node_data->AddIntListAttribute(
-        ax::mojom::blink::IntListAttribute::kDetailsIds,
-        {static_cast<int32_t>(popover->AXObjectID())});
-    return;
+    if (!GetElement()->IsDescendantOrShadowDescendantOf(
+            popover->GetElement())) {
+      // Only expose a details relationship if the trigger button isn't
+      // contained within the popover itself (shadow-including). E.g. a close
+      // button within the popover should not get a details relationship back
+      // to the containing popover.
+      node_data->AddIntListAttribute(
+          ax::mojom::blink::IntListAttribute::kDetailsIds,
+          {static_cast<int32_t>(popover->AXObjectID())});
+      return;
+    }
   }
 
   // Add aria-details for the element anchored to this object.

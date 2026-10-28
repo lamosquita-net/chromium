@@ -301,6 +301,9 @@ class CORE_EXPORT HTMLElement : public Element {
   void MaybeQueuePopoverHideEvent();
   static void HoveredElementChanged(Element* old_element, Element* new_element);
 
+  void SetImplicitAnchor(Element* element);
+  Element* implicitAnchor() const;
+
   void SetPopoverOwnerSelectListElement(HTMLSelectListElement* element);
   HTMLSelectListElement* popoverOwnerSelectListElement() const;
 

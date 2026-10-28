@@ -10225,6 +10225,9 @@ Element* Element::ImplicitAnchorElement() const {
       DCHECK(RuntimeEnabledFeatures::HTMLAnchorAttributeEnabled());
       return anchor;
     }
+    if (Element* implicit_anchor = html_element->implicitAnchor()) {
+      return implicit_anchor;
+    }
     if (Element* select_list = html_element->popoverOwnerSelectListElement()) {
       return select_list;
     }

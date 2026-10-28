@@ -35,6 +35,7 @@
 #include "third_party/blink/public/mojom/forms/form_control_type.mojom-blink.h"
 #include "third_party/blink/renderer/bindings/core/v8/js_event_handler_for_content_attribute.h"
 #include "third_party/blink/renderer/bindings/core/v8/v8_binding_for_core.h"
+#include "third_party/blink/renderer/bindings/core/v8/v8_show_popover_options.h"
 #include "third_party/blink/renderer/bindings/core/v8/v8_toggle_popover_options.h"
 #include "third_party/blink/renderer/bindings/core/v8/v8_union_boolean_togglepopoveroptions.h"
 #include "third_party/blink/renderer/bindings/core/v8/v8_union_stringlegacynulltoemptystring_trustedscript.h"
@@ -1246,6 +1247,9 @@ void HTMLElement::UpdatePopoverAttribute(const AtomicString& value) {
   }
   if (type == PopoverValueType::kNone) {
     if (HasPopoverAttribute()) {
+      if (RuntimeEnabledFeatures::PopoverAnchorRelationshipsEnabled()) {
+        SetImplicitAnchor(nullptr);
+      }
       // If the popover attribute is being removed, remove the PopoverData.
       RemovePopoverData();
     }
@@ -1404,17 +1408,7 @@ void MarkPopoverInvokersDirty(const HTMLElement& popover) {
 }  // namespace
 
 bool HTMLElement::togglePopover(ExceptionState& exception_state) {
-  if (popoverOpen()) {
-    hidePopover(exception_state);
-  } else {
-    ShowPopoverInternal(/*invoker*/ nullptr, &exception_state);
-  }
-
-  if (GetPopoverData()) {
-    return GetPopoverData()->visibilityState() ==
-           PopoverVisibilityState::kShowing;
-  }
-  return false;
+  return togglePopover(nullptr, exception_state);
 }
 
 // The `force` parameter to `togglePopover()` is specified here:
@@ -1425,22 +1419,30 @@ bool HTMLElement::togglePopover(ExceptionState& exception_state) {
 //  - If `force` is provided, and false, then ensure the popover is *hidden*.
 //    So if the popover is already hidden, do nothing.
 //  - If `force` is not provided, just toggle the popover's current state.
-// FlyWeb (level 130): the TogglePopoverOptions dictionary is accepted as in
-// Chromium 130 (8010721fc51), but, as upstream, only read with
-// PopoverAnchorRelationships, which is experimental upstream and not in the
-// 128: so the dictionary (force and invoker) is type-checked and ignored.
 bool HTMLElement::togglePopover(
     V8UnionBooleanOrTogglePopoverOptions* options_or_force,
     ExceptionState& exception_state) {
   bool popover_was_open = popoverOpen();
   bool force = !popover_was_open;
+  Element* invoker;
   if (options_or_force && options_or_force->IsBoolean()) {
     force = options_or_force->GetAsBoolean();
+    invoker = nullptr;
+  } else {
+    TogglePopoverOptions* options =
+        (options_or_force &&
+         RuntimeEnabledFeatures::PopoverAnchorRelationshipsEnabled())
+            ? options_or_force->GetAsTogglePopoverOptions()
+            : nullptr;
+    if (options && options->hasForce()) {
+      force = options->force();
+    }
+    invoker = (options && options->hasSource()) ? options->source() : nullptr;
   }
   if (!force && popover_was_open) {
     hidePopover(exception_state);
   } else if (force && !popover_was_open) {
-    ShowPopoverInternal(/*invoker*/ nullptr, &exception_state);
+    ShowPopoverInternal(invoker, &exception_state);
   } else {
     // We had `force`, and the state already lined up. Just make sure to still
     // throw exceptions in other cases, e.g. disconnected element or no popover
@@ -1449,19 +1451,21 @@ bool HTMLElement::togglePopover(
                    /*include_event_handler_text=*/false,
                    /*document=*/nullptr);
   }
-
   return GetPopoverData() && GetPopoverData()->visibilityState() ==
                                  PopoverVisibilityState::kShowing;
 }
 
 void HTMLElement::showPopover(ExceptionState& exception_state) {
-  ShowPopoverInternal(/*invoker*/ nullptr, &exception_state);
+  return showPopover(nullptr, exception_state);
 }
-
 void HTMLElement::showPopover(ShowPopoverOptions* options,
                               ExceptionState& exception_state) {
-  // FlyWeb (level 130): `invoker` is ignored, see togglePopover().
-  ShowPopoverInternal(/*invoker*/ nullptr, &exception_state);
+  if (!RuntimeEnabledFeatures::PopoverAnchorRelationshipsEnabled()) {
+    options = nullptr;
+  }
+  Element* invoker =
+      options && options->hasSource() ? options->source() : nullptr;
+  ShowPopoverInternal(invoker, &exception_state);
 }
 
 void HTMLElement::ShowPopoverInternal(Element* invoker,
@@ -1610,6 +1614,9 @@ void HTMLElement::ShowPopoverInternal(Element* invoker,
   // Make the popover match `:popover-open` and remove `display:none` styling:
   GetPopoverData()->setVisibilityState(PopoverVisibilityState::kShowing);
   GetPopoverData()->setInvoker(invoker);
+  if (RuntimeEnabledFeatures::PopoverAnchorRelationshipsEnabled()) {
+    SetImplicitAnchor(invoker);
+  }
   PseudoStateChanged(CSSSelector::kPseudoPopoverOpen);
   CHECK(!original_document.AllOpenPopovers().Contains(this));
   original_document.AllOpenPopovers().insert(this);
@@ -1770,7 +1777,10 @@ void HTMLElement::HideAllPopoversUntil(
 
   // Now check the auto stack.
   auto& auto_stack = document.PopoverAutoStack();
-  CHECK(auto_stack.Contains(endpoint));
+  if (!auto_stack.Contains(endpoint)) {
+    // Event handlers from hint popovers could have closed our endpoint.
+    return;
+  }
   hide_stack_until(endpoint, auto_stack);
 }
 
@@ -2393,6 +2403,23 @@ void HTMLElement::SetPopoverOwnerSelectListElement(
 HTMLSelectListElement* HTMLElement::popoverOwnerSelectListElement() const {
   return GetPopoverData() ? GetPopoverData()->ownerSelectListElement()
                           : nullptr;
+}
+
+void HTMLElement::SetImplicitAnchor(Element* element) {
+  CHECK(RuntimeEnabledFeatures::PopoverAnchorRelationshipsEnabled());
+  CHECK(HasPopoverAttribute());
+  if (auto* old_implicit_anchor =
+          GetPopoverData() ? GetPopoverData()->implicitAnchor() : nullptr) {
+    old_implicit_anchor->DecrementImplicitlyAnchoredElementCount();
+  }
+  GetPopoverData()->setImplicitAnchor(element);
+  if (element) {
+    element->IncrementImplicitlyAnchoredElementCount();
+  }
+}
+
+Element* HTMLElement::implicitAnchor() const {
+  return GetPopoverData() ? GetPopoverData()->implicitAnchor() : nullptr;
 }
 
 bool HTMLElement::DispatchFocusEvent(

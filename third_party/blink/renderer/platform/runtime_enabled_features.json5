@@ -2294,7 +2294,7 @@
     {
       // TODO(crbug.com/1416284): Enables popover=hint functionality.
       name: "HTMLPopoverHint",
-      status: "experimental",
+      status: "stable",
     },
     {
       name: "HTMLSearchElement",
@@ -3288,6 +3288,21 @@
     },
     {
       name: "PointerEventTargetsInEventLists",
+      status: "stable",
+    },
+    // TODO(crbug.com/364669918) This enables these two new functionalities:
+    // 1. add an imperative way to set invoker relationships between popovers.
+    // 2. invoker relationships create implicit anchor element references.
+    // This was shipped in M133, and this flag can be removed in M135.
+    {
+      name: "PopoverAnchorRelationships",
+      status: "stable",
+    },
+    // TODO(crbug.com/379241451): This controls the behavior when a popover is
+    // nested inside an invoker button. This was shipped in M133, and this flag
+    // can be removed in M135.
+    {
+      name: "PopoverButtonNestingBehavior",
       status: "stable",
     },
     {

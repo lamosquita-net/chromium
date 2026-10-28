@@ -553,6 +553,19 @@ void HTMLFormControlElement::DefaultEventHandler(Event& event) {
     auto* command_target = commandForElement();
     auto popover = popoverTargetElement();
 
+    bool event_target_was_nested_popover = false;
+    if (popover.popover &&
+        RuntimeEnabledFeatures::PopoverButtonNestingBehaviorEnabled()) {
+      if (auto* target_node = event.target()->ToNode()) {
+        bool button_is_ancestor_of_popover =
+            IsShadowIncludingAncestorOf(*popover.popover);
+        event_target_was_nested_popover =
+            button_is_ancestor_of_popover &&
+            popover.popover->IsShadowIncludingInclusiveAncestorOf(
+                *target_node);
+      }
+    }
+
     // invoketarget & popovertarget shouldn't be combined, so warn.
     if (command_target && popover.popover) {
       AddConsoleMessage(
@@ -577,7 +590,9 @@ void HTMLFormControlElement::DefaultEventHandler(Event& event) {
         }
       }
 
-    } else if (popover.popover) {
+    } else if (popover.popover && !event_target_was_nested_popover) {
+      // A click inside a popover nested in its own invoker button does not
+      // toggle it again (PopoverButtonNestingBehavior, 435f43c75e6).
       // Buttons with a popovertarget will invoke popovers, which is the same
       // logic as an invoketarget with an appropriate command (e.g.
       // togglePopover), sans the `CommandEvent` dispatch. Calling
