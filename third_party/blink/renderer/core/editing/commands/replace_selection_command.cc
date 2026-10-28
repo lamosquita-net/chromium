@@ -1023,10 +1023,16 @@ void ReplaceSelectionCommand::MergeEndIfNeeded(EditingState* editing_state) {
     start_of_paragraph_to_move = CreateVisiblePosition(
         start_of_paragraph_to_move.ToPositionWithAffinity());
   }
-
-  MoveParagraph(start_of_paragraph_to_move,
-                EndOfParagraph(start_of_paragraph_to_move), destination,
-                editing_state);
+  if (RuntimeEnabledFeatures::AllowSkippingEditingBoundaryToMergeEndEnabled()) {
+    MoveParagraph(
+        start_of_paragraph_to_move,
+        EndOfParagraph(start_of_paragraph_to_move, kCanSkipOverEditingBoundary),
+        destination, editing_state);
+  } else {
+    MoveParagraph(start_of_paragraph_to_move,
+                  EndOfParagraph(start_of_paragraph_to_move), destination,
+                  editing_state);
+  }
   if (editing_state->IsAborted())
     return;
 
@@ -1392,7 +1398,14 @@ void ReplaceSelectionCommand::DoApply(EditingState* editing_state) {
           split_start = insertion_pos.ComputeContainerNode();
         Node* node_to_split_to =
             SplitTreeToNode(split_start, element_to_split_to->parentNode());
-        insertion_pos = Position::InParentBeforeNode(*node_to_split_to);
+        if (RuntimeEnabledFeatures::
+                ComputeInsertionPositionBasedOnAnchorTypeEnabled() &&
+            (insertion_pos.IsAfterChildren() ||
+             insertion_pos.IsAfterAnchor())) {
+          insertion_pos = Position::InParentAfterNode(*node_to_split_to);
+        } else {
+          insertion_pos = Position::InParentBeforeNode(*node_to_split_to);
+        }
       }
     }
   }
@@ -1500,8 +1513,15 @@ void ReplaceSelectionCommand::DoApply(EditingState* editing_state) {
   }
 
   GetDocument().UpdateStyleAndLayout(DocumentUpdateReason::kEditing);
+
+  bool is_root_display_inline = false;
+  if (RuntimeEnabledFeatures::RemovePlaceholderBRForDisplayInlineEnabled()) {
+    is_root_display_inline =
+        current_root && current_root->GetComputedStyle() &&
+        current_root->GetComputedStyle()->IsDisplayInlineType();
+  }
   if (end_br &&
-      (plain_text_fragment ||
+      (plain_text_fragment || is_root_display_inline ||
        (ShouldRemoveEndBR(end_br, original_vis_pos_before_end_br) &&
         !(fragment.HasInterchangeNewlineAtEnd() && selection_is_plain_text)))) {
     ContainerNode* parent = end_br->parentNode();
