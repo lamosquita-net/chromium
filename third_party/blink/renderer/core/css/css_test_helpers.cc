@@ -182,8 +182,9 @@ void DeclareProperty(Document& document,
 
 CSSVariableData* CreateVariableData(String s) {
   bool is_animation_tainted = false;
+  bool is_attr_tainted = false;
   bool needs_variable_resolution = false;
-  return CSSVariableData::Create(s, is_animation_tainted,
+  return CSSVariableData::Create(s, is_animation_tainted, is_attr_tainted,
                                  needs_variable_resolution);
 }
 
@@ -229,10 +230,7 @@ const CSSValue* ParseValue(Document& document, String syntax, String value) {
     return nullptr;
   }
   const auto* context = MakeGarbageCollected<CSSParserContext>(document);
-  CSSTokenizer tokenizer(value);
-  auto tokens = tokenizer.TokenizeToEOF();
-  CSSParserTokenRange range(tokens);
-  return syntax_definition->Parse(CSSTokenizedValue{range, value}, *context,
+  return syntax_definition->Parse(value, *context,
                                   /* is_animation_tainted */ false);
 }
 

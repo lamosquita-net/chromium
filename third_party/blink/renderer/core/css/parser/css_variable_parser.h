@@ -24,7 +24,7 @@ class CORE_EXPORT CSSVariableParser {
  public:
   // TODO(sesse): Get rid of this (and then a lot of utility functions can go
   // away, too).
-  static bool ContainsValidVariableReferences(CSSParserTokenRange,
+  static bool ContainsValidVariableReferences(StringView,
                                               const ExecutionContext* context);
 
   // TODO(sesse): Same.
@@ -32,7 +32,7 @@ class CORE_EXPORT CSSVariableParser {
                                                     bool is_animation_tainted,
                                                     const CSSParserContext&);
   static CSSUnparsedDeclarationValue* ParseDeclarationValue(
-      const CSSTokenizedValue&,
+      StringView,
       bool is_animation_tainted,
       const CSSParserContext&);
 
@@ -76,7 +76,7 @@ class CORE_EXPORT CSSVariableParser {
   //
   // https://drafts.css-houdini.org/css-properties-values-api-1/#universal-syntax-definition
   static CSSUnparsedDeclarationValue* ParseUniversalSyntaxValue(
-      CSSTokenizedValue,
+      StringView,
       const CSSParserContext&,
       bool is_animation_tainted);
 

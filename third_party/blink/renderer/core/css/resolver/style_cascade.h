@@ -5,9 +5,10 @@
 #ifndef THIRD_PARTY_BLINK_RENDERER_CORE_CSS_RESOLVER_STYLE_CASCADE_H_
 #define THIRD_PARTY_BLINK_RENDERER_CORE_CSS_RESOLVER_STYLE_CASCADE_H_
 
+#include <utility>
+
 #include "third_party/blink/renderer/core/animation/interpolation.h"
 #include "third_party/blink/renderer/core/core_export.h"
-#include "third_party/blink/renderer/core/css/css_attr_type.h"
 #include "third_party/blink/renderer/core/css/css_property_name.h"
 #include "third_party/blink/renderer/core/css/css_property_value.h"
 #include "third_party/blink/renderer/core/css/parser/css_parser_token.h"
@@ -273,12 +274,26 @@ class CORE_EXPORT StyleCascade {
     bool IsAnimationTainted() const { return is_animation_tainted_; }
     String OriginalText() { return original_text_.ToString(); }
 
-    bool Append(CSSVariableData* data,
+    bool Append(StringView str,
+                bool is_attr_tainted,
                 wtf_size_t byte_limit = std::numeric_limits<wtf_size_t>::max());
-    void Append(const CSSParserToken&, StringView string);
+    bool Append(CSSVariableData* data,
+                bool is_attr_tainted,
+                wtf_size_t byte_limit = std::numeric_limits<wtf_size_t>::max());
+    bool Append(const CSSValue* data,
+                bool is_attr_tainted,
+                wtf_size_t byte_limit = std::numeric_limits<wtf_size_t>::max());
+    void Append(const CSSParserToken&, bool is_attr_tainted, StringView string);
 
     // NOTE: Strips trailing whitespace.
-    bool AppendFallback(const TokenSequence&, wtf_size_t byte_limit);
+    bool AppendFallback(const TokenSequence&,
+                        bool is_attr_tainted,
+                        wtf_size_t byte_limit);
+
+    const Vector<std::pair<wtf_size_t, wtf_size_t>>* GetAttrTaintedRanges()
+        const {
+      return &attr_taint_ranges_;
+    }
 
     CSSVariableData* BuildVariableData();
 
@@ -311,6 +326,8 @@ class CORE_EXPORT StyleCascade {
     bool has_font_units_ = false;
     bool has_root_font_units_ = false;
     bool has_line_height_units_ = false;
+    // Attr tainted intervals [start, end).
+    Vector<std::pair<wtf_size_t, wtf_size_t>> attr_taint_ranges_;
   };
 
   // Resolving Values
@@ -418,13 +435,6 @@ class CORE_EXPORT StyleCascade {
                        const CSSParserContext&,
                        TokenSequence&);
 
-  void AppendTaintToken(TokenSequence& out);
-
-  // Check if <declaration-value> type is equal to <attr-type>.
-  bool ValidateAttrFallback(TokenSequence& sequence,
-                            CSSAttrType attr_type,
-                            const CSSParserContext& context);
-
   // NOTE: The FunctionContext object must be the _caller's_ function context,
   // not the one the function itself sets up. This is because it is used to
   // resolve arguments given to this function. See comment within the
@@ -460,7 +470,7 @@ class CORE_EXPORT StyleCascade {
   // the declaration is "invalid at computed-value time".'
   //
   // https://drafts.css-houdini.org/css-properties-values-api-1/#fallbacks-in-var-references
-  bool ValidateFallback(const CustomProperty&, CSSTokenizedValue) const;
+  bool ValidateFallback(const CustomProperty&, StringView) const;
   // Marks the CustomProperty as referenced by something. Needed to avoid
   // animating these custom properties on the compositor.
   void MarkIsReferenced(const CSSProperty& referencer,

@@ -15,7 +15,6 @@
 
 #include "third_party/blink/renderer/core/css/counter_style_map.h"
 #include "third_party/blink/renderer/core/css/css_appearance_auto_base_select_value_pair.h"
-#include "third_party/blink/renderer/core/css/css_attr_value_tainting.h"
 #include "third_party/blink/renderer/core/css/css_axis_value.h"
 #include "third_party/blink/renderer/core/css/css_basic_shape_values.h"
 #include "third_party/blink/renderer/core/css/css_border_image.h"
@@ -725,17 +724,17 @@ bool AddCSSPaintArgument(
     HeapVector<Member<CSSVariableData>>* const variable_data,
     const CSSParserContext& context) {
   CSSParserTokenRange token_range(tokens);
+  // CSSParserTokenRange doesn't store precise location information about
+  // where each token started or ended, so we don't have the actual original
+  // string. However, for CSS paint arguments, it's not a huge issue
+  // if we get normalized whitespace etc., so we work around it by creating
+  // a fake “original text” by serializing the tokens back.
+  String text = token_range.Serialize();
   if (CSSVariableParser::ContainsValidVariableReferences(
-          token_range, context.GetExecutionContext())) {
+          text, context.GetExecutionContext())) {
     return false;
   }
   if (!token_range.AtEnd()) {
-    // CSSParserTokenRange doesn't store precise location information about
-    // where each token started or ended, so we don't have the actual original
-    // string. However, for CSS paint arguments, it's not a huge issue
-    // if we get normalized whitespace etc., so we work around it by creating
-    // a fake “original text” by serializing the tokens back.
-    String text = token_range.Serialize();
     if (CSSVariableData* unparsed_css_variable_data =
             CSSVariableData::Create({token_range, text}, false, false)) {
       variable_data->push_back(unparsed_css_variable_data);
@@ -2046,7 +2045,7 @@ CSSParserToken ConsumeUrlAsToken(CSSParserTokenStream& stream,
     return CSSParserToken(kEOFToken);
   }
   wtf_size_t value_end_offset = stream.LookAheadOffset();
-  if (IsAttrTainted(stream, value_start_offset, value_end_offset)) {
+  if (stream.IsAttrTainted(value_start_offset, value_end_offset)) {
     return CSSParserToken(kEOFToken);
   }
   return IsFetchRestricted(token.Value(), context)
@@ -3855,7 +3854,7 @@ CSSValue* ConsumeImage(
     String uri_string = ConsumeStringAsString(stream);
     if (!uri_string.IsNull()) {
       wtf_size_t value_end_offset = stream.LookAheadOffset();
-      if (IsAttrTainted(stream, value_start_offset, value_end_offset)) {
+      if (stream.IsAttrTainted(value_start_offset, value_end_offset)) {
         // https://drafts.csswg.org/css-values-5/#attr-security
         // “Additionally, attr() is not allowed to be used in any <url> value,
         // whether directly or indirectly. Doing so makes the property it’s used

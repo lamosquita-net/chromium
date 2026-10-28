@@ -184,12 +184,8 @@ void CustomProperty::ApplyValue(StyleResolverState& state,
   if (!registered_value) {
     DCHECK(declaration);
     CSSVariableData& data = *declaration->VariableDataValue();
-    CSSTokenizer tokenizer(data.OriginalText());
-    Vector<CSSParserToken, 32> tokens = tokenizer.TokenizeToEOF();
-    CSSTokenizedValue tokenized_value{CSSParserTokenRange(tokens),
-                                      data.OriginalText()};
     registered_value =
-        Parse(tokenized_value, *context, CSSParserLocalContext());
+        Parse(data.OriginalText(), *context, CSSParserLocalContext());
   }
 
   if (!registered_value) {
@@ -208,22 +204,17 @@ void CustomProperty::ApplyValue(StyleResolverState& state,
   // The substitution value is used for substituting var() references to
   // the custom property, and the computed value is generally used in other
   // cases (e.g. serialization).
-  //
-  // Note also that `registered_value` may be attr-tainted at this point.
-  // This is what we want when producing the substitution value,
-  // since any tainting must survive the substitution. However, the computed
-  // value should serialize without taint-tokens, hence we store an
-  // UntaintedCopy of `registered_value`.
-  //
-  // See also css_attr_tainting.h.
+
+  bool is_attr_tainted = declaration && declaration->VariableDataValue() &&
+                         declaration->VariableDataValue()->IsAttrTainted();
+
   registered_value = &StyleBuilderConverter::ConvertRegisteredPropertyValue(
       state, *registered_value, context);
   CSSVariableData* data =
       StyleBuilderConverter::ConvertRegisteredPropertyVariableData(
-          *registered_value, is_animation_tainted);
+          *registered_value, is_animation_tainted, is_attr_tainted);
   builder.SetVariableData(name_, data, is_inherited_property);
-  builder.SetVariableValue(name_, registered_value->UntaintedCopy(),
-                           is_inherited_property);
+  builder.SetVariableValue(name_, registered_value, is_inherited_property);
 }
 
 const CSSValue* CustomProperty::ParseSingleValue(
@@ -260,21 +251,21 @@ const CSSValue* CustomProperty::CSSValueFromComputedStyleInternal(
 }
 
 const CSSValue* CustomProperty::ParseUntyped(
-    const CSSTokenizedValue& value,
+    StringView text,
     const CSSParserContext& context,
     const CSSParserLocalContext& local_context) const {
   return CSSVariableParser::ParseDeclarationValue(
-      value, local_context.IsAnimationTainted(), context);
+      text, local_context.IsAnimationTainted(), context);
 }
 
 const CSSValue* CustomProperty::Parse(
-    CSSTokenizedValue value,
+    StringView text,
     const CSSParserContext& context,
     const CSSParserLocalContext& local_context) const {
   if (!registration_) {
-    return ParseUntyped(value, context, local_context);
+    return ParseUntyped(text, context, local_context);
   }
-  return registration_->Syntax().Parse(value, context,
+  return registration_->Syntax().Parse(text, context,
                                        local_context.IsAnimationTainted());
 }
 

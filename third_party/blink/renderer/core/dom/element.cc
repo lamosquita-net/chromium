@@ -7928,6 +7928,17 @@ PseudoElement* Element::UpdatePseudoElement(
           !PseudoElementLayoutObjectIsNeeded(
               pseudo_id, element->GetComputedStyle(), this)) {
         generate_pseudo = false;
+        // If the content property is relying on attr() we should add the
+        // originating element's ComputedStyle to the pseudo element style
+        // cache, so that when attribute value changes it will force style
+        // invalidation.
+        if (element->GetComputedStyle() &&
+            element->GetComputedStyle()->HasAttrFunction() &&
+            !GetComputedStyle()->GetCachedPseudoElementStyle(pseudo_id,
+                                                             g_null_atom)) {
+          GetComputedStyle()->AddCachedPseudoElementStyle(
+              element->GetComputedStyle(), pseudo_id, g_null_atom);
+        }
       }
     }
     if (!generate_pseudo) {
@@ -7965,6 +7976,15 @@ PseudoElement* Element::CreatePseudoElementIfNeeded(
   if (!PseudoElementLayoutObjectIsNeeded(pseudo_id, pseudo_style, this)) {
     GetElementRareData()->SetPseudoElement(pseudo_id, nullptr,
                                            view_transition_name);
+    // If the content property is relying on attr() we should add the
+    // originating element's ComputedStyle to the pseudo element style cache, so
+    // that when attribute value changes it will force style invalidation.
+    if (pseudo_style && pseudo_style->HasAttrFunction() &&
+        !GetComputedStyle()->GetCachedPseudoElementStyle(pseudo_id,
+                                                         g_null_atom)) {
+      GetComputedStyle()->AddCachedPseudoElementStyle(pseudo_style, pseudo_id,
+                                                      g_null_atom);
+    }
     return nullptr;
   }
 

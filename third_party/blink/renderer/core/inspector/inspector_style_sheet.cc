@@ -1347,16 +1347,11 @@ bool InspectorStyle::CheckRegisteredPropertySyntaxWithVarSubstitution(
     return false;
   }
 
-  CSSTokenizer tokenizer(property.value);
-  Vector<CSSParserToken, 32> tokens = tokenizer.TokenizeToEOF();
-  CSSTokenizedValue tokenized_value{CSSParserTokenRange(tokens),
-                                    property.value};
-
   PropertyRegistry empty_registry;
   CustomProperty p(atomic_name, &empty_registry);
 
   const CSSParserContext* parser_context = ParserContextForDocument(document);
-  const CSSValue* result = p.Parse(tokenized_value, *parser_context, {});
+  const CSSValue* result = p.Parse(property.value, *parser_context, {});
   if (!result) {
     return false;
   }
@@ -1370,13 +1365,7 @@ bool InspectorStyle::CheckRegisteredPropertySyntaxWithVarSubstitution(
   }
 
   // Now check the substitution result against the registered syntax.
-  String computed_text = computed_value->CssText();
-  CSSTokenizer computed_text_tokenizer(computed_text);
-  Vector<CSSParserToken, 32> computed_text_tokens =
-      computed_text_tokenizer.TokenizeToEOF();
-  CSSTokenizedValue tokenized_computed_value{
-      CSSParserTokenRange(computed_text_tokens), computed_text};
-  if (!registration->Syntax().Parse(tokenized_computed_value, *parser_context,
+  if (!registration->Syntax().Parse(computed_value->CssText(), *parser_context,
                                     false)) {
     return false;
   }
@@ -2306,12 +2295,9 @@ void InspectorStyleSheet::ParseText(const String& text) {
           if (!registration) {
             continue;
           }
-          CSSTokenizer tokenizer(property_source_data.value);
-          Vector<CSSParserToken, 32> tokens = tokenizer.TokenizeToEOF();
-          CSSTokenizedValue tokenized_value{CSSParserTokenRange(tokens),
-                                            property_source_data.value};
-          if (!registration->Syntax().Parse(
-                  tokenized_value, *style_sheet->ParserContext(), false)) {
+          if (!registration->Syntax().Parse(property_source_data.value,
+                                            *style_sheet->ParserContext(),
+                                            false)) {
             property_source_data.parsed_ok = false;
           }
         }

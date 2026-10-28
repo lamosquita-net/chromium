@@ -5,12 +5,17 @@
 #ifndef THIRD_PARTY_BLINK_RENDERER_CORE_CSS_PARSER_CSS_PARSER_TOKEN_STREAM_H_
 #define THIRD_PARTY_BLINK_RENDERER_CORE_CSS_PARSER_CSS_PARSER_TOKEN_STREAM_H_
 
+#include <algorithm>
+#include <utility>
+
 #include "base/auto_reset.h"
 #include "base/check_op.h"
 #include "third_party/blink/renderer/core/core_export.h"
 #include "third_party/blink/renderer/core/css/parser/css_parser_token_range.h"
 #include "third_party/blink/renderer/core/css/parser/css_tokenizer.h"
 #include "third_party/blink/renderer/platform/wtf/allocator/allocator.h"
+#include "third_party/blink/renderer/platform/wtf/vector.h"
+#include "third_party/blink/renderer/platform/wtf/wtf_size_t.h"
 
 namespace blink {
 
@@ -135,10 +140,32 @@ class CORE_EXPORT CSSParserTokenStream {
 
   explicit CSSParserTokenStream(CSSTokenizer& tokenizer)
       : tokenizer_(tokenizer), next_(kEOFToken) {}
+  // FlyWeb: upstream takes the text (96a736734d); the 128 stream reads from
+  // a CSSTokenizer.
+  CSSParserTokenStream(
+      CSSTokenizer& tokenizer,
+      const Vector<std::pair<wtf_size_t, wtf_size_t>>* attr_taint_ranges)
+      : tokenizer_(tokenizer),
+        next_(kEOFToken),
+        attr_taint_ranges_(attr_taint_ranges) {}
 
   CSSParserTokenStream(CSSParserTokenStream&&) = default;
   CSSParserTokenStream(const CSSParserTokenStream&) = delete;
   CSSParserTokenStream& operator=(const CSSParserTokenStream&) = delete;
+
+  bool IsAttrTainted(wtf_size_t start_offset, wtf_size_t end_offset) {
+    if (!attr_taint_ranges_) {
+      return false;
+    }
+    for (auto [tainted_start, tainted_end] : *attr_taint_ranges_) {
+      int64_t end = std::min(end_offset, tainted_end);
+      int64_t start = std::max(start_offset, tainted_start);
+      if (end - start > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   inline void EnsureLookAhead() {
     if (!HasLookAhead()) {
@@ -689,6 +716,8 @@ class CORE_EXPORT CSSParserTokenStream {
   wtf_size_t offset_ = 0;
   bool has_look_ahead_ = false;
   uint64_t boundaries_ = FlagForTokenType(kEOFToken);
+  // Attr tainted intervals [start, end).
+  const Vector<std::pair<wtf_size_t, wtf_size_t>>* attr_taint_ranges_ = nullptr;
 };
 
 }  // namespace blink

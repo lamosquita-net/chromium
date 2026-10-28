@@ -339,7 +339,8 @@ class StyleBuilderConverter {
 
   static CSSVariableData* ConvertRegisteredPropertyVariableData(
       const CSSValue&,
-      bool is_animation_tainted);
+      bool is_animation_tainted,
+      bool is_attr_tainted);
 
   static StyleAspectRatio ConvertAspectRatio(const StyleResolverState&,
                                              const CSSValue&);

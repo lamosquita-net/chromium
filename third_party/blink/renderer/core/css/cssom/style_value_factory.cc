@@ -338,7 +338,7 @@ CSSStyleValueVector StyleValueFactory::FromString(
 
   if ((property_id == CSSPropertyID::kVariable && !tokens.empty()) ||
       CSSVariableParser::ContainsValidVariableReferences(
-          range, parser_context->GetExecutionContext())) {
+          css_text, parser_context->GetExecutionContext())) {
     const auto* variable_data = CSSVariableData::Create(
         {range, StringView(css_text)}, false /* is_animation_tainted */,
         false /* needs variable resolution */);

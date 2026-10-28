@@ -7,7 +7,6 @@
 #include <optional>
 #include <utility>
 
-#include "third_party/blink/renderer/core/css/css_attr_value_tainting.h"
 #include "third_party/blink/renderer/core/css/css_string_value.h"
 #include "third_party/blink/renderer/core/css/css_syntax_component.h"
 #include "third_party/blink/renderer/core/css/css_unparsed_declaration_value.h"
@@ -169,9 +168,10 @@ std::optional<CSSSyntaxComponent> ConsumeSyntaxComponent(
   return CSSSyntaxComponent(syntax_type, ident, repeat);
 }
 
-const CSSValue* ConsumeSingleTypeInternal(const CSSSyntaxComponent& syntax,
-                                          CSSParserTokenStream& stream,
-                                          const CSSParserContext& context) {
+const CSSValue* ConsumeSingleType(const CSSSyntaxComponent& syntax,
+                                  CSSParserTokenStream& stream,
+                                  const CSSParserContext& context,
+                                  bool is_attr_tainted) {
   switch (syntax.GetType()) {
     case CSSSyntaxType::kIdent:
       if (stream.Peek().GetType() == kIdentToken &&
@@ -208,6 +208,9 @@ const CSSValue* ConsumeSingleTypeInternal(const CSSSyntaxComponent& syntax,
     case CSSSyntaxType::kImage:
       return css_parsing_utils::ConsumeImage(stream, context);
     case CSSSyntaxType::kUrl:
+      if (is_attr_tainted) {
+        return nullptr;
+      }
       return css_parsing_utils::ConsumeUrl(stream, context);
     case CSSSyntaxType::kInteger:
       return css_parsing_utils::ConsumeIntegerOrNumberCalc(stream, context);
@@ -234,37 +237,16 @@ const CSSValue* ConsumeSingleTypeInternal(const CSSSyntaxComponent& syntax,
   }
 }
 
-const CSSValue* TaintedCopyIfNeeded(const CSSValue* value) {
-  if (const auto* v = DynamicTo<CSSStringValue>(value)) {
-    return v->TaintedCopy();
-  }
-  // Only needed for CSSStringValue for now.
-  return value;
-}
-
-const CSSValue* ConsumeSingleType(const CSSSyntaxComponent& syntax,
-                                  CSSParserTokenStream& stream,
-                                  const CSSParserContext& context) {
-  wtf_size_t offset_before = stream.Offset();
-  const CSSValue* value = ConsumeSingleTypeInternal(syntax, stream, context);
-  if (value) {
-    stream.EnsureLookAhead();
-    wtf_size_t offset_after = stream.LookAheadOffset();
-    if (IsAttrTainted(stream.StringRangeAt(
-            offset_before, /* length */ offset_after - offset_before))) {
-      value = TaintedCopyIfNeeded(value);
-    }
-  }
-  return value;
-}
 const CSSValue* ConsumeSyntaxComponent(const CSSSyntaxComponent& syntax,
                                        CSSParserTokenStream& stream,
-                                       const CSSParserContext& context) {
+                                       const CSSParserContext& context,
+                                       bool is_attr_tainted) {
   // CSS-wide keywords are already handled by the CSSPropertyParser
   if (syntax.GetRepeat() == CSSSyntaxRepeat::kSpaceSeparated) {
     CSSValueList* list = CSSValueList::CreateSpaceSeparated();
     while (!stream.AtEnd()) {
-      const CSSValue* value = ConsumeSingleType(syntax, stream, context);
+      const CSSValue* value =
+          ConsumeSingleType(syntax, stream, context, is_attr_tainted);
       if (!value) {
         return nullptr;
       }
@@ -275,7 +257,8 @@ const CSSValue* ConsumeSyntaxComponent(const CSSSyntaxComponent& syntax,
   if (syntax.GetRepeat() == CSSSyntaxRepeat::kCommaSeparated) {
     CSSValueList* list = CSSValueList::CreateCommaSeparated();
     do {
-      const CSSValue* value = ConsumeSingleType(syntax, stream, context);
+      const CSSValue* value =
+          ConsumeSingleType(syntax, stream, context, is_attr_tainted);
       if (!value) {
         return nullptr;
       }
@@ -283,7 +266,8 @@ const CSSValue* ConsumeSyntaxComponent(const CSSSyntaxComponent& syntax,
     } while (css_parsing_utils::ConsumeCommaIncludingWhitespace(stream));
     return list->length() && stream.AtEnd() ? list : nullptr;
   }
-  const CSSValue* result = ConsumeSingleType(syntax, stream, context);
+  const CSSValue* result =
+      ConsumeSingleType(syntax, stream, context, is_attr_tainted);
   if (!stream.AtEnd()) {
     return nullptr;
   }
@@ -315,19 +299,20 @@ std::optional<CSSSyntaxDefinition> CSSSyntaxDefinition::Consume(
   return CSSSyntaxDefinition(std::move(syntax_components));
 }
 
-const CSSValue* CSSSyntaxDefinition::Parse(CSSTokenizedValue value,
+const CSSValue* CSSSyntaxDefinition::Parse(StringView text,
                                            const CSSParserContext& context,
-                                           bool is_animation_tainted) const {
+                                           bool is_animation_tainted,
+                                           bool is_attr_tainted) const {
   if (IsUniversal()) {
-    return CSSVariableParser::ParseUniversalSyntaxValue(value, context,
+    return CSSVariableParser::ParseUniversalSyntaxValue(text, context,
                                                         is_animation_tainted);
   }
   for (const CSSSyntaxComponent& component : syntax_components_) {
-    CSSTokenizer tokenizer(value.text);
+    CSSTokenizer tokenizer(text);
     CSSParserTokenStream stream(tokenizer);
     stream.ConsumeWhitespace();
-    if (const CSSValue* result =
-            ConsumeSyntaxComponent(component, stream, context)) {
+    if (const CSSValue* result = ConsumeSyntaxComponent(
+            component, stream, context, is_attr_tainted)) {
       return result;
     }
   }

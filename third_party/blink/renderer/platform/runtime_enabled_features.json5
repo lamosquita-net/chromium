@@ -853,6 +853,7 @@
       // and can be used in all properties.
       // https://drafts.csswg.org/css-values-4/#attr-notation
       name: "CSSAdvancedAttrFunction",
+      status: "stable",
     },
     {
       // Support for the anchor-scope property.
