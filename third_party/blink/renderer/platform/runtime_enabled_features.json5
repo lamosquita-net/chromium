@@ -4672,8 +4672,7 @@
     {
       name: "WebAssemblyJSStringBuiltins",
       origin_trial_feature_name: "WebAssemblyJSStringBuiltins",
-      status: "experimental",
-      base_feature: "none",
+      status: "stable",
     },
     // WebAuth is disabled on Android versions prior to N (7.0) due to lack of
     // supporting APIs, see runtime_features.cc.
