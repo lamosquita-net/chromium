@@ -552,7 +552,6 @@ constexpr static NameToPseudoStruct kPseudoTypeWithoutArgumentsMap[] = {
     {"backdrop", CSSSelector::kPseudoBackdrop},
     {"before", CSSSelector::kPseudoBefore},
     {"checked", CSSSelector::kPseudoChecked},
-    {"closed", CSSSelector::kPseudoClosed},
     {"corner-present", CSSSelector::kPseudoCornerPresent},
     {"cue", CSSSelector::kPseudoWebKitCustomElement},
     {"current", CSSSelector::kPseudoCurrent},
@@ -728,9 +727,8 @@ CSSSelector::PseudoType CSSSelector::NameToPseudoType(
     return CSSSelector::kPseudoUnknown;
   }
 
-  if ((match->type == CSSSelector::kPseudoOpen ||
-       match->type == CSSSelector::kPseudoClosed) &&
-      !RuntimeEnabledFeatures::CSSPseudoOpenClosedEnabled()) {
+  if (match->type == CSSSelector::kPseudoOpen &&
+      !RuntimeEnabledFeatures::CSSPseudoOpenEnabled()) {
     return CSSSelector::kPseudoUnknown;
   }
 

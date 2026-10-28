@@ -221,7 +221,16 @@ void FileInputType::OpenPopupView() {
                       ? WebFeature::kInputTypeFileSecureOriginOpenChooser
                       : WebFeature::kInputTypeFileInsecureOriginOpenChooser);
     chrome_client->OpenFileChooser(document.GetFrame(), NewFileChooser(params));
+
+    input.PseudoStateChanged(CSSSelector::kPseudoOpen);
   }
+}
+
+bool FileInputType::IsPickerVisible() const {
+  if (FileChooser* chooser = FileChooserOrNull()) {
+    return chooser->FrameOrNull();
+  }
+  return false;
 }
 
 void FileInputType::AdjustStyle(ComputedStyleBuilder& builder) {
@@ -458,6 +467,8 @@ void FileInputType::FilesChosen(FileChooserFileInfoList files,
   }
   if (HasConnectedFileChooser())
     DisconnectFileChooser();
+
+  GetElement().PseudoStateChanged(CSSSelector::kPseudoOpen);
 }
 
 LocalFrame* FileInputType::FrameOrNull() const {

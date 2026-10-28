@@ -82,6 +82,10 @@ AXObject* ColorChooserPopupUIController::RootAXObject(Element* popup_owner) {
   return popup_ ? popup_->RootAXObject(popup_owner) : nullptr;
 }
 
+bool ColorChooserPopupUIController::IsPickerVisible() const {
+  return popup_;
+}
+
 void ColorChooserPopupUIController::WriteDocument(SegmentedBuffer& data) {
   if (client_->ShouldShowSuggestions()) {
     WriteColorSuggestionPickerDocument(data);

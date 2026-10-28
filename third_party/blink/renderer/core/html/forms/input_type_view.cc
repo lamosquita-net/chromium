@@ -131,6 +131,10 @@ bool InputTypeView::HasOpenedPopup() const {
   return false;
 }
 
+bool InputTypeView::IsPickerVisible() const {
+  return false;
+}
+
 bool InputTypeView::NeedsShadowSubtree() const {
   return true;
 }
