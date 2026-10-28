@@ -3723,9 +3723,7 @@
     },
     {
       name: "SchedulerYield",
-      origin_trial_feature_name: "SchedulerYield",
-      origin_trial_allows_third_party: true,
-      status: "experimental",
+      status: "stable",
     },
     {
       // See crbug.com/41321247 and crbug.com/376370642
