@@ -18,10 +18,13 @@
 #include "third_party/blink/renderer/core/frame/local_frame.h"
 #include "third_party/blink/renderer/core/frame/settings.h"
 #include "third_party/blink/renderer/core/html/canvas/text_metrics.h"
+#include "third_party/blink/renderer/bindings/modules/v8/v8_canvas_rendering_context_2d_settings.h"
+#include "third_party/blink/renderer/bindings/modules/v8/v8_canvas_will_read_frequently.h"
 #include "third_party/blink/renderer/core/imagebitmap/image_bitmap.h"
 #include "third_party/blink/renderer/core/workers/worker_global_scope.h"
 #include "third_party/blink/renderer/core/workers/worker_settings.h"
 #include "third_party/blink/renderer/platform/bindings/exception_state.h"
+#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
 #include "third_party/blink/renderer/platform/fonts/text_run_paint_info.h"
 #include "third_party/blink/renderer/platform/graphics/canvas_resource_provider.h"
 #include "third_party/blink/renderer/platform/graphics/graphics_types.h"
@@ -137,6 +140,32 @@ void OffscreenCanvasRenderingContext2D::FinalizeFrame(FlushReason reason) {
   if (Host()) {
     Host()->FlushRecording(reason);
   }
+}
+
+// FlyWeb: 147011978a moves this into a helper built on the creation
+// attributes; the 128 builds it like CanvasRenderingContext2D does.
+CanvasRenderingContext2DSettings*
+OffscreenCanvasRenderingContext2D::getContextAttributes() const {
+  CanvasRenderingContext2DSettings* settings =
+      CanvasRenderingContext2DSettings::Create();
+  settings->setAlpha(CreationAttributes().alpha);
+  settings->setColorSpace(color_params_.GetColorSpaceAsString());
+  if (RuntimeEnabledFeatures::CanvasFloatingPointEnabled()) {
+    settings->setPixelFormat(color_params_.GetPixelFormatAsString());
+  }
+  settings->setDesynchronized(CreationAttributes().desynchronized);
+  switch (CreationAttributes().will_read_frequently) {
+    case CanvasContextCreationAttributesCore::WillReadFrequently::kTrue:
+      settings->setWillReadFrequently(V8CanvasWillReadFrequently::Enum::kTrue);
+      break;
+    case CanvasContextCreationAttributesCore::WillReadFrequently::kFalse:
+      settings->setWillReadFrequently(V8CanvasWillReadFrequently::Enum::kFalse);
+      break;
+    case CanvasContextCreationAttributesCore::WillReadFrequently::kUndefined:
+      settings->setWillReadFrequently(
+          V8CanvasWillReadFrequently::Enum::kUndefined);
+  }
+  return settings;
 }
 
 // BaseRenderingContext2D implementation

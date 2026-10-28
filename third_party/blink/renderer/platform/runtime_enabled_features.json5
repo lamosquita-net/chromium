@@ -1659,6 +1659,10 @@
       status: "stable",
     },
     {
+      name: "ExposeCSSFontFeatureValuesRule",
+      status: "stable",
+    },
+    {
       name: "ExposeRenderTimeNonTaoDelayedImage",
     },
     {
@@ -2220,7 +2224,7 @@
     },
     {
       name: "HighlightInheritance",
-      status: "experimental",
+      status: "stable",
     },
     {
       name: "HighlightPointerEvents",
@@ -2994,6 +2998,10 @@
     {
       name: "OffscreenCanvasCommit",
       status: "experimental",
+    },
+    {
+      name: "OffscreenCanvasGetContextAttributes",
+      status: "stable",
     },
     {
       name: "OmitBlurEventOnElementRemoval",

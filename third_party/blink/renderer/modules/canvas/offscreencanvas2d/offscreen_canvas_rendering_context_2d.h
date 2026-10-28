@@ -18,6 +18,7 @@
 
 namespace blink {
 
+class CanvasRenderingContext2DSettings;
 class CanvasResourceProvider;
 class ExceptionState;
 
@@ -79,6 +80,8 @@ class MODULES_EXPORT OffscreenCanvasRenderingContext2D final
     return static_cast<OffscreenCanvas*>(Host())->HasPlaceholderCanvas() &&
            !dirty_rect_for_commit_.isEmpty();
   }
+
+  CanvasRenderingContext2DSettings* getContextAttributes() const;
 
   // BaseRenderingContext2D implementation
   bool OriginClean() const final;
