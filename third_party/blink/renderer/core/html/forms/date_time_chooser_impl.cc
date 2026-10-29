@@ -43,6 +43,7 @@
 #include "third_party/blink/renderer/core/input_type_names.h"
 #include "third_party/blink/renderer/core/layout/layout_theme.h"
 #include "third_party/blink/renderer/core/page/chrome_client.h"
+#include "third_party/blink/renderer/core/page/page.h"
 #include "third_party/blink/renderer/core/page/page_popup.h"
 #include "third_party/blink/renderer/platform/language.h"
 #include "third_party/blink/renderer/platform/text/date_components.h"
@@ -55,22 +56,21 @@ DateTimeChooserImpl::DateTimeChooserImpl(
     LocalFrame* frame,
     DateTimeChooserClient* client,
     const DateTimeChooserParameters& parameters)
-    : frame_(frame),
+    : chrome_client_(&frame->GetPage()->GetChromeClient()),
       client_(client),
       popup_(nullptr),
       parameters_(&parameters),
       locale_(Locale::Create(parameters.locale)) {
   DCHECK(RuntimeEnabledFeatures::InputMultipleFieldsUIEnabled());
-  DCHECK(frame_);
   DCHECK(client_);
-  popup_ = frame_->View()->GetChromeClient()->OpenPagePopup(this);
+  popup_ = chrome_client_->OpenPagePopup(this);
   parameters_ = nullptr;
 }
 
 DateTimeChooserImpl::~DateTimeChooserImpl() = default;
 
 void DateTimeChooserImpl::Trace(Visitor* visitor) const {
-  visitor->Trace(frame_);
+  visitor->Trace(chrome_client_);
   visitor->Trace(client_);
   DateTimeChooser::Trace(visitor);
 }
@@ -78,7 +78,9 @@ void DateTimeChooserImpl::Trace(Visitor* visitor) const {
 void DateTimeChooserImpl::EndChooser() {
   if (!popup_)
     return;
-  frame_->View()->GetChromeClient()->ClosePagePopup(popup_);
+  if (chrome_client_) {
+    chrome_client_->ClosePagePopup(popup_);
+  }
 }
 
 AXObject* DateTimeChooserImpl::RootAXObject(Element* popup_owner) {
@@ -269,7 +271,7 @@ Element& DateTimeChooserImpl::OwnerElement() {
 }
 
 ChromeClient& DateTimeChooserImpl::GetChromeClient() {
-  return *frame_->View()->GetChromeClient();
+  return *chrome_client_;
 }
 
 Locale& DateTimeChooserImpl::GetLocale() {

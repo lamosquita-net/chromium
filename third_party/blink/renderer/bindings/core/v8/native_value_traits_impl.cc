@@ -120,6 +120,7 @@ ByteSpanWithInlineStorage& ByteSpanWithInlineStorage::operator=(
     span_ = base::make_span(inline_storage_, r.span_.size());
   } else {
     span_ = r.span_;
+    orig_buffer_for_detach_check_ = r.orig_buffer_for_detach_check_;
   }
   return *this;
 }

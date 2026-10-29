@@ -50,6 +50,15 @@ SelectionInDOMTree SelectionForUndoStep::AsSelection() const {
   if (IsNone()) {
     return SelectionInDOMTree();
   }
+
+  // Guard against concurrent DOM modifications that may have disconnected
+  // positions. This prevents crashes when JavaScript callbacks modify DOM
+  // during editing operations.
+  if (!anchor_.IsConnected() || !focus_.IsConnected()) {
+    // If positions are disconnected, return empty selection
+    return SelectionInDOMTree();
+  }
+
   return SelectionInDOMTree::Builder()
       .SetBaseAndExtent(anchor_, focus_)
       .SetAffinity(affinity_)

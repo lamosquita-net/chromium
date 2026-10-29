@@ -621,6 +621,12 @@ textarea::-internal-input-suggested {
   font-family: monospace !important;
 }
 
+textarea::-internal-input-suggested {
+    max-inline-size: 100%;
+    max-block-size: 100%;
+    overflow: hidden;
+}
+
 input[type="password" i] {
     -webkit-text-security: disc !important;
 }

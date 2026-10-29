@@ -13,6 +13,8 @@
 #include "base/containers/span.h"
 #include "base/memory/stack_allocated.h"
 #include "third_party/blink/renderer/core/core_export.h"
+#include "v8/include/v8-array-buffer.h"
+#include "v8/include/v8-local-handle.h"
 
 namespace blink {
 
@@ -30,14 +32,28 @@ class CORE_EXPORT ByteSpanWithInlineStorage {
   ByteSpanWithInlineStorage& operator=(const ByteSpanWithInlineStorage& r);
 
   void Assign(base::span<const uint8_t> span) { span_ = span; }
+  // Remembers the buffer the span points into. Converting a later argument,
+  // or the operation itself, may run script that detaches it (e.g.
+  // ArrayBuffer.prototype.transfer()); the span then points to freed
+  // memory, so as_span() returns an empty span instead (crbug 484946544,
+  // 490118036).
+  void MaybeSetArrayBuffer(v8::Local<v8::ArrayBuffer> array_buffer) {
+    orig_buffer_for_detach_check_ = array_buffer;
+  }
 
   // This class allows implicit conversion to span, because it's an internal
   // class tightly coupled to the bindings generator that knows how to use it.
   // Note rvalue conversion is explicitly disabled.
   // NOLINTNEXTLINE(google-explicit-constructor)
-  operator base::span<const uint8_t>() const& { return span_; }
+  operator base::span<const uint8_t>() const& { return as_span(); }
   operator base::span<const uint8_t>() const&& = delete;
-  const base::span<const uint8_t> as_span() const { return span_; }
+  const base::span<const uint8_t> as_span() const {
+    if (!orig_buffer_for_detach_check_.IsEmpty() &&
+        orig_buffer_for_detach_check_->WasDetached()) {
+      return {};
+    }
+    return span_;
+  }
 
   base::span<uint8_t, kInlineStorageSize> GetInlineStorage() {
     return inline_storage_;
@@ -46,6 +62,7 @@ class CORE_EXPORT ByteSpanWithInlineStorage {
  private:
   base::span<const uint8_t> span_;
   uint8_t inline_storage_[kInlineStorageSize];
+  v8::Local<v8::ArrayBuffer> orig_buffer_for_detach_check_;
 };
 
 template <typename T>
@@ -75,6 +92,9 @@ class SpanWithInlineStorage {
                            bytes.size() / sizeof(T));
   }
 
+  void MaybeSetArrayBuffer(v8::Local<v8::ArrayBuffer> array_buffer) {
+    bytes_.MaybeSetArrayBuffer(array_buffer);
+  }
   void Assign(base::span<const uint8_t> span) { bytes_.Assign(span); }
   base::span<uint8_t, ByteSpanWithInlineStorage::kInlineStorageSize>
   GetInlineStorage() {
@@ -97,6 +117,9 @@ class SpanOrVector {
   operator base::span<const T>() const&& = delete;
   const base::span<const T> as_span() const { return span_.as_span(); }
 
+  void MaybeSetArrayBuffer(v8::Local<v8::ArrayBuffer> array_buffer) {
+    span_.MaybeSetArrayBuffer(array_buffer);
+  }
   void Assign(base::span<const uint8_t> span) { span_.Assign(span); }
   void Assign(Vector<T> vec) {
     vector_ = std::move(vec);
