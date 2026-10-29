@@ -239,7 +239,7 @@ struct CSSGradientValue::GradientDesc {
 
 static void ReplaceColorHintsWithColorStops(
     Vector<GradientStop>& stops,
-    const HeapVector<CSSGradientColorStop, 2>& css_gradient_stops,
+    const HeapVector<CSSGradientColorStop, 1>& css_gradient_stops,
     Color::ColorSpace color_interpolation_space,
     Color::HueInterpolationMethod hue_interpolation_method) {
   // This algorithm will replace each color interpolation hint with 9 regular
@@ -433,7 +433,7 @@ static const CSSValue* GetComputedStopColor(const CSSValue& color,
 void CSSGradientValue::AddComputedStops(
     const ComputedStyle& style,
     bool allow_visited_style,
-    const HeapVector<CSSGradientColorStop, 2>& stops,
+    const HeapVector<CSSGradientColorStop, 1>& stops,
     CSSValuePhase value_phase) {
   for (CSSGradientColorStop stop : stops) {
     if (!stop.IsHint()) {
@@ -449,7 +449,7 @@ namespace {
 bool RequiresStopsNormalization(const Vector<GradientStop>& stops,
                                 CSSGradientValue::GradientDesc& desc) {
   // We need at least two stops to normalize
-  if (stops.size() < 2) {
+  if (stops.empty()) {
     return false;
   }
 
@@ -471,7 +471,7 @@ bool RequiresStopsNormalization(const Vector<GradientStop>& stops,
 // gradient.
 bool NormalizeAndAddStops(const Vector<GradientStop>& stops,
                           CSSGradientValue::GradientDesc& desc) {
-  DCHECK_GT(stops.size(), 1u);
+  DCHECK_GE(stops.size(), 1u);
 
   const float first_offset = stops.front().offset;
   const float last_offset = stops.back().offset;

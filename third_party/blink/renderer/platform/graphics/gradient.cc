@@ -122,7 +122,11 @@ void Gradient::FillSkiaStops(ColorBuffer& colors, OffsetBuffer& pos) const {
     // A gradient with no stops must be transparent black.
     pos.push_back(WebCoreDoubleToSkScalar(0));
     colors.push_back(SkColors::kTransparent);
-  } else if (stops_.front().stop > 0) {
+  } else if (stops_.front().stop > 0 &&
+             // hue-interpolation-method longer hue should not pad the start, as
+             // it would introducing a gradient at position 0..fist_stop
+             hue_interpolation_method_ !=
+                 Color::HueInterpolationMethod::kLonger) {
     // Copy the first stop to 0.0. The first stop position may have a slight
     // rounding error, but we don't care in this float comparison, since
     // 0.0 comes through cleanly and people aren't likely to want a gradient
@@ -143,6 +147,20 @@ void Gradient::FillSkiaStops(ColorBuffer& colors, OffsetBuffer& pos) const {
     Color color = stops_[i].color;
     color.ConvertToColorSpace(color_space_interpolation_space_);
     if (color.HasNoneParams()) {
+      if (stops_.size() == 1) {
+        // If there is only one stop and it has none parameters, we don't need
+        // to resolve missing components at all, but for logic reuse, we still
+        // call `ResolveStopColorWithMissingParams` with a dummy three
+        // components all none color.
+        pos.push_back(WebCoreDoubleToSkScalar(stops_[i].stop));
+        colors.push_back(ResolveStopColorWithMissingParams(
+            color,
+            Color::FromColorSpace(color.GetColorSpace(), std::nullopt,
+                                  std::nullopt, std::nullopt),
+            color_space_interpolation_space_, color_filter_.get()));
+        break;
+      }
+
       if (i != 0) {
         // Fill left
         pos.push_back(WebCoreDoubleToSkScalar(stops_[i].stop));
@@ -174,7 +192,10 @@ void Gradient::FillSkiaStops(ColorBuffer& colors, OffsetBuffer& pos) const {
   // Copy the last stop to 1.0 if needed. See comment above about this float
   // comparison.
   DCHECK(!pos.empty());
-  if (pos.back() < 1) {
+  if (pos.back() < 1 &&
+      // hue-interpolation-method longer hue should not pad the end, as
+      // it would introducing a gradient at position last_stop..end
+      hue_interpolation_method_ != Color::HueInterpolationMethod::kLonger) {
     pos.push_back(WebCoreDoubleToSkScalar(1));
     colors.push_back(colors.back());
   }
@@ -277,7 +298,7 @@ sk_sp<PaintShader> Gradient::CreateShaderInternal(
   pos.reserve(stops_.size());
 
   FillSkiaStops(colors, pos);
-  DCHECK_GE(colors.size(), 2ul);
+  DCHECK_GE(colors.size(), 1ul);
   DCHECK_EQ(pos.size(), colors.size());
 
   SkTileMode tile = SkTileMode::kClamp;
