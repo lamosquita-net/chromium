@@ -352,10 +352,10 @@ bool HTMLDetailsElement::ExpandDetailsAncestors(const Node& node) {
   return details_to_open.size();
 }
 
-bool HTMLDetailsElement::IsValidCommand(HTMLElement& invoker,
-                                        CommandEventType command) {
-  bool parent_is_valid = HTMLElement::IsValidCommand(invoker, command);
-  if (!RuntimeEnabledFeatures::HTMLInvokeActionsV2Enabled()) {
+bool HTMLDetailsElement::IsValidBuiltinCommand(HTMLElement& invoker,
+                                               CommandEventType command) {
+  bool parent_is_valid = HTMLElement::IsValidBuiltinCommand(invoker, command);
+  if (!RuntimeEnabledFeatures::HTMLCommandActionsV2Enabled()) {
     return parent_is_valid;
   }
   return parent_is_valid || command == CommandEventType::kToggle ||
@@ -365,7 +365,7 @@ bool HTMLDetailsElement::IsValidCommand(HTMLElement& invoker,
 
 bool HTMLDetailsElement::HandleCommandInternal(HTMLElement& invoker,
                                                CommandEventType command) {
-  CHECK(IsValidCommand(invoker, command));
+  CHECK(IsValidBuiltinCommand(invoker, command));
 
   if (HTMLElement::HandleCommandInternal(invoker, command)) {
     return true;

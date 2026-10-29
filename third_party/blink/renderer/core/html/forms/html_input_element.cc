@@ -2423,10 +2423,10 @@ bool HTMLInputElement::IsPickerVisible() const {
   return input_type_view_->IsPickerVisible();
 }
 
-bool HTMLInputElement::IsValidCommand(HTMLElement& invoker,
-                                      CommandEventType command) {
-  bool parent_is_valid = HTMLElement::IsValidCommand(invoker, command);
-  if (!RuntimeEnabledFeatures::HTMLInvokeActionsV2Enabled() ||
+bool HTMLInputElement::IsValidBuiltinCommand(HTMLElement& invoker,
+                                             CommandEventType command) {
+  bool parent_is_valid = HTMLElement::IsValidBuiltinCommand(invoker, command);
+  if (!RuntimeEnabledFeatures::HTMLCommandActionsV2Enabled() ||
       parent_is_valid) {
     return parent_is_valid;
   }
@@ -2443,7 +2443,7 @@ bool HTMLInputElement::IsValidCommand(HTMLElement& invoker,
 
 bool HTMLInputElement::HandleCommandInternal(HTMLElement& invoker,
                                              CommandEventType command) {
-  CHECK(IsValidCommand(invoker, command));
+  CHECK(IsValidBuiltinCommand(invoker, command));
 
   if (HTMLElement::HandleCommandInternal(invoker, command)) {
     return true;

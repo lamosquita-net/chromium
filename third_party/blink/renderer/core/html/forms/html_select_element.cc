@@ -1575,10 +1575,10 @@ void HTMLSelectElement::showPicker(ExceptionState& exception_state) {
   select_type_->ShowPicker();
 }
 
-bool HTMLSelectElement::IsValidCommand(HTMLElement& invoker,
-                                       CommandEventType command) {
-  bool parent_is_valid = HTMLElement::IsValidCommand(invoker, command);
-  if (!RuntimeEnabledFeatures::HTMLInvokeActionsV2Enabled()) {
+bool HTMLSelectElement::IsValidBuiltinCommand(HTMLElement& invoker,
+                                              CommandEventType command) {
+  bool parent_is_valid = HTMLElement::IsValidBuiltinCommand(invoker, command);
+  if (!RuntimeEnabledFeatures::HTMLCommandActionsV2Enabled()) {
     return parent_is_valid;
   }
   return parent_is_valid || command == CommandEventType::kShowPicker;
@@ -1586,7 +1586,7 @@ bool HTMLSelectElement::IsValidCommand(HTMLElement& invoker,
 
 bool HTMLSelectElement::HandleCommandInternal(HTMLElement& invoker,
                                               CommandEventType command) {
-  CHECK(IsValidCommand(invoker, command));
+  CHECK(IsValidBuiltinCommand(invoker, command));
 
   if (HTMLElement::HandleCommandInternal(invoker, command)) {
     return true;

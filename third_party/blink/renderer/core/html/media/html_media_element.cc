@@ -1442,14 +1442,14 @@ LocalFrame* HTMLMediaElement::LocalFrameForPlayer() {
                           : GetDocument().GetFrame();
 }
 
-bool HTMLMediaElement::IsValidCommand(HTMLElement& invoker,
-                                      CommandEventType command) {
-  if (!RuntimeEnabledFeatures::HTMLInvokeActionsV2Enabled()) {
-    return HTMLElement::IsValidCommand(invoker, command);
+bool HTMLMediaElement::IsValidBuiltinCommand(HTMLElement& invoker,
+                                             CommandEventType command) {
+  if (!RuntimeEnabledFeatures::HTMLCommandActionsV2Enabled()) {
+    return HTMLElement::IsValidBuiltinCommand(invoker, command);
   }
 
-  return HTMLElement::IsValidCommand(invoker, command) ||
-         command == CommandEventType::kPlaypause ||
+  return HTMLElement::IsValidBuiltinCommand(invoker, command) ||
+         command == CommandEventType::kPlayPause ||
          command == CommandEventType::kPause ||
          command == CommandEventType::kPlay ||
          command == CommandEventType::kToggleMuted;
@@ -1457,7 +1457,7 @@ bool HTMLMediaElement::IsValidCommand(HTMLElement& invoker,
 
 bool HTMLMediaElement::HandleCommandInternal(HTMLElement& invoker,
                                              CommandEventType command) {
-  CHECK(IsValidCommand(invoker, command));
+  CHECK(IsValidBuiltinCommand(invoker, command));
 
   if (HTMLElement::HandleCommandInternal(invoker, command)) {
     return true;
@@ -1466,7 +1466,7 @@ bool HTMLMediaElement::HandleCommandInternal(HTMLElement& invoker,
   Document& document = GetDocument();
   LocalFrame* frame = document.GetFrame();
 
-  if (command == CommandEventType::kPlaypause) {
+  if (command == CommandEventType::kPlayPause) {
     if (paused_) {
       if (LocalFrame::HasTransientUserActivation(frame)) {
         Play();

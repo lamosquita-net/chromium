@@ -40,6 +40,7 @@
 #include "third_party/blink/renderer/core/frame/web_feature.h"
 #include "third_party/blink/renderer/core/fullscreen/fullscreen.h"
 #include "third_party/blink/renderer/core/geometry/dom_rect.h"
+#include "third_party/blink/renderer/core/html/forms/html_button_element.h"
 #include "third_party/blink/renderer/core/html/forms/html_form_control_element.h"
 #include "third_party/blink/renderer/core/html/html_element.h"
 #include "third_party/blink/renderer/core/html/html_frame_owner_element.h"
@@ -351,16 +352,18 @@ void HTMLDialogElement::HandleDialogLightDismiss(
   }
 }
 
-bool HTMLDialogElement::IsValidCommand(HTMLElement& invoker,
-                                       CommandEventType command) {
-  return HTMLElement::IsValidCommand(invoker, command) ||
+bool HTMLDialogElement::IsValidBuiltinCommand(HTMLElement& invoker,
+                                              CommandEventType command) {
+  return HTMLElement::IsValidBuiltinCommand(invoker, command) ||
          command == CommandEventType::kShowModal ||
-         command == CommandEventType::kClose;
+         command == CommandEventType::kClose ||
+         (command == CommandEventType::kRequestClose &&
+          RuntimeEnabledFeatures::HTMLCommandActionsV2Enabled());
 }
 
 bool HTMLDialogElement::HandleCommandInternal(HTMLElement& invoker,
                                               CommandEventType command) {
-  CHECK(IsValidCommand(invoker, command));
+  CHECK(IsValidBuiltinCommand(invoker, command));
 
   if (HTMLElement::HandleCommandInternal(invoker, command)) {
     return true;
@@ -376,16 +379,35 @@ bool HTMLDialogElement::HandleCommandInternal(HTMLElement& invoker,
   }
 
   bool open = IsOpenAndActive();
+  String return_value;
+
+  if (command == CommandEventType::kClose ||
+      command == CommandEventType::kRequestClose) {
+    if (auto* invokerButton = DynamicTo<HTMLButtonElement>(invoker)) {
+      return_value = invokerButton->Value();
+    }
+  }
 
   if (command == CommandEventType::kClose) {
     if (open) {
-      close();
+      close(return_value);
       return true;
     } else {
       AddConsoleMessage(
           mojom::blink::ConsoleMessageSource::kOther,
           mojom::blink::ConsoleMessageLevel::kWarning,
-          "A closing invokeaction attempted to close an already closed Dialog");
+          "A command attempted to close an already closed Dialog");
+    }
+  } else if (command == CommandEventType::kRequestClose) {
+    CHECK(RuntimeEnabledFeatures::HTMLCommandActionsV2Enabled());
+    if (open) {
+      requestClose(return_value, ASSERT_NO_EXCEPTION);
+      return true;
+    } else {
+      AddConsoleMessage(
+          mojom::blink::ConsoleMessageSource::kOther,
+          mojom::blink::ConsoleMessageLevel::kWarning,
+          "A command attempted to request to close an already closed Dialog");
     }
   } else if (command == CommandEventType::kShowModal) {
     if (isConnected() && !open) {

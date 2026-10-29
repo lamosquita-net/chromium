@@ -388,7 +388,8 @@ class CORE_EXPORT HTMLInputElement
 
   ShadowRoot* EnsureShadowSubtree();
 
-  bool IsValidCommand(HTMLElement& invoker, CommandEventType command) override;
+  bool IsValidBuiltinCommand(HTMLElement& invoker,
+                             CommandEventType command) override;
   bool HandleCommandInternal(HTMLElement& invoker,
                              CommandEventType command) override;
 

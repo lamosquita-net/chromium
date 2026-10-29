@@ -476,6 +476,8 @@ AttributeTriggers* HTMLElement::TriggersForAttributeName(
        nullptr},
       {html_names::kOncloseAttr, kNoWebFeature, event_type_names::kClose,
        nullptr},
+      {html_names::kOncommandAttr, kNoWebFeature, event_type_names::kCommand,
+       nullptr},
       {html_names::kOncontentvisibilityautostatechangeAttr, kNoWebFeature,
        event_type_names::kContentvisibilityautostatechange, nullptr},
       {html_names::kOncontextlostAttr, kNoWebFeature,
@@ -2066,7 +2068,9 @@ const HTMLElement* NearestTargetPopoverForInvoker(
         if (!form_element) {
           return nullptr;
         }
-        auto* target_element = form_element->commandForElement();
+        auto* button_element = DynamicTo<HTMLButtonElement>(form_element);
+        auto* target_element =
+            button_element ? button_element->commandForElement() : nullptr;
 
         return target_element
                    ? DynamicTo<HTMLElement>(target_element)
@@ -2412,13 +2416,13 @@ bool HTMLElement::DispatchFocusEvent(
                                      source_capabilities);
 }
 
-bool HTMLElement::IsValidCommand(HTMLElement& invoker,
-                                 CommandEventType command) {
-  return Element::IsValidCommand(invoker, command) ||
+bool HTMLElement::IsValidBuiltinCommand(HTMLElement& invoker,
+                                        CommandEventType command) {
+  return Element::IsValidBuiltinCommand(invoker, command) ||
          command == CommandEventType::kTogglePopover ||
          command == CommandEventType::kHidePopover ||
          command == CommandEventType::kShowPopover ||
-         (RuntimeEnabledFeatures::HTMLInvokeActionsV2Enabled() &&
+         (RuntimeEnabledFeatures::HTMLCommandActionsV2Enabled() &&
           (command == CommandEventType::kToggleFullscreen ||
            command == CommandEventType::kRequestFullscreen ||
            command == CommandEventType::kExitFullscreen));
@@ -2426,7 +2430,7 @@ bool HTMLElement::IsValidCommand(HTMLElement& invoker,
 
 bool HTMLElement::HandleCommandInternal(HTMLElement& invoker,
                                         CommandEventType command) {
-  CHECK(IsValidCommand(invoker, command));
+  CHECK(IsValidBuiltinCommand(invoker, command));
 
   if (Element::HandleCommandInternal(invoker, command)) {
     return true;
@@ -2500,7 +2504,7 @@ bool HTMLElement::HandleCommandInternal(HTMLElement& invoker,
     }
   }
 
-  if (!RuntimeEnabledFeatures::HTMLInvokeActionsV2Enabled()) {
+  if (!RuntimeEnabledFeatures::HTMLCommandActionsV2Enabled()) {
     return false;
   }
 
