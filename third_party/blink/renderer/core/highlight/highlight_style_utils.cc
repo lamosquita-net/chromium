@@ -14,8 +14,10 @@
 #include "third_party/blink/renderer/core/dom/node.h"
 #include "third_party/blink/renderer/core/dom/node_computed_style.h"
 #include "third_party/blink/renderer/core/dom/shadow_root.h"
+#include "third_party/blink/renderer/core/dom/text.h"
 #include "third_party/blink/renderer/core/editing/frame_selection.h"
 #include "third_party/blink/renderer/core/frame/local_frame.h"
+#include "third_party/blink/renderer/core/layout/layout_object.h"
 #include "third_party/blink/renderer/core/layout/layout_theme.h"
 #include "third_party/blink/renderer/core/page/focus_controller.h"
 #include "third_party/blink/renderer/core/page/page.h"
@@ -583,12 +585,10 @@ void HighlightStyleUtils::ResolveColorsFromPreviousLayer(
 }
 
 bool HighlightStyleUtils::ShouldInvalidateVisualOverflow(
-    const Node& node,
+    const LayoutObject& layout_object,
     DocumentMarker::MarkerType type) {
   // Custom highlights and selection are handled separately. Here we just need
-  // to handle spelling, grammar and target-text. Note that we assume
-  // RuntimeEnabledFeatures::HighlightInheritanceEnabled() is true to avoid
-  // needing a non-const node.
+  // to handle spelling, grammar and target-text.
   if (type == DocumentMarker::kSpelling || type == DocumentMarker::kGrammar) {
     return true;
   }
@@ -596,11 +596,8 @@ bool HighlightStyleUtils::ShouldInvalidateVisualOverflow(
   if (type != DocumentMarker::kTextFragment) {
     return false;
   }
-  const ComputedStyle* style = node.GetComputedStyle();
-  if (!style) {
-    return false;
-  }
-  const ComputedStyle* pseudo_style = style->HighlightData().TargetText();
+  const ComputedStyle* pseudo_style =
+      layout_object.StyleRef().HighlightData().TargetText();
   if (!pseudo_style) {
     return false;
   }
@@ -609,14 +606,15 @@ bool HighlightStyleUtils::ShouldInvalidateVisualOverflow(
 }
 
 bool HighlightStyleUtils::CustomHighlightHasVisualOverflow(
-    const Node& node,
+    const Text& text_node,
     const AtomicString& pseudo_argument) {
-  const ComputedStyle* style = node.GetComputedStyle();
-  if (!style) {
+  LayoutObject* layout_object = text_node.GetLayoutObject();
+  if (!layout_object) {
     return false;
   }
   const ComputedStyle* pseudo_style =
-      style->HighlightData().CustomHighlight(pseudo_argument);
+      layout_object->StyleRef().HighlightData().CustomHighlight(
+          pseudo_argument);
   if (!pseudo_style) {
     return false;
   }
