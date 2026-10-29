@@ -382,6 +382,8 @@ class CORE_EXPORT StyleResolver final : public GarbageCollected<StyleResolver> {
 
   bool IsForcedColorsModeEnabled() const;
 
+  void ExpandInheritedVisitedProperties(StyleResolverState& state);
+
   template <typename Functor>
   void ForEachUARulesForElement(const Element& element,
                                 ElementRuleCollector* collector,
