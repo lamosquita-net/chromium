@@ -291,6 +291,11 @@
       name: "AdjustEndOfNextParagraphIfMovedParagraphIsUpdated",
       status: "stable",
     },
+    // See crbug.com/41115285
+    {
+      name: "AdjustStartOfParagraphToMoveDuringIndent",
+      status: "stable",
+    },
     {
       name: "AdTagging",
       public: true,
@@ -749,6 +754,10 @@
       status: "test",
     },
     {
+      name: "CollapseZeroWidthSpaceWhenReuseItem",
+      status: "stable",
+    },
+    {
       name: "CompositeBGColorAnimation",
       public: true,
       status: "experimental",
@@ -1068,6 +1077,11 @@
     {
       name: "CSSLineClamp",
       status: "experimental",
+    },
+    {
+      // crbug.com/392927981
+      name: "CssDecoratingBoxPseudoFix",
+      status: "stable",
     },
     {
       name: "CSSLogicalOverflow",
@@ -1684,6 +1698,11 @@
       status: "stable",
     },
     {
+      //See: crbug.com/40771555
+      name: "EnterInOpenShadowRoots",
+      status: "test",
+    },
+    {
       // Experiment with preventing some instances of mutation XSS
       // by escaping "<" and ">" in attribute values.
       // See: crbug.com/1175016
@@ -1983,6 +2002,10 @@
       name: "FileSystemObserverUnobserve",
       depends_on: ["FileSystemObserver"],
       status: "experimental",
+    },
+    {
+      name: "FindFirstMisspellingEndWhenNonEditable",
+      status: "stable",
     },
     {
       name: "FindTextInReadonlyTextInput",
@@ -3402,6 +3425,10 @@
     // can be removed in M135.
     {
       name: "PopoverButtonNestingBehavior",
+      status: "stable",
+    },
+    {
+      name: "PrevOrNextCandidateIsEditingRootChild",
       status: "stable",
     },
     {
