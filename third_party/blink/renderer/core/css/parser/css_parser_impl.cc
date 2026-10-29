@@ -858,6 +858,9 @@ StyleRuleBase* CSSParserImpl::ConsumeAtRuleContents(
         id == CSSAtRuleID::kCSSAtRuleAnnotation) {
       return ConsumeFontFeatureRule(id, stream);
     } else {
+      // FlyWeb: as 20d6d52ab7 (Chrome 134), an unknown at-rule inside
+      // @font-feature-values consumes its prelude and block.
+      ConsumeErroneousAtRule(stream, id);
       return nullptr;
     }
   } else if (allowed_rules == kPageMarginRules) {
