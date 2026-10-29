@@ -1941,9 +1941,13 @@ void HTMLElement::HidePopoverInternal(
     }
   }
 
-  if (auto* close_watcher = GetPopoverData()->closeWatcher()) {
-    close_watcher->destroy();
-    GetPopoverData()->setCloseWatcher(nullptr);
+  // Focusing previously_focused_element may have removed the popover attribute
+  // from this element, making GetPopoverData return null.
+  if (GetPopoverData()) {
+    if (auto* close_watcher = GetPopoverData()->closeWatcher()) {
+      close_watcher->destroy();
+      GetPopoverData()->setCloseWatcher(nullptr);
+    }
   }
 }
 
