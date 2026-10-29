@@ -6225,8 +6225,10 @@ CSSValue* ConsumeFontWeight(T& stream, const CSSParserContext& context) {
 
   CSSPrimitiveValue* start_weight = ConsumeNumber(
       stream, context, CSSPrimitiveValue::ValueRange::kNonNegative);
-  if (!start_weight || start_weight->GetFloatValue() < 1 ||
-      start_weight->GetFloatValue() > 1000) {
+  auto* numeric_start_weight = DynamicTo<CSSNumericLiteralValue>(start_weight);
+  if (!start_weight ||
+      (numeric_start_weight && (numeric_start_weight->DoubleValue() < 1 ||
+                                numeric_start_weight->DoubleValue() > 1000))) {
     return nullptr;
   }
 
@@ -6239,8 +6241,10 @@ CSSValue* ConsumeFontWeight(T& stream, const CSSParserContext& context) {
 
   CSSPrimitiveValue* end_weight = ConsumeNumber(
       stream, context, CSSPrimitiveValue::ValueRange::kNonNegative);
-  if (!end_weight || end_weight->GetFloatValue() < 1 ||
-      end_weight->GetFloatValue() > 1000) {
+  auto* numeric_end_weight = DynamicTo<CSSNumericLiteralValue>(end_weight);
+  if (!end_weight ||
+      (numeric_end_weight && (numeric_end_weight->DoubleValue() < 1 ||
+                              numeric_end_weight->DoubleValue() > 1000))) {
     return nullptr;
   }
 

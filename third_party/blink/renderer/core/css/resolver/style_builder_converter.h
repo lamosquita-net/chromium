@@ -91,7 +91,8 @@ class StyleBuilderConverterBase {
   static FontSelectionValue ConvertFontStretch(const CSSLengthResolver&,
                                                const CSSValue&);
   static FontSelectionValue ConvertFontStyle(const CSSValue&);
-  static FontSelectionValue ConvertFontWeight(const CSSValue&,
+  static FontSelectionValue ConvertFontWeight(const CSSLengthResolver&,
+                                              const CSSValue&,
                                               FontSelectionValue);
   static FontDescription::FontVariantCaps ConvertFontVariantCaps(
       const CSSValue&);
