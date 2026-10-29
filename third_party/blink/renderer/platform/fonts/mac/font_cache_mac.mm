@@ -29,12 +29,12 @@
 
 #import "third_party/blink/renderer/platform/fonts/font_cache.h"
 
-#include <memory>
-
 #import <AppKit/AppKit.h>
 #import <CoreFoundation/CoreFoundation.h>
 #import <CoreText/CoreText.h>
 #include <Foundation/Foundation.h>
+
+#include <memory>
 
 #include "base/apple/bridging.h"
 #include "base/apple/foundation_util.h"
@@ -46,11 +46,13 @@
 #include "third_party/blink/renderer/platform/font_family_names.h"
 #include "third_party/blink/renderer/platform/fonts/font_description.h"
 #include "third_party/blink/renderer/platform/fonts/font_face_creation_params.h"
+#include "third_party/blink/renderer/platform/fonts/font_fallback_priority.h"
 #include "third_party/blink/renderer/platform/fonts/font_platform_data.h"
 #include "third_party/blink/renderer/platform/fonts/mac/font_matcher_mac.h"
 #include "third_party/blink/renderer/platform/fonts/mac/font_platform_data_mac.h"
 #include "third_party/blink/renderer/platform/fonts/simple_font_data.h"
 #include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+#include "third_party/blink/renderer/platform/text/character.h"
 #include "third_party/blink/renderer/platform/scheduler/public/main_thread.h"
 #include "third_party/blink/renderer/platform/web_test_support.h"
 #include "third_party/blink/renderer/platform/wtf/functional.h"
@@ -155,6 +157,37 @@ ScopedCFTypeRef<CTFontRef> GetSubstituteFont(CTFontRef ct_font,
 
   if (!substitute_font || IsLastResortFont(substitute_font.get())) {
     return ScopedCFTypeRef<CTFontRef>(nullptr);
+  }
+
+  ScopedCFTypeRef<CFStringRef> substitute_font_name(
+      CTFontCopyName(substitute_font.get(), kCTFontFamilyNameKey));
+  // System API might return colored "Apple Color Emoji" font for some emoji
+  // code points. But if emoji code point was requested and fallback_priority is
+  // not emoji presentation, it means that we need a monochromatic (text)
+  // presentation of emoji. To do that we will replace colored emoji font with
+  // the "Apple Symbols" monochromatic emoji font with "Apple Color Emoji"
+  // cascade list since it has better glyph coverage.
+  if (RuntimeEnabledFeatures::SystemFallbackEmojiVSSupportEnabled() &&
+      CFStringCompare(substitute_font_name.get(), CFSTR("Apple Color Emoji"),
+                      kCFCompareCaseInsensitive) == kCFCompareEqualTo &&
+      Character::IsEmoji(character)) {
+    NSArray* lang_list = @[ @"en" ];
+    NSArray* cascade_list(
+        CFToNSOwnershipCast(CTFontCopyDefaultCascadeListForLanguages(
+            substitute_font.get(), NSToCFOwnershipCast(lang_list))));
+    NSDictionary* mono_emoji_attributes = @{
+      CFToNSPtrCast(kCTFontNameAttribute) : @"Apple Symbols",
+      CFToNSPtrCast(kCTFontCascadeListAttribute) : cascade_list,
+    };
+    ScopedCFTypeRef<CTFontDescriptorRef> mono_emoji_descriptor(
+        CTFontDescriptorCreateWithAttributes(
+            NSToCFPtrCast(mono_emoji_attributes)));
+    ScopedCFTypeRef<CTFontRef> mono_emoji_font(CTFontCreateWithFontDescriptor(
+        mono_emoji_descriptor.get(), size, nullptr));
+    if (mono_emoji_font) {
+      substitute_font.reset(
+          CTFontCreateForString(mono_emoji_font.get(), string.get(), range));
+    }
   }
   return substitute_font;
 }
@@ -308,7 +341,7 @@ const SimpleFontData* FontCache::PlatformFallbackFontForCharacter(
     UChar32 character,
     const SimpleFontData* font_data_to_substitute,
     FontFallbackPriority fallback_priority) {
-  if (fallback_priority == FontFallbackPriority::kEmojiEmoji) {
+  if (IsEmojiPresentationEmoji(fallback_priority)) {
     if (const SimpleFontData* emoji_font =
             GetFontData(font_description, AtomicString(kColorEmojiFontMac))) {
       return emoji_font;

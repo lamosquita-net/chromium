@@ -2112,11 +2112,11 @@
     },
     {
       name: "FontVariantEmoji",
-      status: "test",
+      status: "stable",
     },
     {
       name: "FontVariationSequences",
-      status: "experimental",
+      status: "stable",
     },
     {
       // TODO(crbug.com/1231644): This flag is being kept (even though the
@@ -4257,6 +4257,17 @@
     {
       name: "SynthesizedKeyboardEventsForAccessibilityActions",
       status: "experimental",
+    },
+    {
+      // This is used for emoji variation selectors support in system
+      // fallback matching. This is a workaround solution that helps to
+      // avoid incorrect font matching due to lack of cmap format 14
+      // subtable in system emoji fonts on various platforms.
+      // This should be eventually removed when the custom emoji font
+      // is shipped with Chrome or when system emoji fonts will have
+      // cmap format 14 subtable.
+      name: "SystemFallbackEmojiVSSupport",
+      status: "stable",
     },
     {
       name: "SystemWakeLock",

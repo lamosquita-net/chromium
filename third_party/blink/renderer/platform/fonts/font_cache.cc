@@ -370,7 +370,7 @@ FontCache::Bcp47Vector FontCache::GetBcp47LocaleForRequest(
   if (content_locale)
     result.push_back(content_locale->LocaleForSkFontMgr());
 
-  if (fallback_priority == FontFallbackPriority::kEmojiEmoji)
+  if (IsEmojiPresentationEmoji(fallback_priority))
     result.push_back(kColorEmojiLocale);
   return result;
 }
