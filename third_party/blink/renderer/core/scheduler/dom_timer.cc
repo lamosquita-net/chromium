@@ -303,7 +303,10 @@ DOMTimer::DOMTimer(ExecutionContext& context,
 
   // Clamping up to 1ms for historical reasons crbug.com/402694.
   // Removing clamp for single_shot behind a feature flag.
-  if (!single_shot || !blink::features::IsSetTimeoutWithoutClampEnabled()) {
+  // FlyWeb: setInterval(..., 0) without the 1ms clamp, as Chrome 135
+  // (0399f3f3d6f, kSetIntervalWithoutClamp enabled by default).
+  if (single_shot ? !blink::features::IsSetTimeoutWithoutClampEnabled()
+                  : !blink::features::IsSetIntervalWithoutClampEnabled()) {
     timeout = std::max(timeout, base::Milliseconds(1));
   }
 
@@ -333,7 +336,7 @@ void DOMTimer::Stop() {
   }
 
   async_task_context_.Cancel();
-  const bool is_interval = !RepeatInterval().is_zero();
+  const bool is_interval = RepeatInterval().has_value();
   probe::BreakableLocation(GetExecutionContext(),
                            is_interval ? "clearInterval" : "clearTimeout");
 
@@ -361,7 +364,7 @@ void DOMTimer::Fired() {
 
   DEVTOOLS_TIMELINE_TRACE_EVENT("TimerFire", inspector_timer_fire_event::Data,
                                 context, timeout_id_);
-  const bool is_interval = !RepeatInterval().is_zero();
+  const bool is_interval = RepeatInterval().has_value();
 
   probe::UserCallback probe(context, is_interval ? "setInterval" : "setTimeout",
                             g_null_atom, true);
@@ -386,8 +389,8 @@ void DOMTimer::Fired() {
     // Note: The implementation uses >= instead of >, contrary to what the spec
     // requires crbug.com/1108877.
     if (nesting_level_ == kMaxTimerNestingLevel &&
-        RepeatInterval() < kMinimumInterval) {
-      AugmentRepeatInterval(kMinimumInterval - RepeatInterval());
+        *RepeatInterval() < kMinimumInterval) {
+      AugmentRepeatInterval(kMinimumInterval - *RepeatInterval());
     }
     if (nesting_level_ == kMaxTimerNestingLevel) {
       // Move to the TaskType that corresponds to nesting level >=
@@ -397,7 +400,7 @@ void DOMTimer::Fired() {
     }
 
     DCHECK(nesting_level_ < kMaxTimerNestingLevel ||
-           RepeatInterval() >= kMinimumInterval);
+           (is_interval && *RepeatInterval() >= kMinimumInterval));
 
     // No access to member variables after this point, it can delete the timer.
     action_->Execute(context);

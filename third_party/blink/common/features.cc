@@ -2143,6 +2143,12 @@ BASE_FEATURE(kSetTimeoutWithoutClamp,
              "SetTimeoutWithoutClamp",
              base::FEATURE_ENABLED_BY_DEFAULT);
 
+// If enabled, calling setInterval(..., 0) will not clamp to 1ms.
+// Tracking bug: https://crbug.com/402694.
+BASE_FEATURE(kSetIntervalWithoutClamp,
+             "SetIntervalWithoutClamp",
+             base::FEATURE_ENABLED_BY_DEFAULT);
+
 // Enable the shared storage API. Note that enabling this feature does not
 // automatically expose this API to the web, it only allows the element to be
 // enabled by the runtime enabled feature, for origin trials.
@@ -2645,6 +2651,10 @@ bool IsParkableImagesToDiskEnabled() {
 
 bool IsSetTimeoutWithoutClampEnabled() {
   return base::FeatureList::IsEnabled(features::kSetTimeoutWithoutClamp);
+}
+
+bool IsSetIntervalWithoutClampEnabled() {
+  return base::FeatureList::IsEnabled(features::kSetIntervalWithoutClamp);
 }
 
 bool IsUnloadBlocklisted() {

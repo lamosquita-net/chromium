@@ -1834,6 +1834,12 @@ LayoutResult::EStatus BlockLayoutAlgorithm::HandleNewFormattingContext(
         /* self_collapsing_child_had_clearance */ false);
   }
 
+  if (ShouldTextBoxTrim()) {
+    UpdateTextBoxTrim(child, child_break_token,
+                      /*outgoing_inline_break_token=*/nullptr, layout_result,
+                      previous_inflow_position);
+  }
+
   if (constraint_space.HasBlockFragmentation() &&
       !has_break_opportunity_before_next_child_) {
     has_break_opportunity_before_next_child_ =
@@ -2520,28 +2526,8 @@ LayoutResult::EStatus BlockLayoutAlgorithm::FinishInflow(
   }
 
   if (ShouldTextBoxTrim()) [[unlikely]] {
-    should_text_box_trim_fragmentainer_start_ = false;
-    // Update `should_text_box_trim_{start,end}_` if the child `layout_result`
-    // has applied `text-box-trim`, or was meant to apply it.
-    if (should_text_box_trim_node_start_) {
-      if (!child.IsInline() || !outgoing_inline_break_token ||
-          outgoing_inline_break_token->IsPastFirstFormattedLine()) {
-        should_text_box_trim_node_start_ = false;
-      }
-    }
-    if (should_text_box_trim_node_end_) {
-      // FlyWeb: no `line-clamp: auto` measuring pass in the 128 (7f48814f67
-      // not ported), so there is no trim to carry over here.
-      if (layout_result->IsBlockEndTrimmableLine() ||
-          (child.IsBlock() && IsLastInflowChild(*child.GetLayoutBox()))) {
-        ClearShouldTextBoxTrimEnd();
-      } else if (!layout_result->IsSelfCollapsing() && child.IsInline() &&
-                 !override_text_box_trim_end_child_) {
-        // Keep the last non-empty child for `RelayoutForTextBoxTrimEnd`.
-        last_non_empty_inflow_child_ = To<InlineNode>(child);
-        last_non_empty_break_token_ = child_break_token;
-      }
-    }
+    UpdateTextBoxTrim(child, child_break_token, outgoing_inline_break_token,
+                      layout_result, previous_inflow_position);
   }
 
   if (GetConstraintSpace().HasBlockFragmentation() &&
@@ -2552,6 +2538,36 @@ LayoutResult::EStatus BlockLayoutAlgorithm::FinishInflow(
   }
 
   return LayoutResult::kSuccess;
+}
+
+void BlockLayoutAlgorithm::UpdateTextBoxTrim(
+    LayoutInputNode child,
+    const BreakToken* incoming_child_break_token,
+    const InlineBreakToken* outgoing_inline_break_token,
+    const LayoutResult* layout_result,
+    PreviousInflowPosition* previous_inflow_position) {
+  should_text_box_trim_fragmentainer_start_ = false;
+  // Update `should_text_box_trim_{start,end}_` if the child `layout_result` has
+  // applied `text-box-trim`, or was meant to apply it.
+  if (should_text_box_trim_node_start_) {
+    if (!child.IsInline() || !outgoing_inline_break_token ||
+        outgoing_inline_break_token->IsPastFirstFormattedLine()) {
+      should_text_box_trim_node_start_ = false;
+    }
+  }
+  if (should_text_box_trim_node_end_) {
+    // FlyWeb: no `line-clamp: auto` measuring pass in the 128 (7f48814f67
+    // not ported), so there is no trim to carry over here.
+    if (layout_result->IsBlockEndTrimmableLine() ||
+        (child.IsBlock() && IsLastInflowChild(*child.GetLayoutBox()))) {
+      ClearShouldTextBoxTrimEnd();
+    } else if (!layout_result->IsSelfCollapsing() && child.IsInline() &&
+               !override_text_box_trim_end_child_) {
+      // Keep the last non-empty child for `RelayoutForTextBoxTrimEnd`.
+      last_non_empty_inflow_child_ = To<InlineNode>(child);
+      last_non_empty_break_token_ = incoming_child_break_token;
+    }
+  }
 }
 
 InflowChildData BlockLayoutAlgorithm::ComputeChildData(

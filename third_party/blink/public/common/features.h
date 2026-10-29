@@ -1427,6 +1427,7 @@ BLINK_COMMON_EXPORT BASE_DECLARE_FEATURE(
 BLINK_COMMON_EXPORT BASE_DECLARE_FEATURE(kSetLowPriorityForBeacon);
 
 BLINK_COMMON_EXPORT BASE_DECLARE_FEATURE(kSetTimeoutWithoutClamp);
+BLINK_COMMON_EXPORT BASE_DECLARE_FEATURE(kSetIntervalWithoutClamp);
 
 BLINK_COMMON_EXPORT BASE_DECLARE_FEATURE(kSharedStorageAPI);
 
@@ -1735,6 +1736,7 @@ BLINK_COMMON_EXPORT bool IsParkableImagesToDiskEnabled();
 BLINK_COMMON_EXPORT bool IsPlzDedicatedWorkerEnabled();
 
 BLINK_COMMON_EXPORT bool IsSetTimeoutWithoutClampEnabled();
+BLINK_COMMON_EXPORT bool IsSetIntervalWithoutClampEnabled();
 
 // Returns if unload handlers are considered as a blocklisted reason for
 // back/forward cache.
