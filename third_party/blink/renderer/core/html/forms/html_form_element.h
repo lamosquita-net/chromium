@@ -121,6 +121,8 @@ class CORE_EXPORT HTMLFormElement final : public HTMLElement {
     return radio_button_group_scope_;
   }
 
+  const Node* GetListedElementsScope() const;
+
   // Returns the listed elements associated with `this`. If
   // `include_shadow_trees` is `true`, then the list will also contain
   // descendants of `this` that are form control elements and inside Shadow DOM.

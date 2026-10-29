@@ -865,6 +865,18 @@ void HTMLFormElement::CollectListedElements(
 
 // This function should be const conceptually. However we update some fields
 // because of lazy evaluation.
+const Node* HTMLFormElement::GetListedElementsScope() const {
+  HTMLFormElement* mutable_this = const_cast<HTMLFormElement*>(this);
+  Node* scope = mutable_this;
+  if (has_elements_associated_by_parser_) {
+    scope = &NodeTraversal::HighestAncestorOrSelf(*mutable_this);
+  }
+  if (isConnected() && has_elements_associated_by_form_attribute_) {
+    scope = &GetTreeScope().RootNode();
+  }
+  return scope;
+}
+
 const ListedElement::List& HTMLFormElement::ListedElements(
     bool include_shadow_trees) const {
   bool collect_shadow_inputs =
@@ -872,13 +884,9 @@ const ListedElement::List& HTMLFormElement::ListedElements(
 
   if (listed_elements_are_dirty_ || collect_shadow_inputs) {
     HTMLFormElement* mutable_this = const_cast<HTMLFormElement*>(this);
-    Node* scope = mutable_this;
-    if (has_elements_associated_by_parser_)
-      scope = &NodeTraversal::HighestAncestorOrSelf(*mutable_this);
-    if (isConnected() && has_elements_associated_by_form_attribute_)
-      scope = &GetTreeScope().RootNode();
     mutable_this->listed_elements_.clear();
     mutable_this->listed_elements_including_shadow_trees_.clear();
+    const Node* scope = GetListedElementsScope();
     CollectListedElements(
         scope, mutable_this->listed_elements_,
         collect_shadow_inputs

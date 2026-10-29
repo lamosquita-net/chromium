@@ -853,6 +853,10 @@
       base_feature: "none",
     },
     {
+      name: "CorrectStylesForLists",
+      status: "stable",
+    },
+    {
       name: "CorsRFC1918",
     },
     {
@@ -3064,6 +3068,14 @@
       status: {"Android": "", "default": "stable"},
     },
     {
+      // This flag makes the <option> element's label attribute render the
+      // contents of the label attribute even if it is only whitespace in order
+      // to match the spec and firefox.
+      // https://github.com/whatwg/html/issues/10955
+      name: "OptionLabelAttributeWhitespace",
+      status: "stable",
+    },
+    {
       name: "OrientationEvent",
       status: {"Android": "stable"},
     },
@@ -3563,6 +3575,10 @@
       status: "experimental",
     },
     {
+      name: "RadioInputNextButtonInScope",
+      status: "stable",
+    },
+    {
       name: "RasterInducingScroll",
       status: "test",
     },
@@ -3699,6 +3715,10 @@
       status: "stable",
     },
     {
+      name: "ResolveVarStylesOnCopy",
+      status: "stable",
+    },
+    {
       name: "ResourceTimingContentType",
       status: "experimental",
     },
@@ -3814,6 +3834,10 @@
       // Runs a microtask checkpoint before creating custom elements in
       // XMLDocumentParser. Should be safe to remove after M125
       name: "RunMicrotaskBeforeXmlCustomElement",
+      status: "stable",
+    },
+    {
+      name: "SameValueTextContentFiresMutationObservers",
       status: "stable",
     },
     {
@@ -3952,6 +3976,12 @@
       // Maintain author-defined ::selection highlight colors, even if they
       // match the text color.
       name: "SelectionRespectsColors",
+      status: "stable",
+    },
+    {
+      // If enabled, the select element will not dispatch a mouseup event when
+      // an option is selected using the keyboard.
+      name: "SelectNoMouseUpForKeyboardSelection",
       status: "stable",
     },
     {
@@ -4231,6 +4261,13 @@
     {
       name: "StrictMimeTypesForWorkers",
       status: "experimental",
+    },
+    {
+      // crbug.com/396607231
+      // Update strong, b elements default to be font-weight: bolder
+      // Enabled by default on M135. Remove flag on or after M138.
+      name: "StrongBolder",
+      status: "stable",
     },
     {
       // Adds the appearance:base-select CSS value which makes <select>
