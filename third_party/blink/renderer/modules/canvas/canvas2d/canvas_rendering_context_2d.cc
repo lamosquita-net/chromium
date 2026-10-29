@@ -749,7 +749,7 @@ CanvasRenderingContext2D::getContextAttributes() const {
   settings->setColorSpace(color_params_.GetColorSpaceAsString());
   if (RuntimeEnabledFeatures::CanvasFloatingPointEnabled())
     settings->setPixelFormat(color_params_.GetPixelFormatAsString());
-  settings->setDesynchronized(Host()->LowLatencyEnabled());
+  settings->setDesynchronized(CreationAttributes().desynchronized_specified);
   switch (CreationAttributes().will_read_frequently) {
     case CanvasContextCreationAttributesCore::WillReadFrequently::kTrue:
       settings->setWillReadFrequently(true);

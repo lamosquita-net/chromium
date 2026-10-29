@@ -152,7 +152,7 @@ OffscreenCanvasRenderingContext2D::getContextAttributes() const {
   if (RuntimeEnabledFeatures::CanvasFloatingPointEnabled()) {
     settings->setPixelFormat(color_params_.GetPixelFormatAsString());
   }
-  settings->setDesynchronized(CreationAttributes().desynchronized);
+  settings->setDesynchronized(CreationAttributes().desynchronized_specified);
   switch (CreationAttributes().will_read_frequently) {
     case CanvasContextCreationAttributesCore::WillReadFrequently::kTrue:
       settings->setWillReadFrequently(true);
