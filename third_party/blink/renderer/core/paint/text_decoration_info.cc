@@ -340,16 +340,25 @@ void TextDecorationInfo::UpdateForDecorationIndex() {
     DCHECK(inline_context_);
     DCHECK_EQ(inline_context_->DecoratingBoxes().size(),
               AppliedDecorationCount());
-    decorating_box_ = &inline_context_->DecoratingBoxes()[decoration_index_];
-    decorating_box_style = &decorating_box_->Style();
+    bool disable_decorating_box;
+    if (UNLIKELY(static_cast<wtf_size_t>(decoration_index_) >=
+                 inline_context_->DecoratingBoxes().size())) {
+      // Fallback to no-decorating box mode if the sync is lost.
+      disable_decorating_box = true;
+    } else {
+      decorating_box_ = &inline_context_->DecoratingBoxes()[decoration_index_];
+      decorating_box_style = &decorating_box_->Style();
 
-    // Disable the decorating box when the baseline is central, because the
-    // decorating box doesn't produce the ideal position.
-    // https://drafts.csswg.org/css-text-decor-3/#:~:text=text%20is%20not%20aligned%20to%20the%20alphabetic%20baseline
-    // TODO(kojii): The vertical flow in alphabetic baseline may want to use the
-    // decorating box. It needs supporting the rotated coordinate system text
-    // painters use when painting vertical text.
-    if (UNLIKELY(!decorating_box_style->IsHorizontalWritingMode())) {
+      // Disable the decorating box when the baseline is central, because the
+      // decorating box doesn't produce the ideal position.
+      // https://drafts.csswg.org/css-text-decor-3/#:~:text=text%20is%20not%20aligned%20to%20the%20alphabetic%20baseline
+      // TODO(kojii): The vertical flow in alphabetic baseline may want to use
+      // the decorating box. It needs supporting the rotated coordinate system
+      // text painters use when painting vertical text.
+      disable_decorating_box = !decorating_box_style->IsHorizontalWritingMode();
+    }
+
+    if (UNLIKELY(disable_decorating_box)) {
       use_decorating_box_ = false;
       decorating_box_ = nullptr;
       decorating_box_style = &target_style_;
