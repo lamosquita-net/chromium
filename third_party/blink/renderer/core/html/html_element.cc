@@ -1854,6 +1854,15 @@ void HTMLElement::HidePopoverInternal(
       CHECK_EQ(result, DispatchEventResult::kCanceledBeforeDispatch);
       return;
     }
+
+    // The 'beforetoggle' event handler could have changed this popover, e.g. by
+    // changing its type, removing it from the document, or calling
+    // showPopover().
+    if (!IsPopoverReady(PopoverTriggerAction::kHide, exception_state,
+                        /*include_event_handler_text=*/true, &document)) {
+      return;
+    }
+
     if (stack_containing_this && !stack_containing_this->empty() &&
         stack_containing_this->back() != this) {
       CHECK(PopoverType() == PopoverValueType::kAuto ||
@@ -1865,14 +1874,13 @@ void HTMLElement::HidePopoverInternal(
           "popover to be shown. This is not recommended.");
       HideAllPopoversUntil(this, document, focus_behavior,
                            HidePopoverTransitionBehavior::kNoEventsNoWaiting);
-    }
-
-    // The 'beforetoggle' event handler could have changed this popover, e.g. by
-    // changing its type, removing it from the document, or calling
-    // showPopover().
-    if (!IsPopoverReady(PopoverTriggerAction::kHide, exception_state,
-                        /*include_event_handler_text=*/true, &document)) {
-      return;
+      // The 'beforetoggle' event handler (from the HideAllPopoversUntil call)
+      // could have changed this popover, e.g. by changing its type, removing it
+      // from the document, or calling showPopover().
+      if (!IsPopoverReady(PopoverTriggerAction::kHide, exception_state,
+                          /*include_event_handler_text=*/true, &document)) {
+        return;
+      }
     }
 
     // Queue the "closing" toggle event.
