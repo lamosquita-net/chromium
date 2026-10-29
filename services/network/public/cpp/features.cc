@@ -474,4 +474,8 @@ const base::FeatureParam<int> kNetworkContextPrefetchMaxLoaders{
     &kNetworkContextPrefetch,
     /*name=*/"max_loaders", /*default_value=*/10};
 
+BASE_FEATURE(kUpdateRequestForCorsRedirect,
+             "UpdateRequestForCorsRedirect",
+             base::FEATURE_ENABLED_BY_DEFAULT);
+
 }  // namespace network::features
