@@ -3236,6 +3236,10 @@
       status: "experimental",
     },
     {
+      name: "PasteListItemOutsidePreviousListItem",
+      status: "stable",
+    },
+    {
       name: "PaymentApp",
       depends_on: ["PaymentRequest"],
       public: true,
