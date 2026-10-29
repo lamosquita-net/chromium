@@ -5190,12 +5190,13 @@ void NavigationRequest::OnStartChecksComplete(
   // comment in the header for |loader_|.
   DCHECK(!loader_);
 
-  // Only initialize the ServiceWorkerMainResourceHandle if it can be created
-  // for this frame.
+  // Only initialize the `ServiceWorkerMainResourceHandle` if it can be created
+  // for this frame. PDF content frames run in a restricted PDF renderer process
+  // that must not receive service worker capabilities for the hosting origin.
   bool can_create_service_worker =
-      (frame_tree_node_->pending_frame_policy().sandbox_flags &
-       network::mojom::WebSandboxFlags::kOrigin) !=
-      network::mojom::WebSandboxFlags::kOrigin;
+      !IsPdf() && (frame_tree_node_->pending_frame_policy().sandbox_flags &
+                   network::mojom::WebSandboxFlags::kOrigin) !=
+                      network::mojom::WebSandboxFlags::kOrigin;
   if (can_create_service_worker) {
     ServiceWorkerContextWrapper* service_worker_context =
         static_cast<ServiceWorkerContextWrapper*>(
@@ -5845,9 +5846,13 @@ void NavigationRequest::InheritServiceWorkerControllerFromParentIfNeeded() {
     return;
   }
 
-  if ((frame_tree_node_->pending_frame_policy().sandbox_flags &
-       network::mojom::WebSandboxFlags::kOrigin) ==
-      network::mojom::WebSandboxFlags::kOrigin) {
+  // Do not inherit the parent's service worker controller if this frame is a
+  // PDF content frame or has an opaque sandboxed origin. PDF content frames run
+  // in a restricted PDF renderer process that must not receive service worker
+  // capabilities for the hosting origin.
+  if (IsPdf() || (frame_tree_node_->pending_frame_policy().sandbox_flags &
+                  network::mojom::WebSandboxFlags::kOrigin) ==
+                     network::mojom::WebSandboxFlags::kOrigin) {
     return;
   }
   StoragePartition* partition = GetStoragePartitionWithCurrentSiteInfo();
@@ -6195,6 +6200,19 @@ void NavigationRequest::CommitNavigation() {
   blink::mojom::ServiceWorkerContainerInfoForClientPtr
       service_worker_container_info;
   blink::mojom::ControllerServiceWorkerInfoPtr controller;
+
+  // The decision to create `service_worker_handle_` was made before the
+  // request was sent, based only on the sandbox flags inherited from the frame
+  // owner element. If the response delivered a `Content-Security-Policy:
+  // sandbox` header without `allow-same-origin`, the document will commit with
+  // an opaque origin and is not eligible to use service workers, so drop the
+  // handle now instead of creating a container host for the committed document.
+  if (service_worker_handle_ &&
+      (policy_container_builder_->FinalPolicies().sandbox_flags &
+       network::mojom::WebSandboxFlags::kOrigin) ==
+          network::mojom::WebSandboxFlags::kOrigin) {
+    service_worker_handle_.reset();
+  }
 
   // Notify the service worker navigation handle that navigation commit is
   // about to go.
