@@ -346,7 +346,14 @@
     {
       name: "AOMAriaRelationshipProperties",
       public: true,
+      status: "stable",
+    },
+    {
+      // FlyWeb: ariaOwnsElements stays behind its own flag, as in Chrome 135.
+      name: "AOMAriaRelationshipPropertiesAriaOwns",
+      public: true,
       status: "experimental",
+      depends_on: ["AOMAriaRelationshipProperties"],
     },
     {
       name: "AppTitle",
@@ -1046,7 +1053,7 @@
     },
     {
       name: "CSSLogicalOverflow",
-      status: "test",
+      status: "stable",
     },
     {
       name: "CSSMarkerNestedPseudoElement",
@@ -1165,6 +1172,12 @@
       name: "CSSScrollSnapEvents",
       status: "experimental",
       implied_by: ["CSSScrollSnapChangeEvent", "CSSScrollSnapChangingEvent"],
+    },
+    {
+      // Enables env(safe-area-max-inset-*).
+      // https://github.com/w3c/csswg-drafts/issues/11019
+      name: "CSSSafeAreaMaxInset",
+      status: "stable",
     },
     {
       // https://drafts.csswg.org/css-scroll-snap-2#scroll-start
@@ -2898,7 +2911,11 @@
     },
     {
       name: "NavigateEventSourceElement",
-      status: "experimental",
+      status: "stable",
+    },
+    {
+      name: "NavigateEventPopstateLimitations",
+      status: "stable",
     },
     {
       name: "NavigationActivation",

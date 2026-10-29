@@ -30,6 +30,13 @@ enum class UADefinedVariable {
   kSafeAreaInsetBottom,
   kSafeAreaInsetRight,
 
+  // The safe area max insets are four environment variables that define the
+  // maximum safe area insets (safe-area-max-inset-*).
+  kSafeAreaMaxInsetTop,
+  kSafeAreaMaxInsetLeft,
+  kSafeAreaMaxInsetBottom,
+  kSafeAreaMaxInsetRight,
+
   // The keyboard area insets are six environment variables that define a
   // virtual keyboard rectangle by its top, right, bottom, left, width and
   // height insets

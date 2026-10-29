@@ -27,6 +27,16 @@ void SetDefaultEnvironmentVariables(StyleEnvironmentVariables* instance) {
                         kSafeAreaInsetDefault);
   instance->SetVariable(UADefinedVariable::kSafeAreaInsetRight,
                         kSafeAreaInsetDefault);
+  if (RuntimeEnabledFeatures::CSSSafeAreaMaxInsetEnabled()) {
+    instance->SetVariable(UADefinedVariable::kSafeAreaMaxInsetTop,
+                          kSafeAreaInsetDefault);
+    instance->SetVariable(UADefinedVariable::kSafeAreaMaxInsetLeft,
+                          kSafeAreaInsetDefault);
+    instance->SetVariable(UADefinedVariable::kSafeAreaMaxInsetBottom,
+                          kSafeAreaInsetDefault);
+    instance->SetVariable(UADefinedVariable::kSafeAreaMaxInsetRight,
+                          kSafeAreaInsetDefault);
+  }
   instance->SetVariable(UADefinedVariable::kKeyboardInsetTop,
                         kKeyboardInsetDefault);
   instance->SetVariable(UADefinedVariable::kKeyboardInsetLeft,
@@ -59,6 +69,14 @@ const AtomicString StyleEnvironmentVariables::GetVariableName(
     UADefinedVariable variable,
     const FeatureContext* feature_context) {
   switch (variable) {
+    case UADefinedVariable::kSafeAreaMaxInsetTop:
+      return AtomicString("safe-area-max-inset-top");
+    case UADefinedVariable::kSafeAreaMaxInsetLeft:
+      return AtomicString("safe-area-max-inset-left");
+    case UADefinedVariable::kSafeAreaMaxInsetBottom:
+      return AtomicString("safe-area-max-inset-bottom");
+    case UADefinedVariable::kSafeAreaMaxInsetRight:
+      return AtomicString("safe-area-max-inset-right");
     case UADefinedVariable::kSafeAreaInsetTop:
       return AtomicString("safe-area-inset-top");
     case UADefinedVariable::kSafeAreaInsetLeft:
