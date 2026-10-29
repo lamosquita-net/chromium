@@ -156,7 +156,7 @@ class CONTENT_EXPORT ServiceWorkerClient final
   void OnEndNavigationCommit();
 
   // Must be called before `CommitResponse()`.
-  void UpdateUrls(const GURL& url,
+  void UpdateUrls(const GURL& creation_url,
                   const std::optional<url::Origin>& top_frame_origin,
                   const blink::StorageKey& storage_key);
 
@@ -196,6 +196,14 @@ class CONTENT_EXPORT ServiceWorkerClient final
   // The URL may also change on redirects during loading. Once
   // is_response_committed() is true, the URL should no longer change.
   const GURL& url() const { return url_; }
+
+  // The creation_url is the same as the url property above, but without
+  // having the URL fragment removed. This is necessary for the
+  // JS ServiceWorkerClient.url() property.
+  // See https://html.spec.whatwg.org/C/#concept-environment-creation-url
+  //
+  // TODO(crbug.com/384759487): Consider merging `url()` into `creation_url()`.
+  const GURL& creation_url() const { return creation_url_; }
 
   // The origin of the top frame of the client. This is more specific than the
   // `top_frame_site` in the storage key, so must be passed separately.
@@ -298,16 +306,16 @@ class CONTENT_EXPORT ServiceWorkerClient final
 
   // For service worker clients. Returns the URL that is used for scope matching
   // algorithm. This can be different from url() in the case of blob URL
-  // workers. In that case, url() may be like "blob://https://a.test" and the
-  // scope matching URL is "https://a.test", inherited from the parent container
-  // host.
+  // workers or srcdoc/about:blank iframes. In that case, url() may be like
+  // "blob://https://a.test" or "about:srcdoc" and the scope matching URL is
+  // "https://a.test", inherited from the parent container host.
   const GURL& GetUrlForScopeMatch() const;
 
-  // For service worker clients that are dedicated workers. Inherits the
-  // controller of the creator document or worker. Used when the client was
-  // created with a blob URL.
+  // For service worker clients that are dedicated workers and srcdoc iframe.
+  // Inherits the controller of the creator document or worker. Used when the
+  // client was created with a blob, about:srcdoc or about:blank URL.
   void InheritControllerFrom(ServiceWorkerClient& creator_host,
-                             const GURL& blob_url);
+                             const GURL& client_url);
 
   void SetContainerReady();
 
@@ -344,7 +352,7 @@ class CONTENT_EXPORT ServiceWorkerClient final
 
   friend class ServiceWorkerContainerHostTest;
 
-  void UpdateUrlsInternal(const GURL& url,
+  void UpdateUrlsInternal(const GURL& creation_url,
                           const std::optional<url::Origin>& top_frame_origin,
                           const blink::StorageKey& storage_key);
 
@@ -437,6 +445,7 @@ class CONTENT_EXPORT ServiceWorkerClient final
 
   // See comments for the getter functions.
   GURL url_;
+  GURL creation_url_;
   std::optional<url::Origin> top_frame_origin_;
   blink::StorageKey key_;
 
@@ -490,8 +499,9 @@ class CONTENT_EXPORT ServiceWorkerClient final
   std::optional<ServiceWorkerClientInfo> client_info_;
 
   // The URL used for service worker scope matching. It is empty except in the
-  // case of a service worker client with a blob URL.
-  GURL scope_match_url_for_blob_client_;
+  // case of a service worker client with a blob, about:blank or about:srcdoc
+  // URL.
+  GURL scope_match_url_for_client_;
 
   // Become true if the container is inherited by other container.
   bool is_inherited_ = false;

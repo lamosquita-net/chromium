@@ -517,6 +517,18 @@ BASE_FEATURE(kServiceWorkerStaticRouterRaceRequestFix,
              "kServiceWorkerStaticRouterRaceRequestFix",
              base::FEATURE_ENABLED_BY_DEFAULT);
 
+// (crbug.com/41411856): When enabled, the srcdoc iframes are controlled by the
+// same service worker that controls their parent.
+BASE_FEATURE(kServiceWorkerSrcdocSupport,
+             "ServiceWorkerSrcdocSupport",
+             base::FEATURE_ENABLED_BY_DEFAULT);
+
+// (crbug.com/41337436): When enabled, Client.url is the creation URL of the
+// client, as in Chrome 135.
+BASE_FEATURE(kServiceWorkerClientUrlIsCreationUrl,
+             "ServiceWorkerClientUrlIsCreationUrl",
+             base::FEATURE_ENABLED_BY_DEFAULT);
+
 // The set of ServiceWorker to bypass while making navigation request.
 // They are represented by a comma separated list of HEX encoded SHA256 hash of
 // the ServiceWorker's scripts.

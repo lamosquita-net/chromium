@@ -513,7 +513,8 @@ void ServiceWorkerContextCore::OnClientDestroyed(
       service_worker_client.container_host()
           ? service_worker_client.container_host()->ukm_source_id()
           : ukm::kInvalidSourceId,
-      service_worker_client.url(), service_worker_client.GetClientType());
+      service_worker_client.GetUrlForScopeMatch(),
+      service_worker_client.GetClientType());
 }
 
 void ServiceWorkerClientOwner::DestroyServiceWorkerClient(
@@ -697,7 +698,8 @@ void ServiceWorkerContextCore::NotifyClientIsExecutionReady(
   observer_list_->Notify(
       FROM_HERE, &ServiceWorkerContextCoreObserver::OnClientIsExecutionReady,
       service_worker_client.container_host()->ukm_source_id(),
-      service_worker_client.url(), service_worker_client.GetClientType());
+      service_worker_client.GetUrlForScopeMatch(),
+      service_worker_client.GetClientType());
 }
 
 bool ServiceWorkerContextCore::MaybeHasRegistrationForStorageKey(

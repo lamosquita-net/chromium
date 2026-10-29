@@ -5823,7 +5823,49 @@ void NavigationRequest::OnWillCommitWithoutUrlLoaderChecksComplete(
   // Cases with a UrlLoader are handled in OnStartChecksComplete.
   MaybeDispatchNavigateEventForCrossDocumentTraversal();
 
+  InheritServiceWorkerControllerFromParentIfNeeded();
+
   CommitNavigation();
+}
+
+void NavigationRequest::InheritServiceWorkerControllerFromParentIfNeeded() {
+  if (!base::FeatureList::IsEnabled(features::kServiceWorkerSrcdocSupport)) {
+    return;
+  }
+
+  CHECK(!loader_);
+  CHECK(!service_worker_handle_);
+  RenderFrameHostImpl* parent = frame_tree_node()->parent();
+  if (!parent || !GetURL().IsAboutSrcdoc()) {
+    return;
+  }
+  base::WeakPtr<ServiceWorkerClient> parent_service_worker_client =
+      parent->GetLastCommittedServiceWorkerClient();
+  if (!parent_service_worker_client) {
+    return;
+  }
+
+  if ((frame_tree_node_->pending_frame_policy().sandbox_flags &
+       network::mojom::WebSandboxFlags::kOrigin) ==
+      network::mojom::WebSandboxFlags::kOrigin) {
+    return;
+  }
+  StoragePartition* partition = GetStoragePartitionWithCurrentSiteInfo();
+  auto* service_worker_context = static_cast<ServiceWorkerContextWrapper*>(
+      partition->GetServiceWorkerContext());
+  // ServiceWorkerMainResourceHandle is not used for intercepting the srcdoc
+  // iframe main resource. (FlyWeb: the 128 constructor has no
+  // fetch_event_client_id.)
+  service_worker_handle_ = std::make_unique<ServiceWorkerMainResourceHandle>(
+      service_worker_context, base::DoNothing(), parent_service_worker_client);
+  service_worker_handle_->set_service_worker_client(
+      service_worker_context->context()
+          ->service_worker_client_owner()
+          .CreateServiceWorkerClientForWindow(
+              IsSecureFrame(frame_tree_node_->parent()),
+              frame_tree_node_->frame_tree_node_id()));
+  service_worker_handle_->service_worker_client()->InheritControllerFrom(
+      *parent_service_worker_client, net::SimplifyUrlForRequest(GetURL()));
 }
 
 void NavigationRequest::RunCommitDeferringConditions() {

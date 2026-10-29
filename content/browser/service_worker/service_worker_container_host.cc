@@ -123,7 +123,7 @@ void ServiceWorkerContainerHostForClient::Register(
     return;
   }
 
-  std::vector<GURL> urls = {url(), options->scope, script_url};
+  std::vector<GURL> urls = {url_for_access_check(), options->scope, script_url};
   if (!service_worker_security_utils::AllOriginsMatchAndCanAccessServiceWorkers(
           urls)) {
     mojo::ReportBadMessage(ServiceWorkerConsts::kBadMessageImproperOrigins);
@@ -136,7 +136,8 @@ void ServiceWorkerContainerHostForClient::Register(
   }
 
   if (!service_worker_security_utils::
-          OriginCanRegisterServiceWorkerFromJavascript(url())) {
+          OriginCanRegisterServiceWorkerFromJavascript(
+              url_for_access_check())) {
     mojo::ReportBadMessage(ServiceWorkerConsts::kBadMessageImproperOrigins);
     // ReportBadMessage() will terminate the renderer process, but Mojo
     // complains if the callback is not run. Just run it with nonsense
@@ -198,7 +199,7 @@ void ServiceWorkerContainerHostForClient::GetRegistration(
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   if (!CanServeContainerHostMethods(
-          &callback, url(), GURL(),
+          &callback, url_for_access_check(), GURL(),
           ServiceWorkerConsts::kServiceWorkerGetRegistrationErrorPrefix,
           nullptr)) {
     return;
@@ -239,7 +240,7 @@ void ServiceWorkerContainerHostForClient::GetRegistrations(
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   if (!CanServeContainerHostMethods(
-          &callback, url(), GURL(),
+          &callback, url_for_access_check(), GURL(),
           ServiceWorkerConsts::kServiceWorkerGetRegistrationsErrorPrefix,
           std::nullopt)) {
     return;
@@ -771,6 +772,11 @@ const GURL& ServiceWorkerContainerHostForClient::url() const {
   return service_worker_client().url();
 }
 
+const GURL& ServiceWorkerContainerHostForClient::url_for_access_check() const {
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  return service_worker_client().GetUrlForScopeMatch();
+}
+
 const base::WeakPtr<ServiceWorkerContextCore>&
 ServiceWorkerContainerHostForServiceWorker::context() const {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
@@ -784,6 +790,12 @@ ServiceWorkerContainerHostForServiceWorker::AsWeakPtr() {
 }
 
 const GURL& ServiceWorkerContainerHostForServiceWorker::url() const {
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  return url_;
+}
+
+const GURL& ServiceWorkerContainerHostForServiceWorker::url_for_access_check()
+    const {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   return url_;
 }
@@ -1028,7 +1040,7 @@ bool ServiceWorkerContainerHostForClient::IsValidGetRegistrationMessage(
     *out_error = ServiceWorkerConsts::kBadMessageInvalidURL;
     return false;
   }
-  std::vector<GURL> urls = {url(), client_url};
+  std::vector<GURL> urls = {url_for_access_check(), client_url};
   if (!service_worker_security_utils::AllOriginsMatchAndCanAccessServiceWorkers(
           urls)) {
     *out_error = ServiceWorkerConsts::kBadMessageImproperOrigins;
@@ -1045,7 +1057,7 @@ bool ServiceWorkerContainerHostForClient::IsValidGetRegistrationsMessage(
     *out_error = ServiceWorkerConsts::kBadMessageFromNonWindow;
     return false;
   }
-  if (!OriginCanAccessServiceWorkers(url())) {
+  if (!OriginCanAccessServiceWorkers(url_for_access_check())) {
     *out_error = ServiceWorkerConsts::kBadMessageImproperOrigins;
     return false;
   }

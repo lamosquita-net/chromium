@@ -226,7 +226,7 @@ void ServiceWorkerControlleeRequestHandler::InitializeServiceWorkerClient(
   storage_key_ = storage_key;
 
   service_worker_client_->UpdateUrls(
-      stripped_url_,
+      tentative_resource_request.url,
       // The storage key only has a top_level_site, not
       // an origin, so we must extract the origin from
       // trusted_params.
