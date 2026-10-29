@@ -3250,20 +3250,11 @@ void BaseRenderingContext2D::setFont(const String& new_font) {
 
 static inline TextDirection ToTextDirection(
     CanvasRenderingContext2DState::Direction direction,
-    HTMLCanvasElement* canvas,
-    const ComputedStyle** computed_style = nullptr) {
-  const ComputedStyle* style =
-      (canvas &&
-       (computed_style ||
-        direction == CanvasRenderingContext2DState::kDirectionInherit))
-          ? canvas->EnsureComputedStyle()
-          : nullptr;
-  if (computed_style) {
-    *computed_style = style;
-  }
+    CanvasRenderingContextHost* host,
+    const ComputedStyle* style = nullptr) {
   switch (direction) {
     case CanvasRenderingContext2DState::kDirectionInherit:
-      return style ? style->Direction() : TextDirection::kLtr;
+      return host ? host->GetTextDirection(style) : TextDirection::kLtr;
     case CanvasRenderingContext2DState::kDirectionRTL:
       return TextDirection::kRtl;
     case CanvasRenderingContext2DState::kDirectionLTR:
@@ -3282,15 +3273,9 @@ OffscreenCanvas* BaseRenderingContext2D::HostAsOffscreenCanvas() const {
 }
 
 String BaseRenderingContext2D::direction() const {
-  HTMLCanvasElement* canvas = HostAsHTMLCanvasElement();
   const CanvasRenderingContext2DState& state = GetState();
-  if (state.GetDirection() ==
-          CanvasRenderingContext2DState::kDirectionInherit &&
-      canvas) {
-    canvas->GetDocument().UpdateStyleAndLayoutTreeForElement(
-        canvas, DocumentUpdateReason::kCanvas);
-  }
-  return ToTextDirection(state.GetDirection(), canvas) == TextDirection::kRtl
+  return ToTextDirection(state.GetDirection(),
+                         GetCanvasRenderingContextHost()) == TextDirection::kRtl
              ? kRtlDirectionString
              : kLtrDirectionString;
 }
@@ -3405,10 +3390,11 @@ void BaseRenderingContext2D::DrawTextInternal(
 
   // FIXME: Need to turn off font smoothing.
 
-  const ComputedStyle* computed_style = nullptr;
   const CanvasRenderingContext2DState& state = GetState();
-  TextDirection direction =
-      ToTextDirection(state.GetDirection(), canvas, &computed_style);
+  const ComputedStyle* computed_style =
+      canvas ? canvas->EnsureComputedStyle() : nullptr;
+  TextDirection direction = ToTextDirection(
+      state.GetDirection(), GetCanvasRenderingContextHost(), computed_style);
   bool is_rtl = direction == TextDirection::kRtl;
   bool bidi_override =
       computed_style ? IsOverride(computed_style->GetUnicodeBidi()) : false;
@@ -3516,7 +3502,10 @@ TextMetrics* BaseRenderingContext2D::measureText(const String& text) {
   const Font& font = AccessFont(canvas);
 
   const CanvasRenderingContext2DState& state = GetState();
-  TextDirection direction = ToTextDirection(state.GetDirection(), canvas);
+  const ComputedStyle* computed_style =
+      canvas ? canvas->EnsureComputedStyle() : nullptr;
+  TextDirection direction = ToTextDirection(
+      state.GetDirection(), GetCanvasRenderingContextHost(), computed_style);
 
   return MakeGarbageCollected<TextMetrics>(
       font, direction, state.GetTextBaseline(), state.GetTextAlign(), text);

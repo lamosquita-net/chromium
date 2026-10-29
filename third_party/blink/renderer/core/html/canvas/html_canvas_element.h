@@ -165,6 +165,8 @@ class CORE_EXPORT HTMLCanvasElement final
 
   void DiscardResourceProvider() override;
 
+  TextDirection GetTextDirection(const ComputedStyle*) override;
+
   FontSelector* GetFontSelector() override;
 
   bool ShouldBeDirectComposited() const;
