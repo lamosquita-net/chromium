@@ -2744,6 +2744,13 @@ const CSSValue* StyleResolver::ComputeValue(
     const CSSValue& value) {
   const ComputedStyle* base_style = element->GetComputedStyle();
   StyleResolverState state(element->GetDocument(), *element);
+  // The document element has no parent style; make sure there is one, as
+  // StyleResolverState::EnsureParentStyle() does in 135 (crbug 404734313).
+  if (!state.ParentStyle()) {
+    state.SetParentStyle(
+        element->GetDocument().GetStyleResolver().InitialStyleForElement());
+    state.SetLayoutParentStyle(state.ParentStyle());
+  }
   STACK_UNINITIALIZED StyleCascade cascade(state);
   state.SetStyle(*base_style);
   auto* set =
