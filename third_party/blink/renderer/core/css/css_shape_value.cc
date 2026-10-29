@@ -26,13 +26,14 @@ void AppendControlPointCSSText(StringBuilder& builder,
   if ((is_relative && control_point.first != CSSValueID::kStart) ||
       (!is_relative && control_point.first != CSSValueID::kOrigin)) {
     builder.Append(" from ");
-    builder.Append(GetCSSValueNameAs<StringView>(control_point.first));
+    // FlyWeb: the 128 has getValueName() instead of GetCSSValueNameAs<>().
+    builder.Append(getValueName(control_point.first));
   }
 }
 }  // namespace
 String CSSShapeCommand::CSSText() const {
   if (type_ == Type::kPathSegClosePath) {
-    return GetCSSValueNameAs<String>(CSSValueID::kClose);
+    return String(getValueName(CSSValueID::kClose));
   }
 
   StringBuilder builder;

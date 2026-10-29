@@ -16,6 +16,8 @@
 #include "third_party/blink/renderer/core/animation/interpolable_length.h"
 #include "third_party/blink/renderer/core/animation/interpolable_value.h"
 #include "third_party/blink/renderer/core/css/css_identifier_value.h"
+#include "third_party/blink/renderer/core/css/css_math_function_value.h"
+#include "third_party/blink/renderer/core/css/css_numeric_literal_value.h"
 #include "third_party/blink/renderer/core/css/css_path_value.h"
 #include "third_party/blink/renderer/core/css/css_primitive_value.h"
 #include "third_party/blink/renderer/core/css/css_shape_value.h"
@@ -774,8 +776,20 @@ InterpolationValue CSSShapeInterpolationType::MaybeConvertValue(
         const auto& arc =
             static_cast<const cssvalue::CSSShapeArcCommand&>(*command);
         WritePair(To<CSSValuePair>(arc.GetEndPoint()));
-        interpolable_segments.push_back(
-            MakeGarbageCollected<InterpolableNumber>(arc.Angle()));
+        // FlyWeb: the 128 has no InterpolableNumber(const CSSPrimitiveValue&);
+        // build it as the other angle interpolations do, in degrees or as a
+        // math expression resolved later by Value(conversion_data_).
+        const CSSPrimitiveValue& angle = arc.Angle();
+        if (const auto* numeric = DynamicTo<CSSNumericLiteralValue>(angle)) {
+          interpolable_segments.push_back(
+              MakeGarbageCollected<InterpolableNumber>(
+                  numeric->ComputeDegrees(),
+                  CSSPrimitiveValue::UnitType::kDegrees));
+        } else {
+          interpolable_segments.push_back(
+              MakeGarbageCollected<InterpolableNumber>(
+                  *To<CSSMathFunctionValue>(angle).ExpressionNode()));
+        }
         WritePair(arc.Radius());
         interpolable_segments.push_back(
             MakeGarbageCollected<InterpolableNumber>(

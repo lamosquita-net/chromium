@@ -1993,7 +1993,11 @@ void EditingStyle::ComputeValues(Element* element) {
           mutable_style_->CssParserMode());
 
   // Resolve each property in the current mutable_style_.
-  for (const CSSPropertyValue& property : mutable_style_->Properties()) {
+  // FlyWeb: the 128 has no MutableCSSPropertyValueSet::Properties(); walk by
+  // index with PropertyAt(), which gives the same Name/Value/IsImportant.
+  for (unsigned i = 0; i < mutable_style_->PropertyCount(); ++i) {
+    CSSPropertyValueSet::PropertyReference property =
+        mutable_style_->PropertyAt(i);
     const CSSValue& value = property.Value();
 
     if (value.IsUnparsedDeclaration() || value.IsPendingSubstitutionValue()) {
