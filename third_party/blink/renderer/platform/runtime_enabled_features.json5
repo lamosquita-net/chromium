@@ -3428,8 +3428,8 @@
       status: "stable",
     },
     {
+      // Off: upstream reverted bc351d7210f (fd7a39b9edd, crbug 474377386).
       name: "PrevOrNextCandidateIsEditingRootChild",
-      status: "stable",
     },
     {
       name: "PopoverDialogNewFocusBehavior",
