@@ -51,6 +51,10 @@ EnumTraits<network::mojom::CookieExemptionReason,
       return network::mojom::CookieExemptionReason::kCorsOptIn;
     case net::CookieInclusionStatus::ExemptionReason::kScheme:
       return network::mojom::CookieExemptionReason::kScheme;
+    case net::CookieInclusionStatus::ExemptionReason::
+        kSameSiteNoneCookiesInSandbox:
+      return network::mojom::CookieExemptionReason::
+          kSameSiteNoneCookiesInSandbox;
   }
 }
 
@@ -90,6 +94,10 @@ bool EnumTraits<network::mojom::CookieExemptionReason,
       return true;
     case network::mojom::CookieExemptionReason::kScheme:
       *output = net::CookieInclusionStatus::ExemptionReason::kScheme;
+      return true;
+    case network::mojom::CookieExemptionReason::kSameSiteNoneCookiesInSandbox:
+      *output = net::CookieInclusionStatus::ExemptionReason::
+          kSameSiteNoneCookiesInSandbox;
       return true;
   }
 }

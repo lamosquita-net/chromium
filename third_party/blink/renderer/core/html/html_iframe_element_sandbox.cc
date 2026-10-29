@@ -7,6 +7,7 @@
 #include "third_party/blink/renderer/core/html/fenced_frame/html_fenced_frame_element.h"
 #include "third_party/blink/renderer/core/html/html_frame_owner_element.h"
 #include "third_party/blink/renderer/core/html/html_iframe_element.h"
+#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
 
 namespace blink {
 
@@ -34,13 +35,22 @@ const char* const kSupportedSandboxTokens[] = {
 constexpr char kStorageAccessAPISandboxToken[] =
     "allow-storage-access-by-user-activation";
 
+// TODO (https://crbug.com/372894175) move this into |kSupportedSandboxTokens|
+// when feature is enabled by default.
+constexpr char kAllowSameSiteNoneCookiesSandboxToken[] =
+    "allow-same-site-none-cookies";
+
 bool IsTokenSupported(const AtomicString& token) {
   for (const char* supported_token : kSupportedSandboxTokens) {
     if (token == supported_token)
       return true;
   }
 
-  return token == kStorageAccessAPISandboxToken;
+  if (token == kStorageAccessAPISandboxToken) {
+    return true;
+  }
+  return token == kAllowSameSiteNoneCookiesSandboxToken &&
+         RuntimeEnabledFeatures::AllowSameSiteNoneCookiesInSandboxEnabled();
 }
 
 }  // namespace

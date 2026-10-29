@@ -47,6 +47,8 @@ WebSandboxFlags ParseWebSandboxToken(std::string_view token) {
        WebSandboxFlags::kTopNavigationByUserActivation},
       {"allow-top-navigation-to-custom-protocols",
        WebSandboxFlags::kTopNavigationToCustomProtocols},
+      {"allow-same-site-none-cookies",
+       WebSandboxFlags::kAllowSameSiteNoneCookies},
   };
 
   for (const auto& it : table) {

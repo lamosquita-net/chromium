@@ -3078,6 +3078,11 @@ class CONTENT_EXPORT RenderFrameHostImpl
     associated_registry_->GetInterfacesForTesting(out);
   }
 
+  // Returns true if no frame ancestors of a sandboxed context are cross-site
+  // with `frame_origin` (or its precursor if opaque).
+  bool AncestorsAllowSameSiteNoneCookiesOverride(
+      const url::Origin& frame_origin) const;
+
  protected:
   friend class RenderFrameHostFactory;
 
