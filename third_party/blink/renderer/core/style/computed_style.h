@@ -219,6 +219,9 @@ class ComputedStyle final : public ComputedStyleBase {
   // Used by CSS animations. We can't allow them to animate based off visited
   // colors.
   friend class CSSPropertyEquality;
+  // Access Visibility()
+  friend class CSSVisibilityInterpolationType;
+  friend class InheritedVisibilityChecker;
 
   // Accesses GetColor().
   friend class ComputedStyleUtils;
@@ -1840,6 +1843,12 @@ class ComputedStyle final : public ComputedStyleBase {
 
   bool ScrollsOverflow() const {
     return ScrollsOverflowX() || ScrollsOverflowY();
+  }
+
+  // Returns true if the element is HTML inert, or if 'interactivity' computes
+  // to 'inert'.
+  bool IsInert() const {
+    return IsHTMLInert() || Interactivity() == EInteractivity::kInert;
   }
 
   // Visibility utility functions.

@@ -860,6 +860,8 @@ enum CSSSampleId {
     // text-wrap-style).
     kTextWrapMode = 805,
     kTextWrapStyle = 806,
+    // FlyWeb (level 135): same number as Chrome 135.
+    kInteractivity = 811,
 
     // 1. Add new features above this line (don't change the assigned numbers of
     //    the existing items).

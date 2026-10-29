@@ -1931,5 +1931,9 @@
     // interpolate-size
     "numeric-only",
     "allow-keywords",
+
+    // interactivity
+    // auto
+    "inert",
   ],
 }

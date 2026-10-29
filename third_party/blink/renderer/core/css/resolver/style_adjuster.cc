@@ -857,8 +857,8 @@ static void AdjustStyleForInert(ComputedStyleBuilder& builder,
   }
 
   if (element->IsInertRoot()) {
-    builder.SetIsInert(true);
-    builder.SetIsInertIsInherited(false);
+    builder.SetIsHTMLInert(true);
+    builder.SetIsHTMLInertIsInherited(false);
     return;
   }
 
@@ -868,13 +868,13 @@ static void AdjustStyleForInert(ComputedStyleBuilder& builder,
     modal_element = Fullscreen::FullscreenElementFrom(document);
   }
   if (modal_element == element) {
-    builder.SetIsInert(false);
-    builder.SetIsInertIsInherited(false);
+    builder.SetIsHTMLInert(false);
+    builder.SetIsHTMLInertIsInherited(false);
     return;
   }
   if (modal_element && element == document.documentElement()) {
-    builder.SetIsInert(true);
-    builder.SetIsInertIsInherited(false);
+    builder.SetIsHTMLInert(true);
+    builder.SetIsHTMLInertIsInherited(false);
     return;
   }
 
@@ -883,8 +883,8 @@ static void AdjustStyleForInert(ComputedStyleBuilder& builder,
         base_data->GetBaseComputedStyle()->Display() == EDisplay::kNone) {
       // Elements which are transitioning to display:none should become inert:
       // https://github.com/w3c/csswg-drafts/issues/8389
-      builder.SetIsInert(true);
-      builder.SetIsInertIsInherited(false);
+      builder.SetIsHTMLInert(true);
+      builder.SetIsHTMLInertIsInherited(false);
       return;
     }
   }

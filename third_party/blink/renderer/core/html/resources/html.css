@@ -1743,4 +1743,15 @@ html::grammar-error {
   }
 }
 
+/* https://drafts.csswg.org/css-ui-4/#inertness */
+/* Reducing specificity with :where since [inert] needs to override. Also
+   explicitly use 'dialog' to avoid adding universal bucket rule. Separate rule
+   added for :fullscreen in fullscreen.css. */
+dialog:where(:modal) {
+  interactivity: auto;
+}
+[inert] {
+  interactivity: inert;
+}
+
 /* noscript is handled internally, as it depends on settings. */

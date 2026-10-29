@@ -1253,6 +1253,9 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
     case CSSPropertyID::kInterpolateSize:
       return value_id == CSSValueID::kNumericOnly ||
              value_id == CSSValueID::kAllowKeywords;
+    case CSSPropertyID::kInteractivity:
+      DCHECK(RuntimeEnabledFeatures::CSSInertEnabled());
+      return value_id == CSSValueID::kAuto || value_id == CSSValueID::kInert;
     case CSSPropertyID::kIsolation:
       return value_id == CSSValueID::kAuto || value_id == CSSValueID::kIsolate;
     case CSSPropertyID::kListStylePosition:
@@ -1705,6 +1708,7 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
     CSSPropertyID::kAll,
     CSSPropertyID::kAppearance,
     CSSPropertyID::kMixBlendMode,
+    CSSPropertyID::kInteractivity,
     CSSPropertyID::kIsolation,
     CSSPropertyID::kBaselineSource,
     CSSPropertyID::kBorderBottomStyle,

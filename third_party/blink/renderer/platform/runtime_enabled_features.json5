@@ -1039,6 +1039,11 @@
       status: "stable",
     },
     {
+      // Support making elements inert through the interactivity property.
+      name: "CSSInert",
+      status: "stable",
+    },
+    {
       // The `inset-area` CSS property has been renamed to `position-area`. This
       // feature (CSSInsetAreaProperty) enables the old `inset-area` property.
       // This was deprecated in M129, and disabled by default in M131. Assuming
@@ -2437,10 +2442,6 @@
     },
     {
       name: "InertElementNonEditable",
-      status: "stable",
-    },
-    {
-      name: "InertElementNonSearchable",
       status: "stable",
     },
     {
