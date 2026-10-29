@@ -1214,6 +1214,10 @@
       base_feature: "CssSelectorFragmentAnchor",
     },
     {
+      name: "CSSShapeFunction",
+      status: "stable",
+    },
+    {
       name: "CSSSignRelatedFunctions",
       status: "experimental",
     },
@@ -1288,6 +1292,11 @@
     {
       name: "CursorAnchorInfoMojoPipe",
       // No status as this will be controlled by the matching Chromium feature.
+    },
+    {
+      name: "CSSShapeFunctionCompositeAnimation",
+      status: "experimental",
+      depends_on: ["CSSShapeFunction", "CompositeClipPathAnimation"]
     },
     {
       // https://html.spec.whatwg.org/#dom-customelementregistry-getname
