@@ -451,6 +451,9 @@ class MODULES_EXPORT BaseRenderingContext2D : public CanvasPath {
 
   String font() const;
   void setFont(const String& new_font);
+  String lang() const;
+  void setLang(const String&);
+
 
   void fillText(const String& text, double x, double y);
   void fillText(const String& text, double x, double y, double max_width);
@@ -565,6 +568,7 @@ class MODULES_EXPORT BaseRenderingContext2D : public CanvasPath {
   virtual bool WillSetFont() const;
   virtual bool ResolveFont(const String& new_font) = 0;
   virtual bool CurrentFontResolvedAndUpToDate() const;
+  const LayoutLocale* LocaleFromLang();
 
   ALWAYS_INLINE CanvasRenderingContext2DState& GetState() const {
     return *state_stack_.back();
@@ -658,6 +662,8 @@ class MODULES_EXPORT BaseRenderingContext2D : public CanvasPath {
   // would typically happen.
   virtual bool ShouldDisableAccelerationBecauseOfReadback() const {
     return false;
+  static const char kInheritString[];
+
   }
 
   virtual bool IsPaint2D() const { return false; }

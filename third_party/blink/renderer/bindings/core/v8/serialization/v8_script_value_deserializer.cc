@@ -72,6 +72,7 @@
 #include "third_party/blink/renderer/platform/file_metadata.h"
 #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
 #include "third_party/blink/renderer/platform/runtime_enabled_features.h"
+#include "third_party/blink/renderer/platform/text/layout_locale.h"
 #include "third_party/blink/renderer/platform/wtf/date_math.h"
 
 namespace blink {
@@ -615,13 +616,16 @@ ScriptWrappable* V8ScriptValueDeserializer::ReadDOMObject(
                filter_quality = 0;
       SerializedTextDirection serialized_direction =
           SerializedTextDirection::kLtr;
+      String locale_string;
       if (!ReadUint32(&width) || !ReadUint32(&height) ||
+          !ReadUTF8String(&locale_string) ||
           !ReadUint32Enum<SerializedTextDirection>(&serialized_direction) ||
           !ReadUint32(&canvas_id) || !ReadUint32(&client_id) ||
           !ReadUint32(&sink_id) || !ReadUint32(&filter_quality))
         return nullptr;
       OffscreenCanvas* canvas =
           OffscreenCanvas::Create(GetScriptState(), width, height);
+      canvas->SetLocale(LayoutLocale::Get(AtomicString(locale_string)));
       SerializedTextDirectionSettings direction_setting(serialized_direction);
       canvas->SetTextDirection(direction_setting.GetTextDirection());
       canvas->SetPlaceholderCanvasId(canvas_id);

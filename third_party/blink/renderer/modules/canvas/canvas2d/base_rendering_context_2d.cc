@@ -108,6 +108,7 @@
 #include "third_party/blink/renderer/modules/canvas/canvas2d/identifiability_study_helper.h"
 #include "third_party/blink/renderer/modules/canvas/canvas2d/mesh_2d_index_buffer.h"
 #include "third_party/blink/renderer/modules/canvas/canvas2d/mesh_2d_uv_buffer.h"
+#include "third_party/blink/renderer/core/xml_names.h"
 #include "third_party/blink/renderer/modules/canvas/canvas2d/mesh_2d_vertex_buffer.h"
 #include "third_party/blink/renderer/modules/canvas/canvas2d/path_2d.h"
 #include "third_party/blink/renderer/modules/canvas/canvas2d/v8_canvas_style.h"
@@ -251,6 +252,7 @@ const char BaseRenderingContext2D::kCondensedString[] = "condensed";
 const char BaseRenderingContext2D::kSemiCondensedString[] = "semi-condensed";
 const char BaseRenderingContext2D::kNormalStretchString[] = "normal";
 const char BaseRenderingContext2D::kSemiExpandedString[] = "semi-expanded";
+const char BaseRenderingContext2D::kInheritString[] = "inherit";
 const char BaseRenderingContext2D::kExpandedString[] = "expanded";
 const char BaseRenderingContext2D::kExtraExpandedString[] = "extra-expanded";
 const char BaseRenderingContext2D::kUltraExpandedString[] = "ultra-expanded";
@@ -3222,7 +3224,8 @@ bool BaseRenderingContext2D::WillSetFont() const {
 }
 
 bool BaseRenderingContext2D::CurrentFontResolvedAndUpToDate() const {
-  return GetState().HasRealizedFont();
+  const CanvasRenderingContext2DState& state = GetState();
+  return state.HasRealizedFont() && !state.LangIsDirty();
 }
 
 void BaseRenderingContext2D::setFont(const String& new_font) {
@@ -3522,10 +3525,43 @@ void BaseRenderingContext2D::SnapshotStateForFilter() {
   GetState().SetFontForFilter(AccessFont(canvas));
 }
 
+String BaseRenderingContext2D::lang() const {
+  return GetState().GetLang();
+}
+
+void BaseRenderingContext2D::setLang(const String& lang_string) {
+  CanvasRenderingContext2DState& state = GetState();
+  if (state.GetLang() == lang_string) {
+    return;
+  }
+
+  // TODO(crbug.com/40191831): Instrument new canvas APIs.
+  identifiability_study_helper_.set_encountered_skipped_ops();
+
+  state.SetLang(lang_string);
+
+  // If the font has been realized, reset it to account for the new lang
+  // setting. When not yet realized, the lang will be accounted for the first
+  // time the font is realized.
+  if (state.HasRealizedFont()) {
+    setFont(font());
+  }
+}
+
+const LayoutLocale* BaseRenderingContext2D::LocaleFromLang() {
+  String lang_string = GetState().GetLang();
+  if (lang_string == kInheritString) {
+    return GetCanvasRenderingContextHost()->GetLocale();
+  }
+
+  return &LayoutLocale::ValueOrDefault(
+      LayoutLocale::Get(AtomicString(lang_string)));
+}
+
 void BaseRenderingContext2D::setLetterSpacing(const String& letter_spacing) {
   UseCounter::Count(GetTopExecutionContext(),
                     WebFeature::kCanvasRenderingContext2DLetterSpacing);
-  // TODO(crbug.com/1234113): Instrument new canvas APIs.
+  // TODO(crbug.com/40191831): Instrument new canvas APIs.
   identifiability_study_helper_.set_encountered_skipped_ops();
   CanvasRenderingContext2DState& state = GetState();
   if (!state.HasRealizedFont()) {

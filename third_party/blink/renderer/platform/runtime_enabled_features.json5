@@ -733,6 +733,11 @@
       status: "stable",
     },
     {
+      // https://chromestatus.com/feature/5066778773028864
+      name: "CanvasTextLang",
+      status: "stable",
+    },
+    {
       name: "ClipboardSvg",
       status: "stable",
     },

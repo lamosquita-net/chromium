@@ -202,6 +202,9 @@ class CORE_EXPORT OffscreenCanvas final
     text_direction_ = direction;
   }
 
+  const LayoutLocale* GetLocale() const override;
+  void SetLocale(scoped_refptr<const LayoutLocale> locale);
+
   FontSelector* GetFontSelector() override;
 
   void Trace(Visitor*) const override;
@@ -268,6 +271,10 @@ class CORE_EXPORT OffscreenCanvas final
 
   DOMNodeId placeholder_canvas_id_ = kInvalidDOMNodeId;
   std::optional<TextDirection> text_direction_;
+
+  // Required for the TextStyle lang attribute, only non-null if control
+  // was transferred from an HTML canvas.
+  scoped_refptr<const LayoutLocale> locale_ = nullptr;
 
   bool disposing_ = false;
   bool is_neutered_ = false;
