@@ -115,7 +115,7 @@ class OOFCandidateStyleIterator {
   explicit OOFCandidateStyleIterator(const LayoutObject& object,
                                      AnchorEvaluatorImpl& anchor_evaluator)
       : element_(DynamicTo<Element>(object.GetNode())),
-        style_(object.Style()),
+        original_style_(object.StyleRef()),
         anchor_evaluator_(anchor_evaluator) {
     Initialize();
   }
@@ -192,6 +192,13 @@ class OOFCandidateStyleIterator {
       }
     }
     UpdateStyle(index);
+
+    if (!style_) {
+      // The last successful fallback no longer exists. The rule may have been
+      // deleted. Update to base style (FlyWeb: upstream 69b4d66dc3,
+      // crbug.com/411170230).
+      UpdateStyle(std::nullopt);
+    }
   }
 
   std::optional<const CSSPropertyValueSet*> TrySetFromFallback(
@@ -252,6 +259,11 @@ class OOFCandidateStyleIterator {
 
  private:
   void Initialize() {
+    // FlyWeb: upstream 263c8e504d (crbug.com/427134601). Reset() calls this
+    // again, so start from the LayoutObject's style each time.
+    style_ = &original_style_;
+
+    // Not all OOFs have an element. LayoutViewTransitionRoot is one example.
     if (element_) {
       position_try_fallbacks_ = style_->GetPositionTryFallbacks();
 
@@ -339,6 +351,9 @@ class OOFCandidateStyleIterator {
   }
 
   Element* element_ = nullptr;
+
+  // The ComputedStyle stored on LayoutObject at construction time.
+  const ComputedStyle& original_style_;
 
   // The current candidate style if no auto anchor fallback is triggered.
   // Otherwise, the base style for generating auto anchor fallbacks.

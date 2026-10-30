@@ -4117,7 +4117,19 @@ StyleRecalcChange Element::RecalcOwnStyle(
   if (!child_change.ReattachLayoutTree() &&
       (GetForceReattachLayoutTree() || NeedsReattachLayoutTree() ||
        ComputedStyle::NeedsReattachLayoutTree(*this, old_style, new_style))) {
-    child_change = child_change.ForceReattachLayoutTree();
+    if (style_recalc_context.anchor_evaluator == nullptr) {
+      child_change = child_change.ForceReattachLayoutTree();
+    } else {
+      // position-try-fallbacks should not have style changes that causes layout
+      // tree changes. If they do, it is probably the ComputedStyle diff in
+      // NeedsReattachLayoutTree() that incorrectly detects a diff without an
+      // actual computed value change. If we ForceReattachLayoutTree() on the
+      // child_change here, we could end up accessing a destroyed LayoutObject
+      // in layout (FlyWeb: upstream 3f4d114155 / M138 e1b60b5b8c,
+      // crbug.com/420329041).
+      CHECK(!GetForceReattachLayoutTree());
+      CHECK(!NeedsReattachLayoutTree());
+    }
   }
 
   if (diff == ComputedStyle::Difference::kEqual) {
