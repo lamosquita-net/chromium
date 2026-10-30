@@ -2636,9 +2636,10 @@ TextSizeAdjust StyleBuilderConverter::ConvertTextSizeAdjust(
   }
   const CSSPrimitiveValue& primitive_value = To<CSSPrimitiveValue>(value);
   DCHECK(primitive_value.IsPercentage());
-  return TextSizeAdjust(primitive_value.ComputePercentage<float>(
-                            state.CssToLengthConversionData()) /
-                        100.0f);
+  return TextSizeAdjust(
+      static_cast<float>(primitive_value.ComputePercentage(
+          state.CssToLengthConversionData())) /
+      100.0f);
 }
 
 TextUnderlinePosition StyleBuilderConverter::ConvertTextUnderlinePosition(

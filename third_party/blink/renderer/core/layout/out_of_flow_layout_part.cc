@@ -718,8 +718,12 @@ OutOfFlowLayoutPart::ApplyPositionAreaOffsets(
       default_anchor_scroll_shift.ConvertToLogical(
           container_info.writing_direction, PhysicalSize(), PhysicalSize());
 
-  const LogicalBoxSides behaves_as_auto =
-      offsets.behaves_as_auto.ToLogical(container_info.writing_direction);
+  // FlyWeb: the 128 has no PhysicalBoxSides::ToLogical(), and LogicalBoxSides
+  // has line-left/right sides instead of inline-start/end.
+  const PhysicalToLogical<bool> behaves_as_auto(
+      container_info.writing_direction, offsets.behaves_as_auto.top,
+      offsets.behaves_as_auto.right, offsets.behaves_as_auto.bottom,
+      offsets.behaves_as_auto.left);
 
   // Only apply the shift to sides which behave like auto.
   // A shift can either be positive or negative (grow/shrink the rectangle).
@@ -729,19 +733,19 @@ OutOfFlowLayoutPart::ApplyPositionAreaOffsets(
   // If growing we typically grow by the shift, however if the rect edge is
   // below original rect edge, we grow only once they cross, below this is
   // referred to as "slack" which is always positive.
-  if (behaves_as_auto.block_start) {
+  if (behaves_as_auto.BlockStart()) {
     LayoutUnit delta;
     if (logical_shift.block_offset > LayoutUnit()) {
       delta = std::min(logical_shift.block_offset, rect.size.block_size);
     } else {
       const LayoutUnit slack =
-          std::max(LayoutUnit(), container_info.rect.BlockStartOffset() -
-                                     rect.BlockStartOffset());
+          std::max(LayoutUnit(), container_info.rect.offset.block_offset -
+                                     rect.offset.block_offset);
       delta = std::min(LayoutUnit(), logical_shift.block_offset + slack);
     }
-    rect.ShiftBlockStartEdgeTo(rect.BlockStartOffset() + delta);
+    rect.ShiftBlockStartEdgeTo(rect.offset.block_offset + delta);
   }
-  if (behaves_as_auto.block_end) {
+  if (behaves_as_auto.BlockEnd()) {
     LayoutUnit delta;
     if (logical_shift.block_offset > LayoutUnit()) {
       const LayoutUnit slack =
@@ -753,19 +757,19 @@ OutOfFlowLayoutPart::ApplyPositionAreaOffsets(
     }
     rect.ShiftBlockEndEdgeTo(rect.BlockEndOffset() + delta);
   }
-  if (behaves_as_auto.inline_start) {
+  if (behaves_as_auto.InlineStart()) {
     LayoutUnit delta;
     if (logical_shift.inline_offset > LayoutUnit()) {
       delta = std::min(logical_shift.inline_offset, rect.size.inline_size);
     } else {
       const LayoutUnit slack =
-          std::max(LayoutUnit(), container_info.rect.InlineStartOffset() -
-                                     rect.InlineStartOffset());
+          std::max(LayoutUnit(), container_info.rect.offset.inline_offset -
+                                     rect.offset.inline_offset);
       delta = std::min(LayoutUnit(), logical_shift.inline_offset + slack);
     }
-    rect.ShiftInlineStartEdgeTo(rect.InlineStartOffset() + delta);
+    rect.ShiftInlineStartEdgeTo(rect.offset.inline_offset + delta);
   }
-  if (behaves_as_auto.inline_end) {
+  if (behaves_as_auto.InlineEnd()) {
     LayoutUnit delta;
     if (logical_shift.inline_offset > LayoutUnit()) {
       const LayoutUnit slack =

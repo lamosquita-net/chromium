@@ -644,6 +644,7 @@ class MODULES_EXPORT BaseRenderingContext2D : public CanvasPath {
   static const char kExpandedString[];
   static const char kExtraExpandedString[];
   static const char kUltraExpandedString[];
+  static const char kInheritString[];
   static const char kSmallCapsVariantString[];
   static const char kAllSmallCapsVariantString[];
   static const char kPetiteVariantString[];
@@ -662,8 +663,6 @@ class MODULES_EXPORT BaseRenderingContext2D : public CanvasPath {
   // would typically happen.
   virtual bool ShouldDisableAccelerationBecauseOfReadback() const {
     return false;
-  static const char kInheritString[];
-
   }
 
   virtual bool IsPaint2D() const { return false; }

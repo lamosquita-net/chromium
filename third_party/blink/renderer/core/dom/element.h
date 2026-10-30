@@ -1550,7 +1550,7 @@ class CORE_EXPORT Element : public ContainerNode, public Animatable {
 
   // Mark for style invalidation/recalc for :lang() selectors to pick up the
   // changes.
-  void LangAttributeChanged();
+  virtual void LangAttributeChanged();
 
   TextDirection ParentDirectionality() const;
   bool RecalcSelfOrAncestorHasDirAuto();

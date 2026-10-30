@@ -2916,16 +2916,17 @@ double CSSMathExpressionOperation::EvaluateOperator(
       // But for now just handle the simplest case.
       return operands[1];
     }
+    case CSSMathOperator::kPow: {
+      DCHECK_EQ(operands.size(), 2u);
+      return std::pow(operands[0], operands[1]);
+    }
     case CSSMathOperator::kInvalid:
       NOTREACHED_IN_MIGRATION();
       break;
   }
   return 0;
 }
-    case CSSMathOperator::kPow: {
-      DCHECK_EQ(operands.size(), 2u);
-      return std::pow(operands[0], operands[1]);
-    }
+
 const CSSMathExpressionNode& CSSMathExpressionOperation::PopulateWithTreeScope(
     const TreeScope* tree_scope) const {
   Operands populated_operands;
