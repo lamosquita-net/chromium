@@ -80,7 +80,11 @@ void SVGScriptElement::DidNotifySubtreeInsertionsToDocument() {
 
 void SVGScriptElement::ChildrenChanged(const ChildrenChange& change) {
   SVGElement::ChildrenChanged(change);
-  loader_->ChildrenChanged();
+  // FlyWeb: no script execution inside moveBefore() (upstream 08939d0c19,
+  // crbug.com/502118936).
+  if (!GetDocument().StatePreservingAtomicMoveInProgress()) {
+    loader_->ChildrenChanged();
+  }
 
   // We'll record whether the script element children were ever changed by
   // the API (as opposed to the parser).

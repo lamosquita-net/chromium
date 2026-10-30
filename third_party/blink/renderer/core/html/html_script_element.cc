@@ -75,8 +75,12 @@ bool HTMLScriptElement::HasLegalLinkAttribute(const QualifiedName& name) const {
 
 void HTMLScriptElement::ChildrenChanged(const ChildrenChange& change) {
   HTMLElement::ChildrenChanged(change);
-  if (change.IsChildInsertion())
+  // FlyWeb: no script execution inside moveBefore() (upstream 2e3a535512,
+  // crbug.com/496292089).
+  if (change.IsChildInsertion() &&
+      !GetDocument().StatePreservingAtomicMoveInProgress()) {
     loader_->ChildrenChanged();
+  }
 
   // We'll record whether the script element children were ever changed by
   // the API (as opposed to the parser).

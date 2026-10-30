@@ -24,6 +24,7 @@
 
 #include "third_party/blink/renderer/core/html/forms/html_field_set_element.h"
 
+#include "third_party/blink/renderer/core/dom/document.h"
 #include "third_party/blink/renderer/core/dom/element_traversal.h"
 #include "third_party/blink/renderer/core/dom/events/event_dispatch_forbidden_scope.h"
 #include "third_party/blink/renderer/core/dom/layout_tree_builder_traversal.h"
@@ -144,8 +145,11 @@ void HTMLFieldSetElement::ChildrenChanged(const ChildrenChange& change) {
         focused_element = element;
     }
   }
-  if (focused_element)
+  // FlyWeb: blur() runs script; not inside moveBefore() (upstream
+  // bbc8fca2df, crbug.com/497964917).
+  if (!GetDocument().StatePreservingAtomicMoveInProgress() && focused_element) {
     focused_element->blur();
+  }
 }
 
 bool HTMLFieldSetElement::SupportsFocus(UpdateBehavior update_behavior) const {
