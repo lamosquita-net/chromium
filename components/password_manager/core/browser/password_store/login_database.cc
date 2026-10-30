@@ -1970,6 +1970,15 @@ DatabaseCleanupResult LoginDatabase::DeleteUndecryptableLogins() {
         EncryptionResult::kSuccess) {
       continue;
     }
+    // FlyWeb `fw1` (FS.25): the check above only covers the OSCrypt (`v10`)
+    // key. A `fw1` password that does not decrypt means the `fw1` key did not
+    // load (keychain denied or locked) or was replaced (keychain item deleted):
+    // never delete then, as with an unavailable `v10` key.
+    if (base::StartsWith(encrypted_password, "fw1")) {
+      metrics_util::LogDeleteUndecryptableLoginsReturnValue(
+          metrics_util::DeleteCorruptedPasswordsResult::kEncryptionUnavailable);
+      return DatabaseCleanupResult::kEncryptionUnavailable;
+    }
 
     // If it was not possible to decrypt the password, remove it from the
     // database.
