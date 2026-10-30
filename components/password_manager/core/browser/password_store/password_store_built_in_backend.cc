@@ -245,7 +245,13 @@ void PasswordStoreBuiltInBackend::InitBackend(
   subscription_ = os_crypt_async_->GetInstance(
       base::BindOnce(&ConvertToUniquePtr)
           .Then(std::move(init_database_callback)),
+#if BUILDFLAG(IS_MAC)
+      // FlyWeb: new passwords use the `fw1` key (upstream 136,
+      // kUseNewEncryptionMethod); `v10` data is still read.
+      os_crypt_async::Encryptor::Option::kNone);
+#else
       os_crypt_async::Encryptor::Option::kEncryptSyncCompat);
+#endif
 }
 
 void PasswordStoreBuiltInBackend::GetAllLoginsAsync(
