@@ -63,6 +63,7 @@
 #include "third_party/blink/renderer/core/trustedtypes/trusted_types_util.h"
 #include "third_party/blink/renderer/platform/bindings/exception_state.h"
 #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
+#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
 #include "third_party/blink/renderer/platform/wtf/text/string_builder.h"
 #include "ui/gfx/geometry/quad_f.h"
 
@@ -99,6 +100,7 @@ class RangeUpdateScope {
       range_->RemoveFromSelectionIfInDifferentRoot(*old_document_);
       range_->UpdateSelectionIfAddedToSelection();
     }
+    range_->ResetUpdateSelectionBehavior();
 
     range_->ScheduleVisualUpdateIfInRegisteredHighlight(
         range_->OwnerDocument());
@@ -218,11 +220,13 @@ void Range::setStart(Node* ref_node,
     return;
 
   start_.Set(*ref_node, offset, child_node);
+  // Since we're setting start here, it's now ok to update selection start.
+  update_selection_behavior_ =
+      update_selection_behavior_ == UpdateSelectionBehavior::kEndOnly
+          ? UpdateSelectionBehavior::kAll
+          : UpdateSelectionBehavior::kStartOnly;
 
-  if (did_move_document ||
-      HasDifferentRootContainer(&start_.Container(), &end_.Container()) ||
-      compareBoundaryPoints(start_, end_, ASSERT_NO_EXCEPTION) > 0)
-    collapse(true);
+  CollapseIfNeeded(did_move_document, /*collapse_to_start=*/true);
 }
 
 void Range::setEnd(Node* ref_node,
@@ -247,11 +251,13 @@ void Range::setEnd(Node* ref_node,
     return;
 
   end_.Set(*ref_node, offset, child_node);
+  // Since we're setting end here, it's now ok to update selection end.
+  update_selection_behavior_ =
+      update_selection_behavior_ == UpdateSelectionBehavior::kStartOnly
+          ? UpdateSelectionBehavior::kAll
+          : UpdateSelectionBehavior::kEndOnly;
 
-  if (did_move_document ||
-      HasDifferentRootContainer(&start_.Container(), &end_.Container()) ||
-      compareBoundaryPoints(start_, end_, ASSERT_NO_EXCEPTION) > 0)
-    collapse(false);
+  CollapseIfNeeded(did_move_document, /*collapse_to_start=*/false);
 }
 
 void Range::setStart(const Position& start, ExceptionState& exception_state) {
@@ -268,10 +274,28 @@ void Range::setEnd(const Position& end, ExceptionState& exception_state) {
 
 void Range::collapse(bool to_start) {
   RangeUpdateScope scope(this);
-  if (to_start)
+  if (to_start) {
     end_ = start_;
-  else
+  } else {
     start_ = end_;
+  }
+}
+
+void Range::CollapseIfNeeded(bool did_move_document, bool collapse_to_start) {
+  // If the boundary points have different shadow-including roots or start is
+  // after end, collapse the range and the selection.
+  if (did_move_document ||
+      &start_.Container().ShadowIncludingRoot() !=
+          &end_.Container().ShadowIncludingRoot() ||
+      StartPosition() > EndPosition()) {
+    ResetUpdateSelectionBehavior();
+    collapse(collapse_to_start);
+  } else if (HasDifferentRootContainer(&start_.Container(),
+                                       &end_.Container())) {
+    // If the boundary points have the same shadow-including root, but different
+    // roots, collapse the range only.
+    collapse(collapse_to_start);
+  }
 }
 
 bool Range::HasSameRoot(const Node& node) const {
@@ -337,10 +361,12 @@ int16_t Range::comparePoint(Node* ref_node,
     return 0;
 
   // compare to end, and point comes after
-  if (compareBoundaryPoints(ref_node, offset, &end_.Container(), end_.Offset(),
-                            exception_state) > 0 &&
-      !exception_state.HadException())
+  bool start_after_end =
+      compareBoundaryPoints(ref_node, offset, &end_.Container(), end_.Offset(),
+                            exception_state) > 0;
+  if (start_after_end && !exception_state.HadException()) {
     return 1;
+  }
 
   // point is in the middle of this range, or on the boundary points
   return 0;
@@ -412,7 +438,7 @@ int16_t Range::compareBoundaryPoints(Node* container_a,
   if (disconnected) {
     exception_state.ThrowDOMException(
         DOMExceptionCode::kWrongDocumentError,
-        "The two ranges are in separate documents.");
+        "The two ranges are in separate tree scopes.");
     return 0;
   }
   return result;
@@ -428,8 +454,9 @@ int16_t Range::compareBoundaryPoints(const RangeBoundaryPoint& boundary_a,
 
 bool Range::BoundaryPointsValid() const {
   DummyExceptionStateForTesting exception_state;
-  return compareBoundaryPoints(start_, end_, exception_state) <= 0 &&
-         !exception_state.HadException();
+  bool start_after_end =
+      compareBoundaryPoints(start_, end_, exception_state) > 0;
+  return !start_after_end && !exception_state.HadException();
 }
 
 void Range::deleteContents(ExceptionState& exception_state) {
@@ -1765,9 +1792,26 @@ void Range::UpdateSelectionIfAddedToSelection() {
   DCHECK(endContainer()->isConnected());
   DCHECK(endContainer()->GetDocument() == OwnerDocument());
   EventDispatchForbiddenScope no_events;
+
+  Position start_position = StartPosition();
+  Position end_position = EndPosition();
+  if (RuntimeEnabledFeatures::SelectionAcrossShadowDOMEnabled()) {
+    switch (update_selection_behavior_) {
+      case UpdateSelectionBehavior::kEndOnly:
+        start_position =
+            selection.GetSelectionInDOMTree().ComputeStartPosition();
+        break;
+      case UpdateSelectionBehavior::kStartOnly:
+        end_position = selection.GetSelectionInDOMTree().ComputeEndPosition();
+        break;
+      case UpdateSelectionBehavior::kAll:
+        break;
+    }
+  }
+
   selection.SetSelection(SelectionInDOMTree::Builder()
-                             .Collapse(StartPosition())
-                             .Extend(EndPosition())
+                             .Collapse(start_position)
+                             .Extend(end_position)
                              .Build(),
                          SetSelectionOptions::Builder()
                              .SetShouldCloseTyping(true)
@@ -1775,6 +1819,10 @@ void Range::UpdateSelectionIfAddedToSelection() {
                              .SetDoNotSetFocus(true)
                              .Build());
   selection.CacheRangeOfDocument(this);
+}
+
+void Range::ResetUpdateSelectionBehavior() {
+  update_selection_behavior_ = UpdateSelectionBehavior::kAll;
 }
 
 void Range::ScheduleVisualUpdateIfInRegisteredHighlight(Document& document) {

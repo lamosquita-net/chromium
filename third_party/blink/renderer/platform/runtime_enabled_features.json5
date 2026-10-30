@@ -4109,7 +4109,7 @@
       // Implement Selection API across shadow DOM
       // See https://w3c.github.io/selection-api/
       name: "SelectionAcrossShadowDOM",
-      status: "experimental",
+      status: "stable",
     },
     {
       // selection.isCollapsed should return false if anchor and focus nodes

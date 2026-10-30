@@ -29,6 +29,7 @@
 
 #include "third_party/blink/renderer/core/editing/dom_selection.h"
 
+#include "third_party/blink/renderer/bindings/core/v8/v8_get_composed_ranges_options.h"
 #include "third_party/blink/renderer/core/dom/document.h"
 #include "third_party/blink/renderer/core/dom/node.h"
 #include "third_party/blink/renderer/core/dom/range.h"
@@ -566,6 +567,75 @@ Range* DOMSelection::getRangeAt(unsigned index,
   Range* range = CreateRange(CreateRangeFromSelectionEditor());
   CacheRangeIfSelectionOfDocument(range);
   return range;
+}
+
+// https://www.w3.org/TR/selection-api/#dom-selection-getcomposedranges
+const StaticRangeVector DOMSelection::getComposedRanges(
+    const GetComposedRangesOptions* options) const {
+  StaticRangeVector ranges;
+  // 1. If this is empty, return an empty array.
+  if (!IsAvailable()) {
+    return ranges;
+  }
+  TemporaryRange temp_range(this, PrimaryRangeOrNull());
+  if (!temp_range.GetRange()) {
+    return ranges;
+  }
+
+  const SelectionInDOMTree& selection = Selection().GetSelectionInDOMTree();
+  // 2. Otherwise, let startNode be start node of the range associated with
+  // this, and let startOffset be start offset of the range.
+  const Position& start = selection.ComputeStartPosition();
+  Node* startNode = start.ComputeContainerNode();
+  unsigned startOffset = start.ComputeOffsetInContainerNode();
+  // 3. Rescope startNode and startOffset with listed shadow roots.
+  Rescope(startNode, startOffset, options->shadowRoots(), /*isEnd=*/false);
+
+  // 4. Let endNode be end node of the range associated with this, and let
+  // endOffset be end offset of the range.
+  const Position& end = selection.ComputeEndPosition();
+  Node* endNode = end.ComputeContainerNode();
+  unsigned endOffset = end.ComputeOffsetInContainerNode();
+  // 5. Rescope endNode and endOffset with listed shadow roots.
+  Rescope(endNode, endOffset, options->shadowRoots(), /*isEnd=*/true);
+
+  // 6. Return an array consisting of new StaticRange whose start node is
+  // startNode, start offset is startOffset, end node is endNode, and end
+  // offset is endOffset.
+  ranges.push_back(MakeGarbageCollected<StaticRange>(
+      Selection().GetDocument(), startNode, startOffset, endNode, endOffset));
+  return ranges;
+}
+
+// If isEnd is false, rescope following spec step 3.
+// Else, Rescope following sepc step 5.
+// https://www.w3.org/TR/selection-api/#dom-selection-getcomposedranges
+void DOMSelection::Rescope(Node*& node,
+                           unsigned& offset,
+                           const HeapVector<Member<ShadowRoot>>& shadowRoots,
+                           bool isEnd) const {
+  // 3. & 5. While node is a node, node's root is a shadow root, and
+  // node's root is not a shadow-including inclusive ancestor of any of
+  // shadowRoots, repeat these steps:
+  while (node) {
+    ShadowRoot* root = node->ContainingShadowRoot();
+    Element* host = node->OwnerShadowHost();
+    if (!root || !host) {
+      return;
+    }
+    for (auto& shadowRoot : shadowRoots) {
+      if (root->IsShadowIncludingInclusiveAncestorOf(*shadowRoot)) {
+        return;
+      }
+    }
+    // 1. Set node to node's root's host's parent.
+    node = host->parentNode();
+    // 2. Set offset to index of node's root's host.
+    offset = host->NodeIndex();
+    if (isEnd) {
+      offset += 1;
+    }
+  }
 }
 
 Range* DOMSelection::PrimaryRangeOrNull() const {
