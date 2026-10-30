@@ -251,6 +251,7 @@ std::optional<std::string> Encryptor::DecryptData(
     }
   }
 
+  BRAVE_ENCRYPTOR_DECRYPT_DATA_BEFORE_OS_CRYPT_FALLBACK
   // No keys are loaded, or no suitable provider was found, or decryption
   // failed. Fallback to using legacy OSCrypt to attempt decryption.
   std::string string_data(data.begin(), data.end());

@@ -1373,6 +1373,7 @@ void BrowserProcessImpl::PreMainMessageLoopRun() {
                 features::kUseAppBoundEncryptionProviderForEncryption))));
   }
 #endif  // BUILDFLAG(IS_WIN)
+  BRAVE_BROWSER_PROCESS_IMPL_ADD_OS_CRYPT_ASYNC_PROVIDERS
 
   os_crypt_async_ =
       std::make_unique<os_crypt_async::OSCryptAsync>(std::move(providers));
