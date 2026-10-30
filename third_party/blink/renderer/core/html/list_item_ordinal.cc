@@ -26,9 +26,13 @@ bool ListItemOrdinal::IsListOwner(const Node& node) {
   // the purposes of calculating ordinal values.
   // See https://html.spec.whatwg.org/#the-li-element and
   // https://drafts.csswg.org/css-contain-2/#containment-style for more details.
-  return IsA<HTMLUListElement>(node) || IsA<HTMLOListElement>(node) ||
-         (RuntimeEnabledFeatures::HTMLMenuElementIsListOwnerEnabled() &&
-          IsA<HTMLMenuElement>(node)) ||
+  bool is_list_owner_element =
+      IsA<HTMLUListElement>(node) || IsA<HTMLOListElement>(node) ||
+      (RuntimeEnabledFeatures::HTMLMenuElementIsListOwnerEnabled() &&
+       IsA<HTMLMenuElement>(node));
+  return (is_list_owner_element &&
+          (!RuntimeEnabledFeatures::ListOwnerMustHaveCSSBoxEnabled() ||
+           node.GetLayoutObject())) ||
          HasStyleContainment(node);
 }
 

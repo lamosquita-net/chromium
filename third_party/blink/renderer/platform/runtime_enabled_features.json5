@@ -2794,6 +2794,10 @@
       status: "stable",
     },
     {
+      name: "ListOwnerMustHaveCSSBox",
+      status: "stable",
+    },
+    {
       name: "LockedMode",
       status: "test",
       // Enabled by features::kLockedMode.
@@ -4289,6 +4293,10 @@
       status: "stable",
     },
     {
+      name: "SkipLineBreakItemWhenIsCollapsed",
+      status: "stable",
+    },
+    {
       // If enabled, HTMLPreloadScanner will be skipped.
       name: "SkipPreloadScanning",
       origin_trial_feature_name: "SkipPreloadScanning",
@@ -4926,6 +4934,10 @@
     {
       // https://chromestatus.com/feature/5089552511533056
       name: "ViewTransitionTypes",
+      status: "stable",
+    },
+    {
+      name: "ViewTransitionUpdateLifecycleBeforeReady",
       status: "stable",
     },
     {
