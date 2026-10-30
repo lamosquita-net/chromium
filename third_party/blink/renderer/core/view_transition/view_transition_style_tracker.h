@@ -6,6 +6,7 @@
 #define THIRD_PARTY_BLINK_RENDERER_CORE_VIEW_TRANSITION_VIEW_TRANSITION_STYLE_TRACKER_H_
 
 #include "base/containers/flat_map.h"
+#include "base/token.h"
 #include "base/unguessable_token.h"
 #include "cc/layers/view_transition_content_layer.h"
 #include "components/viz/common/view_transition_element_resource_id.h"
@@ -292,6 +293,7 @@ class ViewTransitionStyleTracker
   bool FlattenAndVerifyElements(VectorOf<Element>&, VectorOf<AtomicString>&);
 
   void AddTransitionElementsFromCSSRecursive(PaintLayer*, const TreeScope*);
+  AtomicString GenerateMatchElementName(Element&);
 
   void InvalidateHitTestingCache();
 
@@ -321,6 +323,10 @@ class ViewTransitionStyleTracker
   State state_ = State::kIdle;
 
   const blink::ViewTransitionToken transition_token_;
+
+  // Random part of the names generated for `view-transition-name:
+  // match-element`, so they never match those of another document.
+  base::Token match_element_token_;
 
   // Set if this style tracker was created by deserializing captured state
   // instead of running through the capture phase. This is done for transitions

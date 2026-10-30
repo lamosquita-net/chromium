@@ -977,6 +977,9 @@
     "flat",
     "preserve-3d",
 
+    // view-transition-name
+    "match-element",
+
     //
     // transform-box
     //

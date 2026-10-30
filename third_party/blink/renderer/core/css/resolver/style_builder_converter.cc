@@ -94,6 +94,7 @@
 #include "third_party/blink/renderer/core/style/shape_offset_path_operation.h"
 #include "third_party/blink/renderer/core/style/style_overflow_clip_margin.h"
 #include "third_party/blink/renderer/core/style/style_svg_resource.h"
+#include "third_party/blink/renderer/core/view_transition/view_transition_match_element.h"
 #include "third_party/blink/renderer/platform/fonts/font_palette.h"
 #include "third_party/blink/renderer/platform/fonts/opentype/open_type_math_support.h"
 #include "third_party/blink/renderer/platform/geometry/layout_unit.h"
@@ -2365,6 +2366,13 @@ scoped_refptr<SVGDashArray> StyleBuilderConverter::ConvertStrokeDasharray(
 ScopedCSSName* StyleBuilderConverter::ConvertViewTransitionName(
     StyleResolverState& state,
     const CSSValue& value) {
+  if (const auto* identifier_value = DynamicTo<CSSIdentifierValue>(value);
+      identifier_value &&
+      identifier_value->GetValueID() == CSSValueID::kMatchElement) {
+    // TODO: tree scope for match-element
+    return MakeGarbageCollected<ScopedCSSName>(ViewTransitionMatchElementName(),
+                                               &state.GetDocument());
+  }
   return ConvertNoneOrCustomIdent(state, value);
 }
 

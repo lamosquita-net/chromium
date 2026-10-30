@@ -65,6 +65,7 @@
 #include "third_party/blink/renderer/core/frame/web_feature.h"
 #include "third_party/blink/renderer/core/inspector/console_message.h"
 #include "third_party/blink/renderer/core/keywords.h"
+#include "third_party/blink/renderer/core/view_transition/view_transition_match_element.h"
 #include "third_party/blink/renderer/core/layout/layout_box.h"
 #include "third_party/blink/renderer/core/layout/layout_object.h"
 #include "third_party/blink/renderer/core/style/computed_style.h"
@@ -7040,6 +7041,11 @@ const CSSValue* ViewTransitionName::ParseSingleValue(
   if (stream.Peek().Id() == CSSValueID::kAuto) {
     return nullptr;
   }
+  if (stream.Peek().Id() == CSSValueID::kMatchElement) {
+    return RuntimeEnabledFeatures::CSSViewTransitionMatchElementEnabled()
+               ? css_parsing_utils::ConsumeIdent(stream)
+               : nullptr;
+  }
   return css_parsing_utils::ConsumeCustomIdent(stream, context);
 }
 
@@ -7050,6 +7056,9 @@ const CSSValue* ViewTransitionName::CSSValueFromComputedStyleInternal(
     CSSValuePhase value_phase) const {
   if (!style.ViewTransitionName()) {
     return CSSIdentifierValue::Create(CSSValueID::kNone);
+  }
+  if (style.ViewTransitionName()->GetName() == ViewTransitionMatchElementName()) {
+    return CSSIdentifierValue::Create(CSSValueID::kMatchElement);
   }
   return MakeGarbageCollected<CSSCustomIdentValue>(
       style.ViewTransitionName()->GetName());

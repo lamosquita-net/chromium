@@ -43,6 +43,7 @@
 #include "third_party/blink/renderer/core/view_transition/view_transition_style_builder.h"
 #include "third_party/blink/renderer/core/view_transition/view_transition_supplement.h"
 #include "third_party/blink/renderer/core/view_transition/view_transition_utils.h"
+#include "third_party/blink/renderer/core/view_transition/view_transition_match_element.h"
 #include "third_party/blink/renderer/platform/data_resource_helper.h"
 #include "third_party/blink/renderer/platform/graphics/graphics_types.h"
 #include "third_party/blink/renderer/platform/graphics/paint/geometry_mapper.h"
@@ -644,8 +645,11 @@ void ViewTransitionStyleTracker::AddTransitionElementsFromCSSRecursive(
             : &node->GetTreeScope();
 
     if (relevant_tree_scope == tree_scope || !relevant_tree_scope) {
+      const AtomicString& name = view_transition_name->GetName();
       AddTransitionElement(DynamicTo<Element>(node),
-                           root_style.ViewTransitionName()->GetName());
+                           name == ViewTransitionMatchElementName()
+                               ? GenerateMatchElementName(*To<Element>(node))
+                               : name);
     }
   }
 
@@ -658,6 +662,23 @@ void ViewTransitionStyleTracker::AddTransitionElementsFromCSSRecursive(
   while (auto* child = child_iterator.Next()) {
     AddTransitionElementsFromCSSRecursive(child, tree_scope);
   }
+}
+
+AtomicString ViewTransitionStyleTracker::GenerateMatchElementName(
+    Element& element) {
+  // The flag should be checked much earlier than this, in the CSS parser.
+  CHECK(RuntimeEnabledFeatures::CSSViewTransitionMatchElementEnabled());
+
+  // For match-element, use a stable per-element id.
+  StringBuilder builder;
+  builder.Append("-ua-auto-");
+  if (match_element_token_.is_zero()) {
+    match_element_token_ = base::Token::CreateRandom();
+  }
+  builder.Append(match_element_token_.ToString().c_str());
+  builder.Append("-");
+  builder.AppendNumber(element.GetDomNodeId());
+  return builder.ToAtomicString();
 }
 
 bool ViewTransitionStyleTracker::FlattenAndVerifyElements(
