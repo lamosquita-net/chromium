@@ -494,6 +494,12 @@ void V8Initializer::Initialize(IsolateHolder::ScriptMode mode,
   // Flags need to be set before InitializePlatform as they are used for
   // system instrumentation initialization.
   // See https://crbug.com/v8/11043
+  // FlyWeb (engine level 136): the JS features Chromium 135/136 ship from
+  // gin (SetDefaultEnabledFeatureFlags), set first so that feature overrides
+  // and --js-flags can still turn them off.
+  SetV8Flags("--js-float16array");
+  SetV8Flags("--js-explicit-resource-management");
+  SetV8Flags("--js-regexp-escape");
   SetFlags(mode, js_command_line_flags);
 
   v8::V8::InitializePlatform(V8Platform::Get());
