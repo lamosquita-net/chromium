@@ -34,6 +34,7 @@ enum class CalculationOperator {
   kContainerProgress,
   kCalcSize,
   kMediaProgress,
+  kPow,
   kInvalid
 };
 

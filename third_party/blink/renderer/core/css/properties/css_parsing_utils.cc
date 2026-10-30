@@ -386,12 +386,12 @@ CSSValue* ConsumeCubicBezier(CSSParserTokenStream& stream,
     stream.ConsumeWhitespace();
 
     double x1, y1, x2, y2;
-    if (ConsumeNumberRaw(stream, context, x1) && x1 >= 0 && x1 <= 1 &&
-        ConsumeCommaIncludingWhitespace(stream) &&
+    if (ConsumeNumberRaw(stream, context, x1) && x1 >= 0 &&
+        x1 <= 1 && ConsumeCommaIncludingWhitespace(stream) &&
         ConsumeNumberRaw(stream, context, y1) &&
         ConsumeCommaIncludingWhitespace(stream) &&
-        ConsumeNumberRaw(stream, context, x2) && x2 >= 0 && x2 <= 1 &&
-        ConsumeCommaIncludingWhitespace(stream) &&
+        ConsumeNumberRaw(stream, context, x2) && x2 >= 0 &&
+        x2 <= 1 && ConsumeCommaIncludingWhitespace(stream) &&
         ConsumeNumberRaw(stream, context, y2) && stream.AtEnd()) {
       guard.Release();
       result =
@@ -1107,7 +1107,8 @@ class MathFunctionParser {
   }
 
   bool ConsumeNumberRaw(double& result) {
-    if (!calc_value_ || calc_value_->Category() != kCalcNumber) {
+    if (!calc_value_ || calc_value_->Category() != kCalcNumber ||
+        !calc_value_->ExpressionNode()->IsNumericLiteral()) {
       return false;
     }
     DCHECK(!has_consumed_);  // Cannot consume twice.
@@ -2404,7 +2405,8 @@ CSSValue* ConsumeColorContrast(CSSParserTokenStream& stream,
         target_contrast = 7;
       } else if (ConsumeIdent<CSSValueID::kAAALarge>(stream)) {
         target_contrast = 4.5;
-      } else if (ConsumeNumberRaw(stream, context, target_contrast_temp)) {
+      } else if (ConsumeNumberRaw(stream, context,
+                                             target_contrast_temp)) {
         target_contrast = target_contrast_temp;
       } else {
         return nullptr;
