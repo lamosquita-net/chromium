@@ -220,6 +220,7 @@ DEFINE_ABV_TRAIT(Uint16Array)
 DEFINE_ABV_TRAIT(Uint32Array)
 DEFINE_ABV_TRAIT(BigInt64Array)
 DEFINE_ABV_TRAIT(BigUint64Array)
+DEFINE_ABV_TRAIT(Float16Array)
 DEFINE_ABV_TRAIT(Float32Array)
 DEFINE_ABV_TRAIT(Float64Array)
 #undef DEFINE_ABV_TRAIT
@@ -397,6 +398,8 @@ DOMArrayBufferView* ToDOMArrayBufferView(v8::Isolate* isolate,
     return ToDOMViewType<DOMBigInt64Array, allow_shared>(isolate, value);
   if (v8_view->IsBigUint64Array())
     return ToDOMViewType<DOMBigUint64Array, allow_shared>(isolate, value);
+  if (v8_view->IsFloat16Array())
+    return ToDOMViewType<DOMFloat16Array, allow_shared>(isolate, value);
   if (v8_view->IsFloat32Array())
     return ToDOMViewType<DOMFloat32Array, allow_shared>(isolate, value);
   if (v8_view->IsFloat64Array())
