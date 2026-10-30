@@ -295,4 +295,34 @@ ImageOrientationEnum SerializedImageBitmapSettings::GetImageOrientation()
   return ImageOrientationEnum::kOriginTopLeft;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// SerializedTextDirection
+SerializedTextDirectionSettings::SerializedTextDirectionSettings(
+    TextDirection direction) {
+  switch (direction) {
+    case TextDirection::kLtr:
+      text_direction_ = SerializedTextDirection::kLtr;
+      return;
+    case TextDirection::kRtl:
+      text_direction_ = SerializedTextDirection::kRtl;
+      return;
+  }
+  NOTREACHED_IN_MIGRATION();
+}
+
+SerializedTextDirectionSettings::SerializedTextDirectionSettings(
+    SerializedTextDirection direction)
+    : text_direction_(direction) {}
+
+TextDirection SerializedTextDirectionSettings::GetTextDirection() const {
+  switch (text_direction_) {
+    case SerializedTextDirection::kLtr:
+      return TextDirection::kLtr;
+    case SerializedTextDirection::kRtl:
+      return TextDirection::kRtl;
+  }
+  NOTREACHED_IN_MIGRATION();
+  return TextDirection::kLtr;
+}
+
 }  // namespace blink

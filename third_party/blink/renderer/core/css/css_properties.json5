@@ -6682,7 +6682,6 @@
       converter: "ConvertStyleColor",
       style_builder_template: "color",
       valid_for_highlight_legacy: true,
-      valid_for_highlight: true,
       invalidate: ["color"],
     },
     {
@@ -6709,7 +6708,6 @@
       converter: "ConvertStyleColor",
       style_builder_template: "color",
       valid_for_highlight_legacy: true,
-      valid_for_highlight: true,
       invalidate: ["color"],
     },
     {
@@ -6722,7 +6720,6 @@
       type_name: "float",
       converter: "ConvertTextStrokeWidth",
       valid_for_highlight_legacy: true,
-      valid_for_highlight: true,
       invalidate: ["layout", "paint"],
       affected_by_zoom: true,
     },

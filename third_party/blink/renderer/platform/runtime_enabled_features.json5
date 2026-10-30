@@ -1087,6 +1087,10 @@
       status: "stable",
     },
     {
+      name: "CSSLineClampWebkitBoxBlockification",
+      status: "stable",
+    },
+    {
       name: "CSSLogicalOverflow",
       status: "stable",
     },
@@ -1695,6 +1699,10 @@
       // FlyWeb (level 131): off, as Chrome 129-130 by field trial and
       // Chromium 131 in code (5f7bda8f87b).
       name: "ElementGetInnerHTML",
+    },
+    {
+      name: "ElementInnerTextHandleFirstLineStyle",
+      status: "stable",
     },
     {
       name: "EnforceAnonymityExposure",
@@ -4462,6 +4470,11 @@
     {
       // crbug.com/325517313
       name: "TextDiffSplitFix",
+      status: "stable",
+    },
+    {
+      // crbug.com/359420112
+      name: "TextEmphasisNoPunctuation",
       status: "stable",
     },
     {

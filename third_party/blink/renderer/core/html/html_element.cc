@@ -2718,16 +2718,17 @@ HTMLElement::ElementIfAutoDirectionalityFormAssociatedOrNull(
 }
 
 bool HTMLElement::CalculateAndAdjustAutoDirectionality() {
-  bool is_deferred = false;
+  // Note that HTMLSlotElement overrides this method in order to defer
+  // its work in some cases.
+
   TextDirection text_direction;
-  std::optional<TextDirection> resolve_result =
-      ResolveAutoDirectionality(is_deferred);
+  std::optional<TextDirection> resolve_result = ResolveAutoDirectionality();
   if (resolve_result) {
     text_direction = *resolve_result;
   } else {
     text_direction = TextDirection::kLtr;
   }
-  if (CachedDirectionality() != text_direction && !is_deferred) {
+  if (CachedDirectionality() != text_direction) {
     UpdateDirectionalityAndDescendant(text_direction);
 
     const ComputedStyle* style = GetComputedStyle();
@@ -3147,14 +3148,16 @@ void HTMLElement::OnDirAttrChanged(const AttributeModificationParams& params) {
     UpdateAncestorWithDirAuto(UpdateAncestorTraversal::ExcludeSelf);
   }
 
-  if (is_old_auto && !is_new_auto) {
+  if (is_old_auto) {
     if (!RecalcSelfOrAncestorHasDirAuto()) {
       ClearSelfOrAncestorHasDirAutoAttribute();
       UpdateDescendantHasDirAutoAttribute(false /* has_dir_auto */);
     }
-  } else if (!is_old_auto && is_new_auto) {
-    SetSelfOrAncestorHasDirAutoAttribute();
-    UpdateDescendantHasDirAutoAttribute(true /* has_dir_auto */);
+  } else {
+    if (RecalcSelfOrAncestorHasDirAuto()) {
+      SetSelfOrAncestorHasDirAutoAttribute();
+      UpdateDescendantHasDirAutoAttribute(true /* has_dir_auto */);
+    }
   }
 
   if (is_new_auto) {

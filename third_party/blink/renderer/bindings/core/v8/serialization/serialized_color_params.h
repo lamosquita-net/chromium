@@ -8,6 +8,7 @@
 #include "third_party/blink/renderer/core/html/canvas/image_data.h"
 #include "third_party/blink/renderer/platform/graphics/canvas_color_params.h"
 #include "third_party/blink/renderer/platform/graphics/image_orientation.h"
+#include "third_party/blink/renderer/platform/text/text_direction.h"
 
 namespace blink {
 
@@ -104,6 +105,12 @@ enum class SerializedImageOrientation : uint32_t {
   kLast = kLeftBottom,
 };
 
+enum class SerializedTextDirection : uint32_t {
+  kLtr = 0,
+  kRtl = 1,
+  kLast = kRtl,
+};
+
 class SerializedImageDataSettings {
  public:
   SerializedImageDataSettings(PredefinedColorSpace, ImageDataStorageFormat);
@@ -167,6 +174,21 @@ class SerializedImageBitmapSettings {
   bool is_premultiplied_ = true;
   SerializedImageOrientation image_orientation_ =
       SerializedImageOrientation::kTopLeft;
+};
+
+class SerializedTextDirectionSettings {
+ public:
+  SerializedTextDirectionSettings(TextDirection);
+  SerializedTextDirectionSettings(SerializedTextDirection);
+
+  TextDirection GetTextDirection() const;
+
+  SerializedTextDirection GetSerializedTextDirection() const {
+    return text_direction_;
+  }
+
+ private:
+  SerializedTextDirection text_direction_ = SerializedTextDirection::kLtr;
 };
 
 }  // namespace blink

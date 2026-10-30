@@ -43,7 +43,6 @@ class CORE_EXPORT HighlightStyleUtils {
   enum class HighlightColorProperty : unsigned {
     kCurrentColor,
     kFillColor,
-    kStrokeColor,
     kEmphasisColor,
     kSelectionDecorationColor,
     kTextDecorationColor,
