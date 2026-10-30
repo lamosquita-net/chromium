@@ -290,6 +290,28 @@ bool IsVisitedLinkTransition(ui::PageTransition transition) {
                                       ui::PAGE_TRANSITION_MANUAL_SUBFRAME);
 }
 
+// We require a `top_level_site` and a `frame_origin` to construct a
+// visited link partition key. So if `top_level_url` and/or `fame_url` are
+// invalid OR the transition type is a context where we know we cannot
+// accurately construct a triple partition key, we DO NOT add this navigation as
+// an entry into VisitedLinkDatabase. We do not add ephemeral keys because,
+// inherently, their state shouldn't be persisted across browsing sessions.
+bool AddToVisitedLinkDatabase(ui::PageTransition transition,
+                              std::optional<GURL> top_level_url,
+                              std::optional<GURL> frame_url,
+                              bool is_ephemeral) {
+  // If our navigation comes from an ephemeral context or does not provide
+  // enough information to construct our triple partition key, do not add it to
+  // the database.
+  if (is_ephemeral || !IsVisitedLinkTransition(transition) ||
+      !top_level_url.has_value() || !frame_url.has_value()) {
+    return false;
+  }
+
+  // Check whether the URLs for our key are valid.
+  return top_level_url->is_valid() && frame_url->is_valid();
+}
+
 }  // namespace
 
 std::u16string FormatUrlForRedirectComparison(const GURL& url) {
@@ -1000,15 +1022,15 @@ void HistoryBackend::AddPage(const HistoryAddPageArgs& request) {
                                          request.opener->url);
   }
 
-  // Every url in the redirect chain gets the same top_level_url and frame_url
-  // values.
+  // Every url in the redirect chain gets the same `top_level_url` and
+  // `frame_url` values.
   std::optional<GURL> top_level_url = std::nullopt;
   if (request.top_level_url.has_value() && request.top_level_url->is_valid()) {
     top_level_url = request.top_level_url;
   }
   std::optional<GURL> frame_url = std::nullopt;
-  if (request.referrer.is_valid()) {
-    frame_url = request.referrer;
+  if (request.frame_url.has_value() && request.frame_url->is_valid()) {
+    frame_url = request.frame_url;
   }
 
   if (!has_redirects) {
@@ -1371,7 +1393,8 @@ std::pair<URLID, VisitID> HistoryBackend::AddPageVisit(
     std::optional<VisitID> originator_visit_id,
     std::optional<VisitID> originator_referring_visit,
     std::optional<VisitID> originator_opener_visit,
-    bool is_known_to_sync) {
+    bool is_known_to_sync,
+    bool is_ephemeral) {
   DCHECK(url.is_valid());
   // See if this URL is already in the DB.
   URLRow url_info(url);
@@ -1411,12 +1434,10 @@ std::pair<URLID, VisitID> HistoryBackend::AddPageVisit(
 
   VisitedLinkRow visited_link_info;
   if (base::FeatureList::IsEnabled(kPopulateVisitedLinkDatabase)) {
-    // We require a top_level_site and a frame_origin to construct a
-    // visited link partition key. So if top_level_url and/or fame_url are NULL
-    // OR the transition type is a context where we know we cannot accurately
-    // construct a triple partition key, then we skip the VisitedLinkDatabase.
-    if (IsVisitedLinkTransition(transition) && top_level_url.has_value() &&
-        frame_url.has_value()) {
+    // Determine whether or not the current row should be added to the
+    // VisitedLinkDatabase.
+    if (AddToVisitedLinkDatabase(transition, top_level_url, frame_url,
+                                 is_ephemeral)) {
       // Determine if the visited link is already in the database.
       VisitedLinkID existing_row_id = db_->GetRowForVisitedLink(
           url_id, *top_level_url, *frame_url, visited_link_info);
@@ -1459,13 +1480,9 @@ std::pair<URLID, VisitID> HistoryBackend::AddPageVisit(
   if (originator_opener_visit.has_value())
     visit_info.originator_opener_visit = *originator_opener_visit;
   if (visited_link_info.id) {
+    // TODO(crbug.com/40280017): any visit added via sync will not have a
+    // valid corresponding entry in the VisitedLinkDatabase.
     visit_info.visited_link_id = visited_link_info.id;
-  }
-
-  // TODO(crbug.com/40280017): any visit added via sync should not have a
-  // corresponding entry in the VisitedLinkDatabase.
-  if (visit_source == VisitSource::SOURCE_SYNCED) {
-    CHECK(visit_info.visited_link_id == kInvalidVisitedLinkID);
   }
 
   visit_info.is_known_to_sync = is_known_to_sync;
@@ -1488,7 +1505,7 @@ std::pair<URLID, VisitID> HistoryBackend::AddPageVisit(
 }
 
 // TODO(crbug.com/40279741): Determine if we want to record these URLs in the
-// VisitedLinkDatabase, and if so, plumb the correct value for top_level_site.
+// VisitedLinkDatabase, and if so, plumb the correct value for `top_level_site`.
 void HistoryBackend::AddPagesWithDetails(const URLRows& urls,
                                          VisitSource visit_source) {
   TRACE_EVENT0("browser", "HistoryBackend::AddPagesWithDetails");
@@ -1740,8 +1757,8 @@ VisitID HistoryBackend::AddSyncedVisit(
       IsTypedIncrement(visit.transition), visit.opener_visit,
       visit.consider_for_ntp_most_visited,
       /*local_navigation_id=*/std::nullopt, title,
-      /*top_level_url=*/std::nullopt, /*frame_url=*/std::nullopt, visit.app_id,
-      visit.visit_duration, visit.originator_cache_guid,
+      /*top_level_url=*/std::nullopt, /*frame_url=*/std::nullopt,
+      visit.app_id, visit.visit_duration, visit.originator_cache_guid,
       visit.originator_visit_id, visit.originator_referring_visit,
       visit.originator_opener_visit, visit.is_known_to_sync);
 

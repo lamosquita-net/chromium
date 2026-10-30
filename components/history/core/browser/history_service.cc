@@ -625,12 +625,18 @@ void HistoryService::AddPage(const GURL& url,
                              base::Time time,
                              VisitSource visit_source) {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  // This function will construct the following "self-links" entry in the
+  // VisitedLinkDatabase: `<url, url, url>`.
   AddPage(HistoryAddPageArgs(
       url, time, /*context_id=*/0, /*nav_entry_id=*/0,
       /*local_navigation_id=*/std::nullopt,
       /*referrer=*/GURL(), RedirectList(), ui::PAGE_TRANSITION_LINK,
       /*hidden=*/false, visit_source,
-      /*did_replace_entry=*/false, /*consider_for_ntp_most_visited=*/true));
+      /*did_replace_entry=*/false, /*consider_for_ntp_most_visited=*/true,
+      /*title=*/std::nullopt, /*top_level_url=*/url, /*opener=*/std::nullopt,
+      /*bookmark_id=*/std::nullopt, /*app_id=*/std::nullopt,
+      /*context_annotations=*/std::nullopt, /*is_ephemeral=*/false,
+      /*frame_url=*/url));
 }
 
 void HistoryService::AddPage(HistoryAddPageArgs add_page_args) {
@@ -677,15 +683,28 @@ void HistoryService::AddPage(HistoryAddPageArgs add_page_args) {
 
 void HistoryService::AddPartitionedVisitedLinks(
     const HistoryAddPageArgs& args) {
-  // We require each element of the triple-partition key <link url, top-level
-  // site, frame origin> to have a value.
-  if (!visit_delegate_ || !args.top_level_url.has_value()) {
+  // Ensure that we can communicate to our in-memory hashtable.
+  if (!visit_delegate_) {
     return;
   }
-  // We require each element of the triple-partition key to be valid GURLs.
-  if (!args.top_level_url->is_valid() || !args.referrer.is_valid()) {
+
+  // When links are partitioned and the navigation comes from an ephemeral
+  // context we want to avoid adding it to the hashtable.
+  if (args.is_ephemeral) {
     return;
   }
+
+  // If we were unable to obtain valid URLs for either of our top-level or
+  // frame origin parameters, we cannot successfully construct our
+  // triple-partition key and should not add this navigation to the hashtable.
+  if (!args.top_level_url.has_value() || !args.top_level_url->is_valid()) {
+    return;
+  }
+
+  if (!args.frame_url.has_value() || !args.frame_url->is_valid()) {
+    return;
+  }
+
   // Add the VisitedLink representing each navigation to the partitioned
   // hashtable.
   if (!args.redirects.empty()) {
@@ -695,15 +714,13 @@ void HistoryService::AddPartitionedVisitedLinks(
     DCHECK_EQ(args.url, args.redirects.back());
     for (const GURL& redirect : args.redirects) {
       // All redirects originate from the same top-level site and frame origin.
-      VisitedLink link = {redirect,
-                          net::SchemefulSite(args.top_level_url.value()),
-                          url::Origin::Create(args.referrer)};
+      VisitedLink link = {redirect, net::SchemefulSite(*args.top_level_url),
+                          url::Origin::Create(*args.frame_url)};
       visit_delegate_->AddVisitedLink(link);
     }
   } else {
-    VisitedLink link = {args.url,
-                        net::SchemefulSite(args.top_level_url.value()),
-                        url::Origin::Create(args.referrer)};
+    VisitedLink link = {args.url, net::SchemefulSite(*args.top_level_url),
+                        url::Origin::Create(*args.frame_url)};
     visit_delegate_->AddVisitedLink(link);
   }
 }

@@ -3346,6 +3346,10 @@
     },
     // This is to add an option to enable the Reveal button on password inputs while waiting ::reveal gets standardized.
     {
+      name: "PartitionVisitedLinkDatabaseWithSelfLinks",
+      status: "stable",
+    },
+    {
       name: "PasswordReveal",
     },
     {

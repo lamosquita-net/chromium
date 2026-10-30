@@ -41,6 +41,7 @@
 #include "base/time/time.h"
 #include "base/timer/elapsed_timer.h"
 #include "base/uuid.h"
+#include "net/base/schemeful_site.h"
 #include "services/metrics/public/cpp/ukm_source_id.h"
 #include "services/network/public/mojom/referrer_policy.mojom-blink-forward.h"
 #include "services/network/public/mojom/restricted_cookie_manager.mojom-blink-forward.h"
@@ -1032,7 +1033,7 @@ class CORE_EXPORT Document : public ContainerNode,
 
   TextLinkColors& GetTextLinkColors() { return text_link_colors_; }
   const TextLinkColors& GetTextLinkColors() const { return text_link_colors_; }
-  VisitedLinkState& GetVisitedLinkState() const { return *visited_link_state_; }
+  VisitedLinkState& GetVisitedLinkState();
 
   MouseEventWithHitTestResults PerformMouseEventHitTest(const HitTestRequest&,
                                                         const PhysicalOffset&,
@@ -2119,6 +2120,24 @@ class CORE_EXPORT Document : public ContainerNode,
       has_scheduled_selectionchange_event_on_document_ = false;
   }
 
+  // To partition :visited links, we use a triple-key containing <link_url,
+  // top_level_site, frame_origin>. In practice, this means we are frequently
+  // querying TopFrameOrigin() and constructing a net::SchemefulSite from it.
+  // This is a relatively expensive operation, and since a Document may have
+  // many HTMLAnchorElements, it is much more efficient to calculate the
+  // SchemefulSite once and store that value here for easy access. Since usage
+  // of GetCachedTopFrameSite() is scoped only to VisitedLink use cases, we can
+  // reasonably cache top-level site without fear of stale results, as it is
+  // safe to assume that the top-level site will not change during the
+  // Document's lifetime.
+  class VisitedLinkPassKey {
+   private:
+    friend class HTMLAnchorElement;
+    VisitedLinkPassKey() = default;
+    ~VisitedLinkPassKey() = default;
+  };
+  net::SchemefulSite GetCachedTopFrameSite(VisitedLinkPassKey);
+
 #if BUILDFLAG(IS_ANDROID)
   // This method is invoked when a payment link element is encountered. It
   // passes the payment link back to browser process through the mojo pipe.
@@ -2527,7 +2546,7 @@ class CORE_EXPORT Document : public ContainerNode,
   Member<FormController> form_controller_;
 
   TextLinkColors text_link_colors_;
-  const Member<VisitedLinkState> visited_link_state_;
+  Member<VisitedLinkState> visited_link_state_;
 
   bool visually_ordered_;
 
@@ -2910,6 +2929,10 @@ class CORE_EXPORT Document : public ContainerNode,
   // certain state, when the insertion is triggered via the state-preserving
   // atomic move API (so far, `Node#moveBefore()`).
   bool state_preserving_atomic_move_in_progress_ = false;
+
+  // See VisitedLinkPassKey class description.
+  std::optional<net::SchemefulSite> cached_top_frame_site_for_visited_links_ =
+      std::nullopt;
 
 #if BUILDFLAG(IS_ANDROID)
   HeapMojoRemote<payments::facilitated::mojom::blink::PaymentLinkHandler>

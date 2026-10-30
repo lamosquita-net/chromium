@@ -1766,7 +1766,6 @@ const base::FeatureParam<bool> kPartialLowEndModeExcludeCanvasFontCache{
 
 // When enabled, this flag partitions the :visited link hashtable by <link url,
 // top-level site, frame origin>.
-// TODO(crbug.com/329102369): complete the partitioned hashtable implementation.
 BASE_FEATURE(kPartitionVisitedLinkDatabase,
              "PartitionVisitedLinkDatabase",
              base::FEATURE_DISABLED_BY_DEFAULT);
