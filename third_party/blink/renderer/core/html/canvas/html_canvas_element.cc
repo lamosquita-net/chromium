@@ -1540,6 +1540,7 @@ void HTMLCanvasElement::LayoutObjectDestroyed() {
 }
 
 void HTMLCanvasElement::LangAttributeChanged() {
+  HTMLElement::LangAttributeChanged();
   if (context_) {
     context_->LangAttributeChanged();
   }

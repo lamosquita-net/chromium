@@ -145,12 +145,9 @@ InterpolableColor* CSSColorInterpolationType::MaybeCreateInterpolableColor(
 
   if (state && (value.IsLightDarkValuePair() || value.IsColorMixValue() ||
                 value.IsRelativeColorValue())) {
-    ResolveColorValueContext context{
-        .length_resolver = state->CssToLengthConversionData(),
-        .text_link_colors = state->GetDocument().GetTextLinkColors(),
-        .used_color_scheme = color_scheme,
-        .color_provider = color_provider};
-    StyleColor style_color = ResolveColorValue(value, context);
+    StyleColor style_color = ResolveColorValue(
+        state->CssToLengthConversionData(), value,
+        state->GetDocument().GetTextLinkColors(), color_scheme, color_provider);
     if (!style_color.IsUnresolvedColorFunction()) {
       return CreateInterpolableColor(style_color.GetColor());
     }

@@ -575,6 +575,9 @@ bool CanvasRenderingContext2D::ResolveFont(const String& new_font) {
     FontDescription final_description(resolved_font.GetFontDescription());
     final_description.SetComputedSize(final_description.SpecifiedSize());
     final_description.SetAdjustedSize(final_description.SpecifiedSize());
+    if (use_locale) {
+      final_description.SetLocale(locale);
+    }
     GetState().SetFont(final_description, Host()->GetFontSelector());
   }
   return true;
@@ -672,9 +675,6 @@ scoped_refptr<StaticBitmapImage> blink::CanvasRenderingContext2D::GetImage(
     return nullptr;
   return canvas()->GetCanvas2DLayerBridge()->NewImageSnapshot(reason);
 }
-    if (use_locale) {
-      final_description.SetLocale(locale);
-    }
 
 ImageData* CanvasRenderingContext2D::getImageDataInternal(
     int sx,

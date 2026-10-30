@@ -5804,7 +5804,8 @@ void WebGLRenderingContextBase::TexImageHelperHTMLImageElement(
     if (have_svg_image) {
       SourceImageStatus status;
       image_for_render = image->GetSourceImageForCanvas(
-          FlushReason::kWebGLTexImage, &status, gfx::SizeF(300, 150));
+          FlushReason::kWebGLTexImage, &status, gfx::SizeF(300, 150),
+          kPremultiplyAlpha);
       // Since the size of the source has not been previously validated,
       // GetSourceImageForCanvas() can return nullptr (FlyWeb: upstream
       // 7716014246, crbug.com/447031622).
