@@ -2902,14 +2902,18 @@ bool NavigationRequest::ShouldAddCookieChangeListener() {
   // activation, since in these cases, an existing `RenderFrameHost` will be
   // used, and it would already have an existing listener, so we should skip the
   // initialization.
-  // (4) the navigation is a primary main frame navigation, as the cookie
-  // change information will only be used in the inactive document control
-  // logic.
+  // (4) the navigation is a primary main frame navigation or it's for
+  // prerendering a main frame, as the cookie change information will only be
+  // used to determined if a page can be restored from back/forward cache, so
+  // subframe navigation can be ignored.
+  // FlyWeb: upstream c287a87a87 (crbug.com/417215501), needed since FlyWeb
+  // lets no-store pages into the back/forward cache (level 136).
   return frame_tree_node_->navigator()
              .controller()
              .GetBackForwardCache()
              .should_allow_storing_pages_with_cache_control_no_store() &&
-         !IsPageActivation() && !IsSameDocument() && IsInPrimaryMainFrame() &&
+         !IsPageActivation() && !IsSameDocument() &&
+         (IsInPrimaryMainFrame() || IsInPrerenderedMainFrame()) &&
          common_params_->url.SchemeIsHTTPOrHTTPS();
 }
 
