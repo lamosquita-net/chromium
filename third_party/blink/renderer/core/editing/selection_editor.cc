@@ -142,6 +142,10 @@ void SelectionEditor::SetSelectionAndEndTyping(
 
 void SelectionEditor::DidChangeChildren(const ContainerNode&,
                                         const ContainerNode::ChildrenChange&) {
+  if (GetDocument().StatePreservingAtomicMoveInProgress() &&
+      RuntimeEnabledFeatures::AtomicMoveRangePreservationEnabled()) {
+    return;
+  }
   selection_.ResetDirectionCache();
   MarkCacheDirty();
   DidFinishDOMMutation();
@@ -251,15 +255,31 @@ void SelectionEditor::NodeChildrenWillBeRemoved(ContainerNode& container) {
 void SelectionEditor::NodeWillBeRemoved(Node& node_to_be_removed) {
   if (selection_.IsNone())
     return;
+
+  const bool state_preserving_atomic_move_preserves_selection =
+      GetDocument().StatePreservingAtomicMoveInProgress() &&
+      RuntimeEnabledFeatures::AtomicMoveRangePreservationEnabled();
+
   const Position old_anchor = selection_.anchor_;
   const Position old_focus = selection_.focus_;
-  const Position& new_anchor =
-      ComputePositionForNodeRemoval(old_anchor, node_to_be_removed);
-  const Position& new_focus =
-      ComputePositionForNodeRemoval(old_focus, node_to_be_removed);
-  if (new_anchor == old_anchor && new_focus == old_focus) {
-    return;
+  Position new_anchor = old_anchor;
+  Position new_focus = old_focus;
+
+  // In the case where an atomic move is in progress, `node_to_be_removed` is
+  // not actually being removed from the DOM entirely, so we don't want to snap
+  // either end (anchor or focus) of the selection range to the next logical
+  // node (i.e., `ComputePositionForNodeRemoval()`). Instead we just need to run
+  // the various steps that would ordinarily attend a true selection change, so
+  // that in the case where selection changes direction, selection state is
+  // updated properly.
+  if (!state_preserving_atomic_move_preserves_selection) {
+    new_anchor = ComputePositionForNodeRemoval(old_anchor, node_to_be_removed);
+    new_focus = ComputePositionForNodeRemoval(old_focus, node_to_be_removed);
+    if (new_anchor == old_anchor && new_focus == old_focus) {
+      return;
+    }
   }
+
   selection_ = SelectionInDOMTree::Builder()
                    .SetBaseAndExtent(new_anchor, new_focus)
                    .Build();

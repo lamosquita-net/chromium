@@ -633,6 +633,10 @@ void HTMLDialogElement::RemovedFrom(ContainerNode& insertion_point) {
   HTMLElement::RemovedFrom(insertion_point);
   InertSubtreesChanged(document, old_modal_dialog);
 
+  if (GetDocument().StatePreservingAtomicMoveInProgress()) {
+    return;
+  }
+
   if (!insertion_point.isConnected()) {
     return;
   }

@@ -107,6 +107,7 @@
 #include "third_party/blink/renderer/core/dom/named_node_map.h"
 #include "third_party/blink/renderer/core/dom/node_cloning_data.h"
 #include "third_party/blink/renderer/core/dom/node_computed_style.h"
+#include "third_party/blink/renderer/core/dom/node_traversal.h"
 #include "third_party/blink/renderer/core/dom/presentation_attribute_style.h"
 #include "third_party/blink/renderer/core/dom/pseudo_element.h"
 #include "third_party/blink/renderer/core/dom/scriptable_document_parser.h"
@@ -3020,7 +3021,11 @@ Node::InsertionNotificationRequest Element::InsertedInto(
     EnqueueAutofocus(*this);
 
     if (GetCustomElementState() == CustomElementState::kCustom) {
-      CustomElement::EnqueueConnectedCallback(*this);
+      if (GetDocument().StatePreservingAtomicMoveInProgress()) {
+        CustomElement::EnqueueConnectedMoveCallback(*this);
+      } else {
+        CustomElement::EnqueueConnectedCallback(*this);
+      }
     } else if (GetCustomElementState() == CustomElementState::kUndefined) {
       CustomElement::TryToUpgrade(*this);
     }
@@ -3070,6 +3075,32 @@ Node::InsertionNotificationRequest Element::InsertedInto(
   }
 
   return kInsertionDone;
+}
+
+void Element::MovedFrom(ContainerNode& old_parent) {
+  Node::MovedFrom(old_parent);
+
+  DCHECK(!GetDocument().StatePreservingAtomicMoveInProgress());
+
+  // `old_parent` can be the document.
+  if (!old_parent.IsElementNode()) {
+    return;
+  }
+
+  Element* focused_element = GetDocument().FocusedElement();
+  Element* new_parent_element = parentElement();
+  Element* old_parent_element = &To<Element>(old_parent);
+  if (focused_element && old_parent.HasFocusWithin() &&
+      contains(focused_element) && old_parent != *new_parent_element) {
+    Element* common_ancestor = To<Element>(NodeTraversal::CommonAncestor(
+        *old_parent_element, *new_parent_element));
+
+    // The "focus within" flag is set separately on each ancestor, and affects
+    // the :focus-within CSS property. We set it to the right value here because
+    // we skipped the step that sets it on removal/insertion.
+    old_parent_element->SetHasFocusWithinUpToAncestor(false, common_ancestor);
+    new_parent_element->SetHasFocusWithinUpToAncestor(true, common_ancestor);
+  }
 }
 
 void Element::RemovedFrom(ContainerNode& insertion_point) {
@@ -3123,7 +3154,8 @@ void Element::RemovedFrom(ContainerNode& insertion_point) {
       document.SetCSSTarget(nullptr);
     }
 
-    if (GetCustomElementState() == CustomElementState::kCustom) {
+    if (GetCustomElementState() == CustomElementState::kCustom &&
+        !GetDocument().StatePreservingAtomicMoveInProgress()) {
       CustomElement::EnqueueDisconnectedCallback(*this);
     }
   }
@@ -7120,6 +7152,10 @@ Node* Element::InsertAdjacent(const String& where,
 }
 
 void Element::HideNonce() {
+  if (GetDocument().StatePreservingAtomicMoveInProgress()) {
+    return;
+  }
+
   const AtomicString& nonce_value = FastGetAttribute(html_names::kNonceAttr);
   if (nonce_value.empty()) {
     return;

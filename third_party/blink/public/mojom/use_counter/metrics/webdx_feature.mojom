@@ -134,6 +134,8 @@ enum WebDXFeature {
   kAbortsignalAny = 88,
   kNavigation = 89,
   kMathml = 90,
+  // FlyWeb: upstream value (M133), out of order on purpose.
+  kMoveBeforeAPI = 229,
 
   // Add new features immediately above this line. Don't change assigned
   // numbers of any item, and don't reuse removed slots.

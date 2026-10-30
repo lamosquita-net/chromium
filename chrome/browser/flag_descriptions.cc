@@ -1966,12 +1966,6 @@ const char kObservableAPIDescription[] =
     "A reactive programming primitive for ergonomically handling streams of "
     "async data. See https://github.com/WICG/observable.";
 
-const char kAtomicMoveAPIName[] = "Atomic DOM move (Node.moveBefore)";
-const char kAtomicMoveAPIDescription[] =
-    "Introduces a state-preserving atomic move primitive to the DOM, "
-    "by calling Node.moveBefore. See "
-    "https://github.com/whatwg/dom/issues/1255.";
-
 const char kCastStreamingAv1Name[] =
     "Enable AV1 video encoding for Cast Streaming";
 const char kCastStreamingAv1Description[] =

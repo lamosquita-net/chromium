@@ -693,9 +693,13 @@ void ContainerNode::WillRemoveChildren() {
     DispatchChildRemovalEvents(child);
   }
 
-  CHECK(!GetDocument().StatePreservingAtomicMoveInProgress());
-  ChildFrameDisconnector(*this).Disconnect(
-      ChildFrameDisconnector::kDescendantsOnly);
+  // Only disconnect subframes in the non-state-preserving-atomic-move case,
+  // i.e., the traditional case where we intend to *fully* remove a node from
+  // the tree, instead of atomically re-inserting it.
+  if (!GetDocument().StatePreservingAtomicMoveInProgress()) {
+    ChildFrameDisconnector(*this).Disconnect(
+        ChildFrameDisconnector::kDescendantsOnly);
+  }
 }
 
 LayoutBox* ContainerNode::GetLayoutBoxForScrolling() const {
@@ -1208,11 +1212,19 @@ void ContainerNode::ChildrenChanged(const ChildrenChange& change) {
   if (!change.IsChildInsertion())
     return;
   Node* inserted_node = change.sibling_changed;
-  if (inserted_node->IsContainerNode() || inserted_node->IsTextNode())
+  if (inserted_node->IsContainerNode() || inserted_node->IsTextNode()) {
     inserted_node->ClearFlatTreeNodeDataIfHostChanged(*this);
+  } else {
+    return;
+  }
   if (!InActiveDocument())
     return;
   if (Element* element = DynamicTo<Element>(this)) {
+    if (GetDocument().StatePreservingAtomicMoveInProgress()) {
+      // This is always safe, since `inserted_node` is either an element or text
+      // node, whose style can be dirtied.
+      inserted_node->FlatTreeParentChanged();
+    }
     if (!element->GetComputedStyle()) {
       // There is no need to mark for style recalc if the parent element does
       // not already have a ComputedStyle. For instance if we insert nodes into
@@ -1222,8 +1234,7 @@ void ContainerNode::ChildrenChanged(const ChildrenChange& change) {
       return;
     }
   }
-  if (inserted_node->IsContainerNode() || inserted_node->IsTextNode())
-    inserted_node->SetStyleChangeOnInsertion();
+  inserted_node->SetStyleChangeOnInsertion();
 }
 
 bool ContainerNode::ChildrenChangedAllChildrenRemovedNeedsList() const {

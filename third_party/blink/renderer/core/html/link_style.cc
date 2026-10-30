@@ -267,7 +267,7 @@ LinkStyle::LoadReturnValue LinkStyle::LoadStylesheetIfNeeded(
       !params.href.IsValid())
     return kNotNeeded;
 
-  if (GetResource()) {
+  if (GetResource() && !GetDocument().StatePreservingAtomicMoveInProgress()) {
     RemovePendingSheet();
     ClearResource();
   }
@@ -299,7 +299,9 @@ LinkStyle::LoadReturnValue LinkStyle::LoadStylesheetIfNeeded(
       *owner_, critical_style, owner_->IsCreatedByParser());
   PendingSheetType type = type_and_behavior.first;
 
-  AddPendingSheet(type);
+  if (!GetDocument().StatePreservingAtomicMoveInProgress()) {
+    AddPendingSheet(type);
+  }
 
   // Load stylesheets that are not needed for the layout immediately with low
   // priority.  When the link element is created by scripts, load the
@@ -388,8 +390,10 @@ void LinkStyle::SetSheetTitle(const String& title) {
 }
 
 void LinkStyle::OwnerRemoved() {
-  if (StyleSheetIsLoading())
+  if (StyleSheetIsLoading() &&
+      !GetDocument().StatePreservingAtomicMoveInProgress()) {
     RemovePendingSheet();
+  }
 
   if (sheet_)
     ClearSheet();

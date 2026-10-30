@@ -276,7 +276,7 @@ class CORE_EXPORT Node : public EventTarget {
 
   Node* insertBefore(Node* new_child, Node* ref_child, ExceptionState&);
   Node* insertBefore(Node* new_child, Node* ref_child);
-  Node* moveBefore(Node* new_child, Node* ref_child, ExceptionState&);
+  void moveBefore(Node* new_child, Node* ref_child, ExceptionState&);
   Node* replaceChild(Node* new_child, Node* old_child, ExceptionState&);
   Node* replaceChild(Node* new_child, Node* old_child);
   Node* removeChild(Node* child, ExceptionState&);
@@ -834,6 +834,11 @@ class CORE_EXPORT Node : public EventTarget {
   // dispatch synchronous events.
   virtual void RemovedFrom(ContainerNode& insertion_point);
 
+  // Notifies the node that it has moved from a different parent.
+  // This corresponds to "moving steps"
+  // (https://dom.spec.whatwg.org/#concept-node-move-ext)
+  virtual void MovedFrom(ContainerNode& old_parent);
+
   // FIXME(dominicc): This method is not debug-only--it is used by
   // Tracing--rename it to something indicative.
   String DebugName() const;
@@ -1037,7 +1042,10 @@ class CORE_EXPORT Node : public EventTarget {
                          mojom::blink::ConsoleMessageLevel level,
                          const String& message);
 
- private:
+  // Called when a node changes its flat tree parent, either because slot
+  // assignments changed, or the node got reparented by a moveBefore().
+  void FlatTreeParentChanged();
+
  private:
   enum NodeFlags : uint32_t {
     // getNodeType() is called extensively. As it's called quite a bit its
@@ -1205,10 +1213,6 @@ class CORE_EXPORT Node : public EventTarget {
   TransientMutationObserverRegistry();
 
   ShadowRoot* GetSlotAssignmentRoot() const;
-
-  // Called when a node changes its flat tree parent, either because slot
-  // assignments changed, or the node got reparented by a moveBefore().
-  void FlatTreeParentChanged();
 
   // EventTarget ends with a single 32-bit member, so put one 32-bit member
   // first to avoid padding on 64-bit.
