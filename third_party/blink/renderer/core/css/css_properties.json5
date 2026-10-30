@@ -3482,7 +3482,7 @@
       type_name: "DynamicRangeLimit",
       field_group: "*",
       field_template: "external",
-      keywords: ["standard", "high", "constrained-high"],
+      keywords: ["standard", "no-limit", "constrained"],
       typedom_types: ["Keyword"],
       include_paths: ["third_party/blink/renderer/platform/graphics/graphics_types.h"],
       default_value: "DynamicRangeLimit(cc::PaintFlags::DynamicRangeLimit::kHigh)",
@@ -4623,6 +4623,17 @@
       keywords: ["always", "anchors-visible", "no-overflow"],
       typedom_types: ["Keyword"],
       invalidate: ["layout", "paint"],
+    },
+    {
+      name: "print-color-adjust",
+      property_methods: ["CSSValueFromComputedStyleInternal"],
+      independent: false,  // Actually true, but setting it to false saves a precious bit in ComputedStyleBase.
+      inherited: true,
+      field_template: "keyword",
+      keywords: ["economy", "exact"],
+      default_value: "economy",
+      valid_for_permission_element: true,
+      invalidate: ["paint"],
     },
     {
       name: "quotes",
@@ -6552,17 +6563,6 @@
       legacy_overlapping: true,
     },
     {
-      name: "-webkit-print-color-adjust",
-      property_methods: ["CSSValueFromComputedStyleInternal"],
-      independent: false,  // Actually true, but setting it to false saves a precious bit in ComputedStyleBase.
-      inherited: true,
-      field_template: "keyword",
-      keywords: ["economy", "exact"],
-      default_value: "economy",
-      valid_for_permission_element: true,
-      invalidate: ["paint"],
-    },
-    {
       name: "-webkit-rtl-ordering",
       property_methods: ["CSSValueFromComputedStyleInternal"],
       independent: true,
@@ -7495,6 +7495,10 @@
     {
       name: "-webkit-max-logical-height",
       alias_for: "max-block-size",
+    },
+    {
+      name: "-webkit-print-color-adjust",
+      alias_for: "print-color-adjust",
     },
 
     // Properties that we ignore in the StyleBuilder.

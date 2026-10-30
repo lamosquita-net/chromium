@@ -3460,8 +3460,8 @@ static const CSSValue* DynamicRangeLimit_ParseInternal(
     const CSSParserContext& context,
     const CSSParserLocalContext& local_context) {
   if (const CSSValue* const keyword_value = css_parsing_utils::ConsumeIdent<
-          CSSValueID::kStandard, CSSValueID::kHigh,
-          CSSValueID::kConstrainedHigh>(range)) {
+          CSSValueID::kStandard, CSSValueID::kNoLimit,
+          CSSValueID::kConstrained>(range)) {
     return keyword_value;
   }
 
@@ -3510,30 +3510,30 @@ const CSSValue* DynamicRangeLimit::CSSValueFromComputedStyleInternal(
     return CSSIdentifierValue::Create(CSSValueID::kStandard);
   }
   if (limit.constrained_high_mix == 1.f) {
-    return CSSIdentifierValue::Create(CSSValueID::kConstrainedHigh);
+    return CSSIdentifierValue::Create(CSSValueID::kConstrained);
   }
   if (limit.standard_mix == 0.f && limit.constrained_high_mix == 0.f) {
-    return CSSIdentifierValue::Create(CSSValueID::kHigh);
+    return CSSIdentifierValue::Create(CSSValueID::kNoLimit);
   }
   const float high_mix = 1 - limit.standard_mix - limit.constrained_high_mix;
   if (limit.standard_mix == 0.f) {
     return MakeGarbageCollected<cssvalue::CSSDynamicRangeLimitMixValue>(
-        CSSIdentifierValue::Create(CSSValueID::kConstrainedHigh),
-        CSSIdentifierValue::Create(CSSValueID::kHigh),
+        CSSIdentifierValue::Create(CSSValueID::kConstrained),
+        CSSIdentifierValue::Create(CSSValueID::kNoLimit),
         CSSNumericLiteralValue::Create(
             100 * high_mix, CSSPrimitiveValue::UnitType::kPercentage));
   }
   if (limit.constrained_high_mix == 0.f) {
     return MakeGarbageCollected<cssvalue::CSSDynamicRangeLimitMixValue>(
         CSSIdentifierValue::Create(CSSValueID::kStandard),
-        CSSIdentifierValue::Create(CSSValueID::kHigh),
+        CSSIdentifierValue::Create(CSSValueID::kNoLimit),
         CSSNumericLiteralValue::Create(
             100 * high_mix, CSSPrimitiveValue::UnitType::kPercentage));
   }
   if (high_mix == 0.f) {
     return MakeGarbageCollected<cssvalue::CSSDynamicRangeLimitMixValue>(
         CSSIdentifierValue::Create(CSSValueID::kStandard),
-        CSSIdentifierValue::Create(CSSValueID::kConstrainedHigh),
+        CSSIdentifierValue::Create(CSSValueID::kConstrained),
         CSSNumericLiteralValue::Create(
             100 * limit.constrained_high_mix,
             CSSPrimitiveValue::UnitType::kPercentage));
@@ -3544,8 +3544,8 @@ const CSSValue* DynamicRangeLimit::CSSValueFromComputedStyleInternal(
   return MakeGarbageCollected<cssvalue::CSSDynamicRangeLimitMixValue>(
       CSSIdentifierValue::Create(CSSValueID::kStandard),
       MakeGarbageCollected<cssvalue::CSSDynamicRangeLimitMixValue>(
-          CSSIdentifierValue::Create(CSSValueID::kConstrainedHigh),
-          CSSIdentifierValue::Create(CSSValueID::kHigh),
+          CSSIdentifierValue::Create(CSSValueID::kConstrained),
+          CSSIdentifierValue::Create(CSSValueID::kNoLimit),
           CSSNumericLiteralValue::Create(
               100 * (1 - limit.constrained_high_mix / (1 - limit.standard_mix)),
               CSSPrimitiveValue::UnitType::kPercentage)),
@@ -10418,7 +10418,7 @@ void WebkitPerspectiveOriginY::ApplyInherit(StyleResolverState& state) const {
       state.ParentStyle()->PerspectiveOrigin().Y());
 }
 
-const CSSValue* WebkitPrintColorAdjust::CSSValueFromComputedStyleInternal(
+const CSSValue* PrintColorAdjust::CSSValueFromComputedStyleInternal(
     const ComputedStyle& style,
     const LayoutObject*,
     bool allow_visited_style,

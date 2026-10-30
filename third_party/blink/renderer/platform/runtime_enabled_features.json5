@@ -726,7 +726,7 @@
     },
     {
       name: "ClickToCapturedPointer",
-      status: "experimental",
+      status: "stable",
     },
     {
       name: "ClipboardItemWithDOMStringSupport",
@@ -934,6 +934,12 @@
       status: "test",
     },
     {
+      // Replaces `string` type in CSS attr() function syntax with `raw-string`.
+      // https://github.com/w3c/csswg-drafts/issues/11645#issuecomment-2701601350
+      name: "CSSAttrRawString",
+      status: "stable",
+    },
+    {
       // https://chromestatus.com/feature/5125388091260928
       name: "CSSBackgroundClipUnprefix",
       status: "stable",
@@ -1021,7 +1027,7 @@
     },
     {
       name: "CSSDynamicRangeLimit",
-      status: "experimental",
+      status: "stable",
     },
     {
       // Include custom properties in CSSComputedStyleDeclaration::item/length.
@@ -1304,6 +1310,12 @@
       //
       // [1] https://drafts.csswg.org/css-scoping-1/#shadow-names
       name: "CSSTreeScopedTimelines",
+    },
+    {
+      // The var() fallback does not validate against the type
+      // of the custom property being referenced.
+      name: "CSSTypeAgnosticVarFallback",
+      status: "stable",
     },
     // Support for `user-select:contain`.
     {
@@ -2360,6 +2372,12 @@
     {
       name: "HTMLCommandAttributes",
       status: "stable",
+    },
+    // Adds support for the 'request-close' command.
+    {
+      name: "HTMLCommandRequestClose",
+      depends_on: ["HTMLCommandAttributes"],
+      status: "experimental",
     },
     {
       // TODO(crbug.com/376516550): Enables dialog light dismiss functionality.

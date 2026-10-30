@@ -364,7 +364,7 @@ enum CSSSampleId {
     kAliasWebkitPerspectiveOrigin = 309,
     kWebkitPerspectiveOriginX = 310,
     kWebkitPerspectiveOriginY = 311,
-    kWebkitPrintColorAdjust = 312,
+    kAliasWebkitPrintColorAdjust = 312,
     kWebkitRtlOrdering = 313,
     kWebkitRubyPosition = 314,
     kWebkitTextCombine = 315,
@@ -862,6 +862,8 @@ enum CSSSampleId {
     kTextWrapStyle = 806,
     // FlyWeb (level 135): same number as Chrome 135.
     kInteractivity = 811,
+    // FlyWeb (level 136): same number as Chrome 136.
+    kPrintColorAdjust = 848,
 
     // 1. Add new features above this line (don't change the assigned numbers of
     //    the existing items).

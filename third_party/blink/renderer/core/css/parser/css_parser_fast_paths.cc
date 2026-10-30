@@ -1590,7 +1590,7 @@ bool CSSParserFastPaths::IsValidKeywordPropertyAndValue(
              value_id == CSSValueID::kNormal ||
              value_id == CSSValueID::kStrict ||
              value_id == CSSValueID::kAfterWhiteSpace;
-    case CSSPropertyID::kWebkitPrintColorAdjust:
+    case CSSPropertyID::kPrintColorAdjust:
       return value_id == CSSValueID::kExact || value_id == CSSValueID::kEconomy;
     case CSSPropertyID::kWebkitRtlOrdering:
       return value_id == CSSValueID::kLogical ||
@@ -1811,7 +1811,7 @@ CSSBitset CSSParserFastPaths::handled_by_keyword_fast_paths_properties_{{
     CSSPropertyID::kWebkitFontSmoothing,
     CSSPropertyID::kLineBreak,
     CSSPropertyID::kWebkitLineBreak,
-    CSSPropertyID::kWebkitPrintColorAdjust,
+    CSSPropertyID::kPrintColorAdjust,
     CSSPropertyID::kWebkitRtlOrdering,
     CSSPropertyID::kWebkitRubyPosition,
     CSSPropertyID::kWebkitTextCombine,
