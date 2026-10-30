@@ -47,7 +47,11 @@ class LoginDatabaseAsyncHelper : public PasswordStoreSync {
 
   ~LoginDatabaseAsyncHelper() override;
 
-  // Opens |login_db_| and creates sync bridges.
+  // Creates the sync bridge, which must exist before sync asks for its
+  // controller delegate, that is, before the OSCryptAsync key arrives.
+  void CreateSyncBackend();
+
+  // Opens |login_db_| and initializes the sync bridge.
   bool Initialize(
       base::RepeatingCallback<void(std::optional<PasswordStoreChangeList>,
                                    bool)> remote_form_changes_received,

@@ -313,15 +313,28 @@ class ScopedStoreTransaction {
 
 PasswordSyncBridge::PasswordSyncBridge(
     std::unique_ptr<syncer::ModelTypeChangeProcessor> change_processor,
+    syncer::WipeModelUponSyncDisabledBehavior
+        wipe_model_upon_sync_disabled_behavior)
+    : ModelTypeSyncBridge(std::move(change_processor)),
+      wipe_model_upon_sync_disabled_behavior_(
+          wipe_model_upon_sync_disabled_behavior) {}
+
+PasswordSyncBridge::PasswordSyncBridge(
+    std::unique_ptr<syncer::ModelTypeChangeProcessor> change_processor,
     PasswordStoreSync* password_store_sync,
     syncer::WipeModelUponSyncDisabledBehavior
         wipe_model_upon_sync_disabled_behavior,
     const base::RepeatingClosure& sync_enabled_or_disabled_cb)
-    : ModelTypeSyncBridge(std::move(change_processor)),
-      password_store_sync_(password_store_sync),
-      wipe_model_upon_sync_disabled_behavior_(
-          wipe_model_upon_sync_disabled_behavior),
-      sync_enabled_or_disabled_cb_(sync_enabled_or_disabled_cb) {
+    : PasswordSyncBridge(std::move(change_processor),
+                         wipe_model_upon_sync_disabled_behavior) {
+  Init(password_store_sync, sync_enabled_or_disabled_cb);
+}
+
+void PasswordSyncBridge::Init(
+    PasswordStoreSync* password_store_sync,
+    const base::RepeatingClosure& sync_enabled_or_disabled_cb) {
+  password_store_sync_ = password_store_sync;
+  sync_enabled_or_disabled_cb_ = sync_enabled_or_disabled_cb;
   DCHECK(password_store_sync_);
   DCHECK(sync_enabled_or_disabled_cb_);
   // The metadata store could be null if the login database initialization
