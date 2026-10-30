@@ -207,6 +207,7 @@ void PaintLayerScrollableArea::DisposeImpl() {
   // leaving the ScrollAnchor with a stale LayoutObject pointer.
   scroll_anchor_.Dispose();
 
+    frame_view->RemovePendingStickyUpdate(this);
   GetLayoutBox()
       ->GetDocument()
       .GetPage()

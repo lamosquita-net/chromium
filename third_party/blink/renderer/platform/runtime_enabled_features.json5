@@ -284,6 +284,11 @@
       implied_by: ["Fledge", "Parakeet"],
       public: true,
     },
+    // Fix for crbug.com/403358869
+    {
+      name: "AdjustDOMOffsetToLayoutOffsetForSecureText",
+      status: "stable",
+    },
     // Adjust the end of the next paragraph if the end position for the
     // paragraph is updated while moving the paragraph. See
     // https://crbug.com/329121649
@@ -392,6 +397,10 @@
     // later use.
     {
       name: "AtomicMoveRangePreservation",
+    },
+    {
+      name: "AllowSvgUseToReferenceExternalDocumentRoot",
+      status: "stable",
     },
     {
       name: "AttributionReporting",
@@ -801,6 +810,12 @@
       origin_trial_feature_name: "CompressionDictionaryTransportV3",
       origin_trial_allows_third_party: true,
       public: true,
+    },
+    {
+      // If focus is not at canonical position then spellcheck should be deactivated.
+      // crbug.com/396485529
+      name: "CheckForCanonicalPositionInIdleSpellCheck",
+      status: "stable",
     },
     {
       name: "CompressionDictionaryTransportBackend",
@@ -2335,6 +2350,12 @@
       },
     },
     {
+      // Enables Skipping children for invisible select elements containing
+      // non-editable node while calculating end of paragraph.
+      name: "HandleDeletionAtStartAndEndBoundaryContainingHiddenElement",
+      status: "stable",
+    },
+    {
       // Updates the hanging behavior of preserved whitespace at the end of a
       // line to not depend on text-align. This flag is to be used as a
       // killswitch in case of any issues.
@@ -3329,6 +3350,11 @@
     },
     {
       name: "PaintHighlightsForFirstLetter",
+      status: "stable",
+    },
+    {
+      // crbug.com/398955086
+      name: "PlaceholderVisibility",
       status: "stable",
     },
     {
@@ -4436,7 +4462,7 @@
     },
     {
       name: "SynthesizedKeyboardEventsForAccessibilityActions",
-      status: "experimental",
+      status: "stable",
     },
     {
       // This is used for emoji variation selectors support in system
@@ -4617,6 +4643,12 @@
     // This landed in M132, and can be removed in M134.
     {
       name: "TopLayerInactiveDocumentExceptions",
+      status: "stable",
+    },
+    {
+      // Ensures symbols are treated as word boundaries during traversal.
+      // See https://crbug.com/40252642
+      name: "TreatSymbolsAsWordBoundary",
       status: "stable",
     },
     {
