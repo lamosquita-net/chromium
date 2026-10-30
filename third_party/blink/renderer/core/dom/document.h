@@ -1842,10 +1842,8 @@ class CORE_EXPORT Document : public ContainerNode,
     return slot_assignment_recalc_depth_;
   }
   bool IsInSlotAssignmentRecalc() const {
-    // Since we forbid recursive slot assignement recalc, the depth should be
-    // <= 1.
-    DCHECK_LE(slot_assignment_recalc_depth_, 1u);
-    return slot_assignment_recalc_depth_ == 1;
+    // FlyWeb: upstream 8e20d98d7d (crbug.com/553121008).
+    return slot_assignment_recalc_depth_ > 0;
   }
 
   bool ShouldSuppressMutationEvents() const {

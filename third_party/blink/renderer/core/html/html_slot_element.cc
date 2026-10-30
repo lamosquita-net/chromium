@@ -252,7 +252,9 @@ void HTMLSlotElement::ClearAssignedNodesAndFlatTreeChildren() {
 
 void HTMLSlotElement::UpdateFlatTreeNodeDataForAssignedNodes() {
   Node* previous = nullptr;
-  for (auto& current : assigned_nodes_) {
+  // FlyWeb: copy, the loop can change assigned_nodes_ (upstream 8e20d98d7d).
+  const HeapVector<Member<Node>> assigned_nodes = assigned_nodes_;
+  for (auto& current : assigned_nodes) {
     bool flat_tree_parent_changed = false;
     if (!current->NeedsStyleRecalc() && !current->GetComputedStyle()) {
       if (auto* node_data = current->GetFlatTreeNodeData())
@@ -284,7 +286,9 @@ void HTMLSlotElement::DetachDisplayLockedAssignedNodesLayoutTreeIfNeeded() {
   // detach the node's layout tree.
   StyleEngine& style_engine = GetDocument().GetStyleEngine();
   StyleEngine::DetachLayoutTreeScope detach_scope(style_engine);
-  for (auto& current : assigned_nodes_) {
+  // FlyWeb: copy, the loop can change assigned_nodes_ (upstream 8e20d98d7d).
+  const HeapVector<Member<Node>> assigned_nodes = assigned_nodes_;
+  for (auto& current : assigned_nodes) {
     if (current->GetForceReattachLayoutTree())
       current->DetachLayoutTree();
   }
