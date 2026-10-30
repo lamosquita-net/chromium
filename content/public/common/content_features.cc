@@ -151,7 +151,7 @@ BASE_FEATURE(kBrowserVerifiedUserActivationMouse,
 // TODO(crbug.com/40189625): Enable this feature.
 BASE_FEATURE(kCacheControlNoStoreEnterBackForwardCache,
              "CacheControlNoStoreEnterBackForwardCache",
-             base::FEATURE_DISABLED_BY_DEFAULT);
+             base::FEATURE_ENABLED_BY_DEFAULT);
 
 // This killswitch is distinct from the OT.
 // It allows us to remotely disable the feature, and get it to stop working even
