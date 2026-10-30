@@ -542,6 +542,12 @@ void BoxFragmentBuilder::PropagateChildBreakValues(
 }
 
 void BoxFragmentBuilder::HandleOofsAndSpecialDescendants() {
+  has_final_size_ = true;
+
+  // There may be OOFs with anchor queries. So be sure to propagate any anchors
+  // that we've found so far.
+  PropagateSizeDependentData();
+
   OutOfFlowLayoutPart(this).Run();
   if (Style().ScrollMarkerGroup() != EScrollMarkerGroup::kNone &&
       !GetConstraintSpace().IsAnonymous()) {
@@ -559,6 +565,8 @@ const LayoutResult* BoxFragmentBuilder::ToBoxFragment(
       DCHECK(fragment.IsLineBox() ||
              // TODO(kojii): How to place floats and OOF is TBD.
              fragment.IsFloatingOrOutOfFlowPositioned());
+  Finalize();
+
     }
   }
 #endif

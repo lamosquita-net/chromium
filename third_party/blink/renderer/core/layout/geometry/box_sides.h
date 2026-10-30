@@ -40,8 +40,6 @@ struct LogicalBoxSides {
 // Presence of box sides (e.g. borders) for a fragment, in the physical
 // coordinate space.
 struct PhysicalBoxSides {
-  STACK_ALLOCATED();
-
  public:
   bool top = true;
   bool right = true;
@@ -75,6 +73,11 @@ struct PhysicalBoxSides {
         left = logical.block_start;
       }
     }
+  }
+
+  bool operator==(const PhysicalBoxSides& other) const {
+    return top == other.top && right == other.right && bottom == other.bottom &&
+           left == other.left;
   }
 
   bool IsEmpty() const { return !top && !right && !bottom && !left; }

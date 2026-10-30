@@ -23,26 +23,26 @@ bool IsInlineContainerForNode(const BlockNode& node,
              node.Style().GetPosition());
 }
 
-LogicalAnchorQuery::SetOptions AnchorQuerySetOptions(
+PhysicalAnchorQuery::SetOptions AnchorQuerySetOptions(
     const PhysicalFragment& fragment,
     const LayoutInputNode& container,
     bool maybe_out_of_order_if_oof) {
   // If the |fragment| is not absolutely positioned, it's an in-flow anchor.
   // https://drafts.csswg.org/css-anchor-1/#determining
   if (!fragment.IsOutOfFlowPositioned()) {
-    return LogicalAnchorQuery::SetOptions::kInFlow;
+    return PhysicalAnchorQuery::SetOptions::kInFlow;
   }
 
   // If the OOF |fragment| is not in a block fragmentation context, it's a child
   // of its containing block. Make it out-of-flow.
   DCHECK(fragment.GetLayoutObject());
   if (!maybe_out_of_order_if_oof) {
-    return LogicalAnchorQuery::SetOptions::kOutOfFlow;
+    return PhysicalAnchorQuery::SetOptions::kOutOfFlow;
   }
 
   // |container| is null if it's an inline box.
   if (!container.GetLayoutBox()) {
-    return LogicalAnchorQuery::SetOptions::kOutOfFlow;
+    return PhysicalAnchorQuery::SetOptions::kOutOfFlow;
   }
 
   // If the OOF |fragment| is in a block fragmentation context, it's a child of
@@ -52,11 +52,11 @@ LogicalAnchorQuery::SetOptions AnchorQuerySetOptions(
   const LayoutObject* containing_block = layout_object->Container();
   DCHECK(containing_block);
   if (containing_block == container.GetLayoutBox()) {
-    return LogicalAnchorQuery::SetOptions::kOutOfFlow;
+    return PhysicalAnchorQuery::SetOptions::kOutOfFlow;
   }
   // Otherwise its containing block is a descendant of the block fragmentation
   // context, so it's in-flow.
-  return LogicalAnchorQuery::SetOptions::kInFlow;
+  return PhysicalAnchorQuery::SetOptions::kInFlow;
 }
 
 }  // namespace
@@ -167,15 +167,15 @@ void FragmentBuilder::PropagateSnapAreas(const PhysicalFragment& child) {
   }
 }
 
-LogicalAnchorQuery& FragmentBuilder::EnsureAnchorQuery() {
+PhysicalAnchorQuery& FragmentBuilder::EnsureAnchorQuery() {
   if (!anchor_query_)
-    anchor_query_ = MakeGarbageCollected<LogicalAnchorQuery>();
+    anchor_query_ = MakeGarbageCollected<PhysicalAnchorQuery>();
   return *anchor_query_;
 }
 
 void FragmentBuilder::PropagateChildAnchors(const PhysicalFragment& child,
                                             const LogicalOffset& child_offset) {
-  std::optional<LogicalAnchorQuery::SetOptions> options;
+  std::optional<PhysicalAnchorQuery::SetOptions> options;
   Element* context = nullptr;
   if (auto* node = child.GetNode()) {
     if (auto* element = DynamicTo<Element>(node)) {
@@ -189,23 +189,26 @@ void FragmentBuilder::PropagateChildAnchors(const PhysicalFragment& child,
       }
     }
   }
-  if (child.IsBox() &&
-      (child.Style().AnchorName() || child.IsImplicitAnchor())) {
+  if (child.IsAnchor()) {
+    DCHECK(child.GetLayoutObject());
     // Set the child's `anchor-name` before propagating its descendants', so
     // that ancestors have precedence over their descendants.
-    LogicalRect rect{child_offset,
-                     child.Size().ConvertToLogical(GetWritingMode())};
+    LogicalRect logical_rect(child_offset,
+                             child.Size().ConvertToLogical(GetWritingMode()));
+    const WritingModeConverter converter(GetWritingDirection(), Size());
+    PhysicalRect rect = converter.ToPhysical(logical_rect);
     options = AnchorQuerySetOptions(
         child, node_, IsBlockFragmentationContextRoot() || HasItems());
-    if (child.Style().AnchorName()) {
+    if (child.IsExplicitAnchor()) {
       for (const ScopedCSSName* name : child.Style().AnchorName()->GetNames()) {
         EnsureAnchorQuery().Set(name, *child.GetLayoutObject(), rect, *options,
                                 context);
       }
     }
     if (child.IsImplicitAnchor()) {
-      EnsureAnchorQuery().Set(child.GetLayoutObject(), *child.GetLayoutObject(),
-                              rect, *options, context);
+      EnsureAnchorQuery().Set(To<Element>(child.GetNode()),
+                              *child.GetLayoutObject(), rect, *options,
+                              context);
     }
   }
 
@@ -215,9 +218,11 @@ void FragmentBuilder::PropagateChildAnchors(const PhysicalFragment& child,
       options = AnchorQuerySetOptions(
           child, node_, IsBlockFragmentationContextRoot() || HasItems());
     }
-    const WritingModeConverter converter(GetWritingDirection(), child.Size());
-    EnsureAnchorQuery().SetFromPhysical(*anchor_query, converter, child_offset,
-                                        *options, context);
+    const WritingModeConverter converter(GetWritingDirection(), Size());
+    PhysicalOffset additional_offset =
+        converter.ToPhysical(child_offset, child.Size());
+    EnsureAnchorQuery().SetFromChild(*anchor_query, additional_offset, *options,
+                                     context);
   }
 }
 
@@ -283,9 +288,20 @@ void FragmentBuilder::PropagateFromFragment(
     return;
   }
 
-  // Propagate anchors from the |child|. Anchors are in |OofData| but the
-  // |child| itself may have an anchor.
-  PropagateChildAnchors(child, child_offset + relative_offset);
+  if (child.HasAnchorQueryToPropagate()) {
+    // This child either is an anchor, or has anchors inside (or both). They are
+    // to be propagated as soon as the container size is known.
+    LogicalOffset total_offset = child_offset + relative_offset;
+    if (HasFinalSize()) {
+      // When handling OOFs (after in-flow layout is finished) and an OOF wants
+      // to propagate anchors, it needs to be done right away, since there may
+      // be subsequent OOFs that have queries against those anchors.
+      PropagateChildAnchors(child, total_offset);
+    } else {
+      children_with_size_dependent_propagation_.push_back(
+          LogicalFragmentLink(child, total_offset));
+    }
+  }
 
   PropagateStickyDescendants(child);
   PropagateSnapAreas(child);
@@ -423,6 +439,7 @@ void FragmentBuilder::AddOutOfFlowChildCandidate(
     const LogicalOffset& child_offset,
     LogicalStaticPosition::InlineEdge inline_edge,
     LogicalStaticPosition::BlockEdge block_edge,
+    LogicalStaticPosition::LogicalAlignmentDirection align_self_direction,
     bool is_hidden_for_paint,
     bool allow_top_layer_nodes) {
   DCHECK(child);
@@ -433,7 +450,9 @@ void FragmentBuilder::AddOutOfFlowChildCandidate(
 
   oof_candidates_may_have_anchor_queries_ |= child.MayHaveAnchorQuery();
   oof_positioned_candidates_.emplace_back(
-      child, LogicalStaticPosition{child_offset, inline_edge, block_edge},
+      child,
+      LogicalStaticPosition{child_offset, inline_edge, block_edge,
+                            align_self_direction},
       RequiresContentBeforeBreaking(), is_hidden_for_paint,
       OofInlineContainer<LogicalOffset>());
 }
@@ -452,7 +471,8 @@ void FragmentBuilder::AddOutOfFlowInlineChildCandidate(
       child, child_offset,
       IsLtr(inline_container_direction) ? LogicalStaticPosition::kInlineStart
                                         : LogicalStaticPosition::kInlineEnd,
-      LogicalStaticPosition::kBlockStart, is_hidden_for_paint);
+      LogicalStaticPosition::kBlockStart, LogicalStaticPosition::kBlock,
+      is_hidden_for_paint);
 }
 
 void FragmentBuilder::AddOutOfFlowFragmentainerDescendant(
@@ -994,6 +1014,16 @@ void FragmentBuilder::PropagateSpaceShortage(
   UpdateMinimalSpaceShortage(space_shortage, &minimal_space_shortage_);
 }
 
+void FragmentBuilder::Finalize() {
+#if DCHECK_IS_ON()
+  DCHECK(!is_finalized_);
+  is_finalized_ = true;
+#endif
+
+  has_final_size_ = true;
+  PropagateSizeDependentData();
+}
+
 const LayoutResult* FragmentBuilder::Abort(LayoutResult::EStatus status) {
   return MakeGarbageCollected<LayoutResult>(
       LayoutResult::FragmentBuilderPassKey(), status, this);
@@ -1014,5 +1044,14 @@ String FragmentBuilder::ToString() const {
 }
 
 #endif
+
+void FragmentBuilder::PropagateSizeDependentData() {
+  DCHECK(has_final_size_);
+  for (const LogicalFragmentLink& link :
+       children_with_size_dependent_propagation_) {
+    PropagateChildAnchors(*link.fragment, link.offset);
+  }
+  children_with_size_dependent_propagation_.clear();
+}
 
 }  // namespace blink

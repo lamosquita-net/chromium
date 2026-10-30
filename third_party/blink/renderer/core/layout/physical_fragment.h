@@ -464,6 +464,10 @@ class CORE_EXPORT PhysicalFragment : public GarbageCollected<PhysicalFragment> {
   // Should only be called during layout as it inspects DOM.
   bool IsImplicitAnchor() const;
 
+  bool IsExplicitAnchor() const { return IsCSSBox() && Style().AnchorName(); }
+
+  bool IsAnchor() const { return IsExplicitAnchor() || IsImplicitAnchor(); }
+
   // GetLayoutObject should only be used when necessary for compatibility
   // with LegacyLayout.
   //
@@ -688,8 +692,14 @@ class CORE_EXPORT PhysicalFragment : public GarbageCollected<PhysicalFragment> {
    public:
     virtual ~OofData() = default;
     virtual void Trace(Visitor* visitor) const;
+    void SetAnchorQuery(PhysicalAnchorQuery* query) { anchor_query_ = query; }
+    const PhysicalAnchorQuery* AnchorQuery() const { return anchor_query_; }
+    PhysicalAnchorQuery& EnsureAnchorQuery();
+
     HeapVector<PhysicalOofPositionedNode> oof_positioned_descendants;
-    PhysicalAnchorQuery anchor_query;
+
+   private:
+    Member<PhysicalAnchorQuery> anchor_query_;
   };
 
   // Returns true if some child is OOF in the fragment tree. This happens if
@@ -713,15 +723,16 @@ class CORE_EXPORT PhysicalFragment : public GarbageCollected<PhysicalFragment> {
   base::span<PhysicalOofPositionedNode> OutOfFlowPositionedDescendants() const;
 
   bool HasAnchorQuery() const {
-    return oof_data_ && !oof_data_->anchor_query.IsEmpty();
+    return oof_data_ && oof_data_->AnchorQuery() &&
+           !oof_data_->AnchorQuery()->IsEmpty();
   }
   bool HasAnchorQueryToPropagate() const {
-    return HasAnchorQuery() || Style().AnchorName() || IsImplicitAnchor();
+    return HasAnchorQuery() || IsAnchor();
   }
   const PhysicalAnchorQuery* AnchorQuery() const {
     if (!HasAnchorQuery())
       return nullptr;
-    return &oof_data_->anchor_query;
+    return oof_data_->AnchorQuery();
   }
 
   const FragmentedOofData* GetFragmentedOofData() const;

@@ -4317,7 +4317,7 @@ void StyleEngine::Trace(Visitor* visitor) const {
   visitor->Trace(fill_or_clip_path_uri_value_cache_);
   visitor->Trace(style_containment_scope_tree_);
   visitor->Trace(try_value_flips_);
-  visitor->Trace(last_successful_option_dirty_set_);
+  visitor->Trace(anchored_element_dirty_set_);
   FontSelectorClient::Trace(visitor);
 }
 
@@ -4409,10 +4409,11 @@ void StyleEngine::UpdateViewportSize() {
 
 namespace {
 
-bool UpdateLastSuccessfulPositionFallback(Element& element) {
-  if (OutOfFlowData* out_of_flow_data = element.GetOutOfFlowData()) {
+bool UpdateLastSuccessfulPositionFallbackAndAnchorScrollShift(
+    Element& element) {
+  if (OutOfFlowData* data = element.GetOutOfFlowData()) {
     LayoutObject* layout_object = element.GetLayoutObject();
-    if (out_of_flow_data->ApplyPendingSuccessfulPositionFallback(
+    if (data->ApplyPendingSuccessfulPositionFallbackAndAnchorScrollShift(
             layout_object) &&
         layout_object) {
       layout_object->SetNeedsLayoutAndFullPaintInvalidation(
@@ -4452,7 +4453,7 @@ bool InvalidatePositionTryNames(Element* root,
 
 }  // namespace
 
-bool StyleEngine::UpdateLastSuccessfulPositionFallbacks() {
+bool StyleEngine::UpdateLastSuccessfulPositionFallbacksAndAnchorScrollShift() {
   bool invalidated = false;
   if (!dirty_position_try_names_.empty()) {
     // Added, removed, or modified @position-try rules.
@@ -4465,13 +4466,13 @@ bool StyleEngine::UpdateLastSuccessfulPositionFallbacks() {
     dirty_position_try_names_.clear();
   }
 
-  if (!last_successful_option_dirty_set_.empty()) {
-    for (Element* element : last_successful_option_dirty_set_) {
-      if (UpdateLastSuccessfulPositionFallback(*element)) {
+  if (!anchored_element_dirty_set_.empty()) {
+    for (Element* element : anchored_element_dirty_set_) {
+      if (UpdateLastSuccessfulPositionFallbackAndAnchorScrollShift(*element)) {
         invalidated = true;
       }
     }
-    last_successful_option_dirty_set_.clear();
+    anchored_element_dirty_set_.clear();
   }
   return invalidated;
 }

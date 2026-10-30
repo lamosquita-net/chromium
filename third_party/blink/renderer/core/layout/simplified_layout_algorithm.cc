@@ -264,7 +264,7 @@ const LayoutResult* SimplifiedLayoutAlgorithm::Layout() {
     LogicalStaticPosition position = layer->GetStaticPosition();
     container_builder_.AddOutOfFlowChildCandidate(
         To<BlockNode>(child), position.offset, position.inline_edge,
-        position.block_edge);
+        position.block_edge, position.align_self_direction);
   }
 
   // We add both items and line-box fragments for existing mechanisms to work.

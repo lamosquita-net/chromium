@@ -904,6 +904,10 @@
       status: "stable",
     },
     {
+      name: "CSSAnchorRememberedScrollOffset",
+      status: "stable",
+    },
+    {
       // Support for the anchor-scope property.
       // https://drafts.csswg.org/css-anchor-position-1/#anchor-scope
       name: "CSSAnchorScope",
