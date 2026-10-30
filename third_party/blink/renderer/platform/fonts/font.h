@@ -37,6 +37,8 @@
 #include "third_party/blink/renderer/platform/text/text_direction.h"
 #include "third_party/blink/renderer/platform/wtf/allocator/allocator.h"
 #include "third_party/blink/renderer/platform/wtf/cross_thread_copier.h"
+#include "third_party/blink/renderer/platform/wtf/text/character_names.h"
+#include "third_party/blink/renderer/platform/wtf/text/wtf_uchar.h"
 
 // To avoid conflicts with the DrawText macro from the Windows SDK...
 #undef DrawText
@@ -185,7 +187,13 @@ class PLATFORM_EXPORT Font {
   // This may fail and return a nullptr in case the last resort font cannot be
   // loaded. This *should* not happen but in reality it does ever now and then
   // when, for whatever reason, the last resort font cannot be loaded.
+  // Returns the primary font that contains the CJK water glyph.
+  const SimpleFontData* PrimaryFontWithCjkWater() const;
+
   const SimpleFontData* PrimaryFont() const;
+
+  // Returns the primary font that contains the digit zero glyph.
+  const SimpleFontData* PrimaryFontWithDigitZero() const;
 
   // Access the NG shape cache associated with this particular font object.
   // Should *not* be retained across layout calls as it may become invalid.
@@ -254,8 +262,22 @@ class PLATFORM_EXPORT Font {
   mutable Member<FontFallbackList> font_fallback_list_;
 };
 
+// Uses space as lookup character.
 inline const SimpleFontData* Font::PrimaryFont() const {
-  return EnsureFontFallbackList()->PrimarySimpleFontData(font_description_);
+  return EnsureFontFallbackList()->PrimarySimpleFontDataWithSpace(
+      font_description_);
+}
+
+// Uses digit zero as lookup character.
+inline const SimpleFontData* Font::PrimaryFontWithDigitZero() const {
+  return EnsureFontFallbackList()->PrimarySimpleFontDataWithDigitZero(
+      font_description_);
+}
+
+// Uses CJK water as lookup character.
+inline const SimpleFontData* Font::PrimaryFontWithCjkWater() const {
+  return EnsureFontFallbackList()->PrimarySimpleFontDataWithCjkWater(
+      font_description_);
 }
 
 inline FontSelector* Font::GetFontSelector() const {

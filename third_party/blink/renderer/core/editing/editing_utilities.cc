@@ -213,8 +213,17 @@ static bool HasEditableLevel(const Node& node, EditableLevel editable_level) {
   // would fire in the middle of Document::setFocusedNode().
 
   for (const Node& ancestor : NodeTraversal::InclusiveAncestorsOf(node)) {
-    if (!(ancestor.IsHTMLElement() || ancestor.IsDocumentNode()))
+    if (!(ancestor.IsHTMLElement() || ancestor.IsDocumentNode())) {
       continue;
+    }
+    // If the `ancestor` is a child of the shadow host and does not have a slot
+    // assigned, it should use the style of the shadow host and therefore be
+    // skipped.
+    // See https://issues.chromium.org/issues/392725745 for more details.
+    if (RuntimeEnabledFeatures::UseShadowHostStyleCheckEditableEnabled() &&
+        ancestor.IsChildOfShadowHost() && !ancestor.AssignedSlot()) {
+      continue;
+    }
     // An inert subtree should not contain any content or controls which are
     // critical to understanding or using aspects of the page which are not in
     // the inert state. Content in an inert subtree will not be perceivable by

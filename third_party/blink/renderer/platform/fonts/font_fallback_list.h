@@ -31,6 +31,7 @@
 #include "third_party/blink/renderer/platform/wtf/allocator/allocator.h"
 #include "third_party/blink/renderer/platform/wtf/forward.h"
 #include "third_party/blink/renderer/platform/wtf/ref_counted.h"
+#include "third_party/blink/renderer/platform/wtf/text/character_names.h"
 
 namespace blink {
 
@@ -86,18 +87,37 @@ class PLATFORM_EXPORT FontFallbackList
     return shape_cache_.Get();
   }
 
-  const SimpleFontData* PrimarySimpleFontData(
+  const SimpleFontData* PrimarySimpleFontDataWithSpace(
       const FontDescription& font_description) {
     if (nullify_primary_font_data_for_test_) {
       return nullptr;
     }
-    if (!cached_primary_simple_font_data_) {
-      cached_primary_simple_font_data_ =
-          DeterminePrimarySimpleFontData(font_description);
-      DCHECK(cached_primary_simple_font_data_);
+    if (!cached_primary_simple_font_data_with_space_) {
+      cached_primary_simple_font_data_with_space_ =
+          DeterminePrimarySimpleFontData(font_description, kSpaceCharacter);
+      DCHECK(cached_primary_simple_font_data_with_space_);
     }
-    return cached_primary_simple_font_data_;
+    return cached_primary_simple_font_data_with_space_;
   }
+  const SimpleFontData* PrimarySimpleFontDataWithDigitZero(
+      const FontDescription& font_description) {
+    if (!cached_primary_simple_font_data_with_digit_zero_) {
+      cached_primary_simple_font_data_with_digit_zero_ =
+          DeterminePrimarySimpleFontData(font_description, kDigitZeroCharacter);
+      DCHECK(cached_primary_simple_font_data_with_digit_zero_);
+    }
+    return cached_primary_simple_font_data_with_digit_zero_;
+  }
+
+  const SimpleFontData* PrimarySimpleFontDataWithCjkWater(
+      const FontDescription& font_description) {
+    if (!cached_primary_simple_font_data_with_cjk_water_) {
+      cached_primary_simple_font_data_with_cjk_water_ =
+          DeterminePrimarySimpleFontData(font_description, kCjkWaterCharacter);
+    }
+    return cached_primary_simple_font_data_with_cjk_water_;
+  }
+
   const FontData* FontDataAt(const FontDescription&, unsigned index);
 
   bool CanShapeWordByWord(const FontDescription&);
@@ -118,14 +138,19 @@ class PLATFORM_EXPORT FontFallbackList
  private:
   const FontData* GetFontData(const FontDescription&);
 
-  const SimpleFontData* DeterminePrimarySimpleFontData(const FontDescription&);
+  const SimpleFontData* DeterminePrimarySimpleFontData(
+      const FontDescription&,
+      UChar32 lookup_character = kSpaceCharacter);
   const SimpleFontData* DeterminePrimarySimpleFontDataCore(
-      const FontDescription&);
+      const FontDescription&,
+      UChar32 lookup_character = kSpaceCharacter);
 
   bool ComputeCanShapeWordByWord(const FontDescription&);
 
   HeapVector<Member<const FontData>, 1> font_list_;
-  Member<const SimpleFontData> cached_primary_simple_font_data_ = nullptr;
+  Member<const SimpleFontData> cached_primary_simple_font_data_with_space_;
+  Member<const SimpleFontData> cached_primary_simple_font_data_with_digit_zero_;
+  Member<const SimpleFontData> cached_primary_simple_font_data_with_cjk_water_;
   const Member<FontSelector> font_selector_;
   int family_index_ = 0;
   const uint16_t generation_;

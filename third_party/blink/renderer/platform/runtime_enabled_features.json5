@@ -3966,6 +3966,11 @@
       base_feature: "none",
     },
     {
+      // See https://crbug.com/395544401
+      name: "SelectionUpdateToInitialSelectionInListify",
+      status: "stable",
+    },
+    {
       name: "ScrollbarColor",
       status: "stable",
     },
@@ -4776,6 +4781,10 @@
       // of selection start.
       // https://crbug.com/40658856
       name: "UseSelectionFocusNodeForCaretNavigation",
+      status: "stable",
+    },
+    {
+      name: "UseShadowHostStyleCheckEditable",
       status: "stable",
     },
     {
