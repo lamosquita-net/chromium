@@ -31,6 +31,7 @@
 #include <stdarg.h>
 
 #include <algorithm>
+#include <limits>
 #include <string_view>
 
 #include "base/functional/callback.h"
@@ -224,15 +225,21 @@ String String::Format(const char* format, ...) {
   int length = base::vsnprintf(buffer.data(), buffer.size(), format, args);
   va_end(args);
 
-  // TODO(esprehn): This can only happen if there's an encoding error, what's
-  // the locale set to inside blink? Can this happen? We should probably CHECK
-  // instead.
-  if (length < 0)
+  // TODO(esprehn): Negative result can only happen if there's an encoding
+  // error, what's the locale set to inside blink? Can this happen?
+  if (length < 0) {
     return String();
+  }
 
   if (static_cast<unsigned>(length) >= buffer.size()) {
-    // vsnprintf doesn't include the NUL terminator in the length so we need to
-    // add space for it when growing.
+    // Buffer is too small to hold the full result. Resize larger and try
+    // again. `length` doesn't include the NUL terminator so add space for
+    // it when growing.
+    if (length == std::numeric_limits<int>::max()) {
+      // But length can't grow if it is already at max size (and signed
+      // overflow below would be UB).
+      return String();
+    }
     buffer.Grow(length + 1);
 
     // We need to call va_end() and then va_start() each time we use args, as
@@ -244,8 +251,15 @@ String String::Format(const char* format, ...) {
     va_start(args, format);
     length = base::vsnprintf(buffer.data(), buffer.size(), format, args);
     va_end(args);
+
+    // TODO(tsepez): can we get an error the second time around if
+    // we didn't get an error the first time? Can this happen?
+    if (length < 0) {
+      return String();
+    }
   }
 
+  // Note that first() will CHECK() if length is OOB.
   CHECK_LT(static_cast<unsigned>(length), buffer.size());
   return String(reinterpret_cast<const LChar*>(buffer.data()), length);
 }

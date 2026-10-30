@@ -668,6 +668,11 @@ String BaseAudioContext::state() const {
 void BaseAudioContext::SetContextState(AudioContextState new_state) {
   DCHECK(IsMainThread());
 
+  // The closed AudioContext does not accept any state change.
+  if (context_state_ == kClosed) {
+    return;
+  }
+
   // If there's no change in the current state, there's nothing that needs to be
   // done.
   if (new_state == context_state_) {
