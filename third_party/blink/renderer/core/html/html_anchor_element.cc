@@ -71,6 +71,7 @@
 #include "third_party/blink/renderer/platform/runtime_enabled_features.h"
 #include "third_party/blink/renderer/platform/timer.h"
 #include "third_party/blink/renderer/platform/weborigin/kurl.h"
+#include "third_party/blink/renderer/platform/network/blink_schemeful_site.h"
 #include "third_party/blink/renderer/platform/weborigin/security_origin.h"
 #include "third_party/blink/renderer/platform/weborigin/security_policy.h"
 #include "ui/events/event_constants.h"
@@ -554,6 +555,17 @@ void HTMLAnchorElement::NavigateToHyperlink(ResourceRequest request,
           GetExecutionContext()) &&
       HasRel(kRelationOpener) && !frame_request.GetWindowFeatures().noopener) {
     frame_request.SetExplicitOpener();
+  }
+  if (completed_url.ProtocolIs("blob")) {
+    auto blob_url_site =
+        BlinkSchemefulSite(SecurityOrigin::Create(completed_url));
+    BlinkSchemefulSite top_level_site =
+        window->GetStorageKey().GetTopLevelSite();
+    if (top_level_site != blob_url_site &&
+        base::FeatureList::IsEnabled(
+            features::kEnforceNoopenerOnBlobURLNavigation)) {
+      frame_request.SetNoOpener();
+    }
   }
 
   frame_request.SetTriggeringEventInfo(

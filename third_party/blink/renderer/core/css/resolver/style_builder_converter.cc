@@ -2852,20 +2852,15 @@ OffsetPathOperation* ConvertOffsetPathValueToOperation(
     StyleResolverState& state,
     const CSSValue& value,
     CoordBox coord_box) {
-  if (value.IsRayValue() || value.IsBasicShapeValue()) {
-    return MakeGarbageCollected<ShapeOffsetPathOperation>(
-        BasicShapeForValue(state, value), coord_box);
+  if (auto* url_value = DynamicTo<cssvalue::CSSURIValue>(value)) {
+    SVGResource* resource =
+        state.GetElementStyleResources().GetSVGResourceFromValue(
+            CSSPropertyID::kOffsetPath, *url_value);
+    return MakeGarbageCollected<ReferenceOffsetPathOperation>(
+        url_value->ValueForSerialization(), resource, coord_box);
   }
-  if (auto* path_value = DynamicTo<cssvalue::CSSPathValue>(value)) {
-    return MakeGarbageCollected<ShapeOffsetPathOperation>(
-        path_value->GetStylePath(), coord_box);
-  }
-  const auto& url_value = To<cssvalue::CSSURIValue>(value);
-  SVGResource* resource =
-      state.GetElementStyleResources().GetSVGResourceFromValue(
-          CSSPropertyID::kOffsetPath, url_value);
-  return MakeGarbageCollected<ReferenceOffsetPathOperation>(
-      url_value.ValueForSerialization(), resource, coord_box);
+  return MakeGarbageCollected<ShapeOffsetPathOperation>(
+      BasicShapeForValue(state, value), coord_box);
 }
 
 }  // namespace

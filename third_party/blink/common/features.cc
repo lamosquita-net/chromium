@@ -798,6 +798,12 @@ BASE_FEATURE(kEventTimingFallbackToModalDialogStart,
              "EventTimingFallbackToModalDialogStart",
              base::FEATURE_ENABLED_BY_DEFAULT);
 
+// Prevents an opener from being returned when a BlobURL is cross-site to the
+// window's top-level site.
+BASE_FEATURE(kEnforceNoopenerOnBlobURLNavigation,
+             "EnforceNoopenerOnBlobURLNavigation",
+             base::FEATURE_ENABLED_BY_DEFAULT);
+
 // Enable not reporting orphan pointerup (pointerup not accompanied by
 // pointerdown) as an interaction in performance event timing.
 BASE_FEATURE(kEventTimingHandleOrphanPointerup,

@@ -1731,13 +1731,6 @@ void ComputedStyle::ApplyMotionPathTransform(float origin_x,
         path_position = CalculatePointAndTangentOnPath(path.GetPath());
         break;
       }
-      case BasicShape::kStyleShapeType: {
-        const StyleShape& shape = To<StyleShape>(basic_shape);
-        Path path;
-        shape.GetPath(path, bounding_box, EffectiveZoom());
-        path_position = CalculatePointAndTangentOnPath(path);
-        break;
-      }
       case BasicShape::kStyleRayType: {
         const gfx::RectF reference_box = GetReferenceBox(box, coord_box);
         const gfx::PointF offset_from_reference_box =
@@ -1771,7 +1764,8 @@ void ComputedStyle::ApplyMotionPathTransform(float origin_x,
       case BasicShape::kBasicShapeCircleType:
       case BasicShape::kBasicShapeEllipseType:
       case BasicShape::kBasicShapeInsetType:
-      case BasicShape::kBasicShapePolygonType: {
+      case BasicShape::kBasicShapePolygonType:
+      case BasicShape::kStyleShapeType: {
         const gfx::RectF reference_box = GetReferenceBox(box, coord_box);
         const gfx::PointF offset_from_reference_box =
             GetOffsetFromContainingBlock(box) -
