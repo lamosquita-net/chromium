@@ -1976,6 +1976,8 @@ _CONFIG = [
         ],
         'allowed': ['cc::ViewTransitionElementId'],
     },
+            'third_party/blink/renderer/core/animation/css_color_interpolation_type.cc',
+            'third_party/blink/renderer/core/animation/interpolable_shadow.cc',
     {
         'paths': [
             'third_party/blink/renderer/core/view_transition/',

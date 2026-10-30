@@ -116,7 +116,9 @@ float CalculationExpressionSizingKeywordNode::Evaluate(
 
 CalculationExpressionColorChannelKeywordNode::
     CalculationExpressionColorChannelKeywordNode(ColorChannelKeyword channel)
-    : channel_(channel) {}
+    : channel_(channel) {
+  has_color_channel_keyword_ = true;
+}
 
 float CalculationExpressionColorChannelKeywordNode::Evaluate(
     float max_value,
@@ -418,6 +420,9 @@ CalculationExpressionOperationNode::CalculationExpressionOperationNode(
       DCHECK(!child->HasStretch());
       if (child->HasPercent()) {
         has_percent_ = true;
+      }
+      if (child->HasColorChannelKeyword()) {
+        has_color_channel_keyword_ = true;
       }
     }
   }
