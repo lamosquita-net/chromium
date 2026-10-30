@@ -44,7 +44,7 @@
 #include "third_party/blink/renderer/bindings/core/v8/v8_offscreen_canvas.h"
 #include "third_party/blink/renderer/bindings/core/v8/v8_readable_stream.h"
 #include "third_party/blink/renderer/bindings/core/v8/v8_string_resource.h"
-#include "third_party/blink/renderer/bindings/core/v8/v8_union_float32array_uint16array_uint8clampedarray.h"
+#include "third_party/blink/renderer/bindings/core/v8/v8_union_float16array_float32array_uint8clampedarray.h"
 #include "third_party/blink/renderer/core/context_features/context_feature_settings.h"
 #include "third_party/blink/renderer/core/dom/dom_exception.h"
 #include "third_party/blink/renderer/core/fileapi/blob.h"
@@ -848,7 +848,7 @@ TEST(V8ScriptValueSerializerTest, RoundTripImageDataWithColorSpaceInfo) {
   V8TestingScope scope;
   ImageDataSettings* image_data_settings = ImageDataSettings::Create();
   image_data_settings->setColorSpace("display-p3");
-  image_data_settings->setStorageFormat("float32");
+  image_data_settings->setPixelFormat("rgba-float32");
   ImageData* image_data = ImageData::ValidateAndCreate(
       2, 1, std::nullopt, image_data_settings,
       ImageData::ValidateAndCreateParams(), ASSERT_NO_EXCEPTION);
@@ -866,7 +866,7 @@ TEST(V8ScriptValueSerializerTest, RoundTripImageDataWithColorSpaceInfo) {
   EXPECT_EQ(image_data->Size(), new_image_data->Size());
   ImageDataSettings* new_image_data_settings = new_image_data->getSettings();
   EXPECT_EQ("display-p3", new_image_data_settings->colorSpace());
-  EXPECT_EQ("float32", new_image_data_settings->storageFormat());
+  EXPECT_EQ("rgba-float32", new_image_data_settings->pixelFormat());
   SkPixmap new_pm = new_image_data->GetSkPixmap();
   EXPECT_EQ(kRGBA_F32_SkColorType, new_pm.info().colorType());
   EXPECT_EQ(200.f, reinterpret_cast<const float*>(new_pm.addr(0, 0))[0]);
@@ -929,7 +929,7 @@ TEST(V8ScriptValueSerializerTest, DecodeImageDataV18) {
   EXPECT_EQ(gfx::Size(2, 1), new_image_data->Size());
   ImageDataSettings* new_image_data_settings = new_image_data->getSettings();
   EXPECT_EQ("display-p3", new_image_data_settings->colorSpace());
-  EXPECT_EQ("float32", new_image_data_settings->storageFormat());
+  EXPECT_EQ("rgba-float32", new_image_data_settings->pixelFormat());
   SkPixmap new_pm = new_image_data->GetSkPixmap();
   EXPECT_EQ(kRGBA_F32_SkColorType, new_pm.info().colorType());
   EXPECT_EQ(200u, static_cast<const uint8_t*>(new_pm.addr(0, 0))[0]);
@@ -1323,7 +1323,7 @@ TEST(V8ScriptValueSerializerTest, DecodeImageBitmapV20WithoutImageOrientation) {
       0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0xaf, 0x3f, 0x00, 0x00, 0x00, 0x00,
       0x00, 0x80, 0x8c, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0xda, 0xb8, 0x3f,
       0x00, 0x00, 0x00, 0x00, 0xe0, 0xd9, 0xe6, 0x3f, 0x02,
-      0x03,        // kCanvasPixelFormatTag kBGRA8
+      0x03,        // kImageBitmapPixelFormatTag kBGRA8
       0x06, 0x00,  // kCanvasOpacityModeTag
       0x04, 0x01,  // kOriginCleanTag
       0x05, 0x01,  // kIsPremultipliedTag
@@ -1386,7 +1386,7 @@ TEST(V8ScriptValueSerializerTest, DecodeImageBitmapV20WithImageOrientation) {
       0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0xaf, 0x3f, 0x00, 0x00, 0x00, 0x00,
       0x00, 0x80, 0x8c, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0xda, 0xb8, 0x3f,
       0x00, 0x00, 0x00, 0x00, 0xe0, 0xd9, 0xe6, 0x3f, 0x02,
-      0x03,        // kCanvasPixelFormatTag kBGRA8
+      0x03,        // kImageBitmapPixelFormatTag kBGRA8
       0x06, 0x00,  // kCanvasOpacityModeTag
       0x04, 0x01,  // kOriginCleanTag
       0x05, 0x01,  // kIsPremultipliedTag

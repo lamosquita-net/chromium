@@ -52,7 +52,7 @@
 #include "third_party/blink/renderer/bindings/core/v8/v8_image_bitmap_options.h"
 #include "third_party/blink/renderer/bindings/core/v8/v8_image_data_settings.h"
 #include "third_party/blink/renderer/bindings/core/v8/v8_typedefs.h"
-#include "third_party/blink/renderer/bindings/core/v8/v8_union_float32array_uint16array_uint8clampedarray.h"  // IWYU pragma: keep (https://github.com/clangd/clangd/issues/2043)
+#include "third_party/blink/renderer/bindings/core/v8/v8_union_float16array_float32array_uint8clampedarray.h"  // IWYU pragma: keep (https://github.com/clangd/clangd/issues/2043)
 #include "third_party/blink/renderer/bindings/modules/v8/v8_begin_layer_options.h"
 #include "third_party/blink/renderer/bindings/modules/v8/v8_canvas_rendering_context_2d_settings.h"
 #include "third_party/blink/renderer/bindings/modules/v8/v8_canvas_will_read_frequently.h"
@@ -1356,7 +1356,7 @@ static void TestDrawHighBitDepthPNGsOnWideGamutCanvas(
   path.Append(test::CoreTestDataPath());
   path.Append("/png-16bit/");
   ImageDataSettings* color_setting = ImageDataSettings::Create();
-  color_setting->setStorageFormat(
+  color_setting->setPixelFormat(
       ImageDataStorageFormatName(ImageDataStorageFormat::kFloat32));
   color_setting->setColorSpace(PredefinedColorSpaceName(color_space));
   for (auto interlace : interlace_status) {
@@ -1453,8 +1453,8 @@ void TestPutImageDataOnCanvasWithColorSpaceSettings(
       DOMUint8ClampedArray::Create(u8_pixels, data_length));
   DCHECK(data_u8);
   EXPECT_EQ(data_length, data_u8->length());
-  NotShared<DOMUint16Array> data_u16(
-      DOMUint16Array::Create(u16_pixels, data_length));
+  NotShared<DOMFloat16Array> data_u16(
+      DOMFloat16Array::Create(u16_pixels, data_length));
   DCHECK(data_u16);
   EXPECT_EQ(data_length, data_u16->length());
   NotShared<DOMFloat32Array> data_f32(
@@ -1497,11 +1497,11 @@ void TestPutImageDataOnCanvasWithColorSpaceSettings(
           PredefinedColorSpaceName(predefined_color_spaces[k]));
       switch (canvas_pixel_formats[k]) {
         case CanvasPixelFormat::kUint8:
-          canvas_color_setting->setStorageFormat(
+          canvas_color_setting->setPixelFormat(
               ImageDataStorageFormatName(ImageDataStorageFormat::kUint8));
           break;
         case CanvasPixelFormat::kF16:
-          canvas_color_setting->setStorageFormat(
+          canvas_color_setting->setPixelFormat(
               ImageDataStorageFormatName(ImageDataStorageFormat::kFloat32));
           break;
         default:

@@ -268,11 +268,11 @@ bool ParseTextBaseline(const String& s, TextBaseline& baseline) {
 String ImageDataStorageFormatName(ImageDataStorageFormat format) {
   switch (format) {
     case ImageDataStorageFormat::kUint8:
-      return "uint8";
+      return "rgba-unorm8";
     case ImageDataStorageFormat::kUint16:
-      return "uint16";
+      return "rgba-float16";
     case ImageDataStorageFormat::kFloat32:
-      return "float32";
+      return "rgba-float32";
   }
   NOTREACHED_IN_MIGRATION();
   return String();
@@ -300,7 +300,7 @@ String PredefinedColorSpaceName(PredefinedColorSpace color_space) {
 String CanvasPixelFormatName(CanvasPixelFormat pixel_format) {
   switch (pixel_format) {
     case CanvasPixelFormat::kUint8:
-      return "uint8";
+      return "unorm8";
     case CanvasPixelFormat::kF16:
       return "float16";
   }

@@ -104,7 +104,7 @@ ImageDataStorageFormat SerializedImageDataSettings::GetStorageFormat() const {
 ImageDataSettings* SerializedImageDataSettings::GetImageDataSettings() const {
   ImageDataSettings* settings = ImageDataSettings::Create();
   settings->setColorSpace(PredefinedColorSpaceName(GetColorSpace()));
-  settings->setStorageFormat(ImageDataStorageFormatName(GetStorageFormat()));
+  settings->setPixelFormat(ImageDataStorageFormatName(GetStorageFormat()));
   return settings;
 }
 

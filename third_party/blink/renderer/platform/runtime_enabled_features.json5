@@ -670,7 +670,7 @@
     },
     {
       name: "CanvasFloatingPoint",
-      status: "experimental",
+      status: "stable",
     },
     {
       name: "CanvasHDR",
@@ -2515,6 +2515,10 @@
       // of plain text copy and paste -
       // https://www.w3.org/TR/css-text-3/#text-transform
       name: "IgnoresCSSTextTransformsForPlainTextCopy",
+      status: "stable",
+    },
+    {
+      name: "ImageDataPixelFormat",
       status: "stable",
     },
     {
