@@ -37,6 +37,14 @@ class PasswordStoreSync;
 class PasswordSyncBridge : public syncer::ModelTypeSyncBridge {
  public:
   // |password_store_sync| must not be null and must outlive this object.
+  // FlyWeb: with the login database opened after the OSCryptAsync key arrives,
+  // the bridge is created first and Init() runs with the database open
+  // (upstream, 136). `this` is unusable until Init() is called.
+  PasswordSyncBridge(
+      std::unique_ptr<syncer::ModelTypeChangeProcessor> change_processor,
+      syncer::WipeModelUponSyncDisabledBehavior
+          wipe_model_upon_sync_disabled_behavior);
+
   PasswordSyncBridge(
       std::unique_ptr<syncer::ModelTypeChangeProcessor> change_processor,
       PasswordStoreSync* password_store_sync,
@@ -48,6 +56,9 @@ class PasswordSyncBridge : public syncer::ModelTypeSyncBridge {
   PasswordSyncBridge& operator=(const PasswordSyncBridge&) = delete;
 
   ~PasswordSyncBridge() override;
+
+  void Init(PasswordStoreSync* password_store_sync,
+            const base::RepeatingClosure& sync_enabled_or_disabled_cb);
 
   // Notifies the bridge of changes to the password database. Callers are
   // responsible for calling this function within the very same transaction as
@@ -101,7 +112,7 @@ class PasswordSyncBridge : public syncer::ModelTypeSyncBridge {
       const syncer::EntityMetadataMap& metadata_map) const;
 
   // Password store responsible for persistence.
-  const raw_ptr<PasswordStoreSync> password_store_sync_;
+  raw_ptr<PasswordStoreSync> password_store_sync_ = nullptr;
 
   syncer::WipeModelUponSyncDisabledBehavior
       wipe_model_upon_sync_disabled_behavior_ =
