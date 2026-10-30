@@ -552,6 +552,12 @@ void ViewTransition::ProcessCurrentState() {
         DCHECK_GE(document_->Lifecycle().GetState(),
                   DocumentLifecycle::kPrePaintClean);
 
+        // Lifecycle update can cause the transition to abort (e.g. if the
+        // snapshot root changed size during layout).
+        if (IsTerminalState(state_)) {
+          break;
+        }
+
         // Note: this happens after updating the lifecycle since the snapshot
         // root can depend on layout when using a mobile viewport (i.e.
         // horizontally overflowing element expanding the size of the frame
@@ -576,7 +582,15 @@ void ViewTransition::ProcessCurrentState() {
                 ViewTransitionUpdateLifecycleBeforeReadyEnabled()) {
           document_->View()->UpdateAllLifecyclePhasesExceptPaint(
               DocumentUpdateReason::kViewTransition);
-          style_tracker_->RunPostPrePaintSteps();
+          // Lifecycle update can cause the transition to abort (e.g. if the
+          // snapshot root changed size during layout).
+          if (IsTerminalState(state_)) {
+            break;
+          }
+          if (!style_tracker_->RunPostPrePaintSteps()) {
+            SkipTransition(PromiseResponse::kRejectInvalidState);
+            break;
+          }
         }
 
         delegate_->AddPendingRequest(
@@ -831,7 +845,7 @@ void ViewTransition::RunViewTransitionStepsDuringMainFrame() {
   if (StateRunsInViewTransitionStepsDuringMainFrame(state_))
     ProcessCurrentState();
 
-  if (style_tracker_ &&
+  if (!IsTerminalState(state_) && style_tracker_ &&
       document_->Lifecycle().GetState() >= DocumentLifecycle::kPrePaintClean &&
       !style_tracker_->RunPostPrePaintSteps()) {
     SkipTransition(PromiseResponse::kRejectInvalidState);
