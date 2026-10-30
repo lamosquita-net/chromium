@@ -11,6 +11,8 @@
 #include "third_party/blink/renderer/core/css/css_syntax_component.h"
 #include "third_party/blink/renderer/core/css/css_syntax_definition.h"
 #include "third_party/blink/renderer/core/css/css_unparsed_declaration_value.h"
+#include "third_party/blink/renderer/core/css/parser/css_if_parser.h"
+#include "third_party/blink/renderer/core/css/parser/css_parser_context.h"
 #include "third_party/blink/renderer/core/css/parser/css_parser_token.h"
 #include "third_party/blink/renderer/core/css/parser/css_parser_token_range.h"
 #include "third_party/blink/renderer/core/css/properties/css_parsing_utils.h"
@@ -229,6 +231,56 @@ static bool ConsumeAttributeReference(CSSParserTokenStream& stream,
   return stream.AtEnd();
 }
 
+// <if()> = if( [ <if-condition> : <declaration-value>? ; ]*
+//              <if-condition> : <declaration-value>? ;? )
+// <if-condition> = <boolean-expr[ <if-test> ]> | else
+// <if-test> =
+//   supports( [ <supports-condition> | <ident> : <declaration-value> ] ) |
+//   media( <media-query> ) |
+//   style( <style-query> )
+// https://www.w3.org/TR/css-values-5/#if-notation
+//
+// FlyWeb: this parser takes an ExecutionContext instead of the
+// CSSParserContext of Chromium 137, so one is built for CSSIfParser.
+static bool ConsumeIf(CSSParserTokenStream& stream,
+                      bool& has_references,
+                      bool& has_font_units,
+                      bool& has_root_font_units,
+                      bool& has_line_height_units,
+                      const ExecutionContext* context) {
+  CSSParserTokenStream::BlockGuard guard(stream);
+  const CSSParserContext* parser_context =
+      context ? MakeGarbageCollected<CSSParserContext>(*context)
+              : StrictCSSParserContext(SecureContextMode::kInsecureContext);
+  CSSIfParser parser(*parser_context);
+
+  stream.ConsumeWhitespace();
+  while (parser.ConsumeIfCondition(stream)) {
+    if (stream.Peek().GetType() != kColonToken) {
+      return false;
+    }
+    stream.ConsumeIncludingWhitespace();
+    // Parse <declaration-value>
+    if (!ConsumeUnparsedValue(stream, /*restricted_value=*/false,
+                              has_references, has_font_units,
+                              has_root_font_units, has_line_height_units,
+                              context)) {
+      return false;
+    }
+    if (stream.AtEnd()) {
+      return true;
+    }
+    if (stream.Peek().GetType() != kSemicolonToken) {
+      return false;
+    }
+    stream.ConsumeIncludingWhitespace();
+    if (stream.AtEnd()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Utility function for ConsumeUnparsedDeclaration(). Parses until it
 // detects some error (such as a stray top-level right-paren; if so,
 // returns false) or something that should end a declaration, such as
@@ -300,6 +352,17 @@ static bool ConsumeUnparsedValue(CSSParserTokenStream& stream,
           if (!ConsumeAttributeReference(stream, has_references, has_font_units,
                                          has_root_font_units,
                                          has_line_height_units, context)) {
+            error = true;
+            break;
+          }
+          has_references = true;
+          continue;
+        case CSSValueID::kIf:
+          if (!RuntimeEnabledFeatures::CSSInlineIfForStyleQueriesEnabled()) {
+            break;
+          }
+          if (!ConsumeIf(stream, has_references, has_font_units,
+                         has_root_font_units, has_line_height_units, context)) {
             error = true;
             break;
           }

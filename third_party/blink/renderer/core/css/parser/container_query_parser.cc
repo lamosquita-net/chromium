@@ -222,6 +222,12 @@ const MediaQueryExpNode* ContainerQueryParser::ConsumeContainerCondition(
       range);
 }
 
+const MediaQueryExpNode* ContainerQueryParser::ConsumeIfStyleQuery(
+    CSSParserTokenRange& range,
+    const CSSParserTokenOffsets& offsets) {
+  return ConsumeFeatureQuery(range, offsets, StyleFeatureSet());
+}
+
 const MediaQueryExpNode* ContainerQueryParser::ConsumeFeatureQuery(
     CSSParserTokenRange& range,
     const CSSParserTokenOffsets& offsets,

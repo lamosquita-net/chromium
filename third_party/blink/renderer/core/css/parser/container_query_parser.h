@@ -28,6 +28,11 @@ class CORE_EXPORT ContainerQueryParser {
   const MediaQueryExpNode* ParseCondition(CSSParserTokenRange,
                                           const CSSParserTokenOffsets&);
 
+  // The contents of style( <style-query> ) in if() (FlyWeb: by range, since
+  // the 128's query parsers are range-based; Chromium 137 uses a stream).
+  const MediaQueryExpNode* ConsumeIfStyleQuery(CSSParserTokenRange&,
+                                               const CSSParserTokenOffsets&);
+
  private:
   friend class ContainerQueryParserTest;
 

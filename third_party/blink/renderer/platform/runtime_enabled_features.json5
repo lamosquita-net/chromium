@@ -1086,6 +1086,18 @@
       status: "stable",
     },
     {
+      name: "CSSInlineIfForMediaQueries",
+      status: "stable",
+    },
+    {
+      name: "CSSInlineIfForStyleQueries",
+      status: "stable",
+    },
+    {
+      name: "CSSInlineIfForSupportsQueries",
+      status: "stable",
+    },
+    {
       // The `inset-area` CSS property has been renamed to `position-area`. This
       // feature (CSSInsetAreaProperty) enables the old `inset-area` property.
       // This was deprecated in M129, and disabled by default in M131. Assuming

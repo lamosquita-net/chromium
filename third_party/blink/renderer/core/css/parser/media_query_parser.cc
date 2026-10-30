@@ -524,6 +524,28 @@ const MediaQueryExpNode* MediaQueryParser::ConsumeInParens(
   return ConsumeGeneralEnclosed(range);
 }
 
+const MediaQueryExpNode* MediaQueryParser::ConsumeIfMediaTest(
+    CSSParserTokenRange& range,
+    const CSSParserTokenOffsets& offsets) {
+  // As in Chromium 137, <media-condition> first and then <media-feature>.
+  CSSParserTokenRange original = range;
+  if (const MediaQueryExpNode* node = ConsumeCondition(range, offsets)) {
+    range.ConsumeWhitespace();
+    if (range.AtEnd()) {
+      return node;
+    }
+  }
+  range = original;
+  if (const MediaQueryExpNode* node =
+          ConsumeFeature(range, offsets, MediaQueryFeatureSet())) {
+    range.ConsumeWhitespace();
+    if (range.AtEnd()) {
+      return node;
+    }
+  }
+  return nullptr;
+}
+
 const MediaQueryExpNode* MediaQueryParser::ConsumeGeneralEnclosed(
     CSSParserTokenRange& range) {
   if (range.Peek().GetType() != kLeftParenthesisToken &&

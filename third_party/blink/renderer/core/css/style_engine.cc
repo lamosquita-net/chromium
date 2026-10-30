@@ -60,6 +60,7 @@
 #include "third_party/blink/renderer/core/css/out_of_flow_data.h"
 #include "third_party/blink/renderer/core/css/property_registration.h"
 #include "third_party/blink/renderer/core/css/property_registry.h"
+#include "third_party/blink/renderer/core/css/resolver/media_query_result.h"
 #include "third_party/blink/renderer/core/css/resolver/scoped_style_resolver.h"
 #include "third_party/blink/renderer/core/css/resolver/selector_filter_parent_scope.h"
 #include "third_party/blink/renderer/core/css/resolver/style_builder_converter.h"
@@ -509,9 +510,14 @@ void StyleEngine::MediaQueryAffectingValueChanged(TreeScope& tree_scope,
                                                   MediaValueChange change) {
   auto* collection = StyleSheetCollectionFor(tree_scope);
   DCHECK(collection);
+  // Regular media queries are invalidated through rebuilding of the RuleSets.
   if (AffectedByMediaValueChange(collection->ActiveStyleSheets(), change)) {
     SetNeedsActiveStyleUpdate(tree_scope);
   }
+
+  // Styles that use functional media queries (those within @function)
+  // are invalidated by marking the affected elements for recalc directly.
+  InvalidateFunctionalMediaDependentStylesIfNeeded();
 }
 
 void StyleEngine::WatchedSelectorsChanged() {
@@ -1169,6 +1175,22 @@ void SetNeedsStyleRecalcForViewportUnits(TreeScope& tree_scope,
       element->SetNeedsStyleRecalc(kLocalStyleChange,
                                    StyleChangeReasonForTracing::Create(
                                        style_change_reason::kViewportUnits));
+    }
+  }
+}
+
+template <typename Func>
+void MarkElementsForRecalc(TreeScope& tree_scope,
+                           const StyleChangeReasonForTracing& reason,
+                           Func predicate) {
+  for (Element* element = ElementTraversal::FirstWithin(tree_scope.RootNode());
+       element; element = ElementTraversal::NextIncludingPseudo(*element)) {
+    if (ShadowRoot* root = element->GetShadowRoot()) {
+      MarkElementsForRecalc(*root, reason, predicate);
+    }
+    const ComputedStyle* style = element->GetComputedStyle();
+    if (style && predicate(*style)) {
+      element->SetNeedsStyleRecalc(kLocalStyleChange, reason);
     }
   }
 }
@@ -2251,6 +2273,14 @@ void StyleEngine::InvalidateSlottedElements(
   }
 }
 
+bool StyleEngine::HasViewportDependentMediaQueries() {
+  DCHECK(global_rule_set_);
+  UpdateActiveStyle();
+  return global_rule_set_->GetRuleFeatureSet()
+             .HasViewportDependentMediaQueries() ||
+         functional_media_query_result_flags_.is_viewport_dependent;
+}
+
 bool StyleEngine::HasViewportDependentPropertyRegistrations() {
   UpdateActiveStyle();
   const PropertyRegistry* registry = GetDocument().GetPropertyRegistry();
@@ -2971,6 +3001,27 @@ void StyleEngine::ApplyVisionDeficiencyStyle(
     ops.Operations().push_back(vision_deficiency_filter_);
     layout_view_style_builder.SetFilter(ops);
   }
+}
+
+bool StyleEngine::EvaluateFunctionalMediaQuery(const MediaQuerySet& query_set) {
+  bool result = EnsureMediaQueryEvaluator().Eval(
+      query_set, &functional_media_query_result_flags_);
+  functional_media_query_results_.insert(&query_set, result);
+  return result;
+}
+
+void StyleEngine::InvalidateFunctionalMediaDependentStylesIfNeeded() {
+  if (!EnsureMediaQueryEvaluator().DidResultsChange(
+          functional_media_query_results_)) {
+    return;
+  }
+  functional_media_query_results_.clear();
+  functional_media_query_result_flags_.Clear();
+  const auto& reason =
+      StyleChangeReasonForTracing::Create(style_change_reason::kMediaQuery);
+  MarkElementsForRecalc(GetDocument(), reason, [](const ComputedStyle& style) {
+    return style.AffectedByFunctionalMedia();
+  });
 }
 
 const MediaQueryEvaluator& StyleEngine::EnsureMediaQueryEvaluator() {
@@ -4216,6 +4267,9 @@ void StyleEngine::MarkAllElementsForStyleRecalc(
   if (Element* root = GetDocument().documentElement()) {
     root->SetNeedsStyleRecalc(kSubtreeStyleChange, reason);
   }
+
+  functional_media_query_results_.clear();
+  functional_media_query_result_flags_.Clear();
 }
 
 void StyleEngine::UpdateViewportStyle() {
@@ -4318,6 +4372,7 @@ void StyleEngine::Trace(Visitor* visitor) const {
   visitor->Trace(style_containment_scope_tree_);
   visitor->Trace(try_value_flips_);
   visitor->Trace(anchored_element_dirty_set_);
+  visitor->Trace(functional_media_query_results_);
   FontSelectorClient::Trace(visitor);
 }
 

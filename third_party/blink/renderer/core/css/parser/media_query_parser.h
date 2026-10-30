@@ -59,6 +59,7 @@ class CORE_EXPORT MediaQueryParser {
 
  private:
   friend class ContainerQueryParser;
+  friend class CSSIfParser;
 
   enum ParserType {
     kMediaQuerySetParser,
@@ -149,6 +150,12 @@ class CORE_EXPORT MediaQueryParser {
 
   // https://drafts.csswg.org/mediaqueries-4/#typedef-general-enclosed
   const MediaQueryExpNode* ConsumeGeneralEnclosed(CSSParserTokenRange&);
+
+  // The contents of media( <media-feature> | <media-condition> ) in if(),
+  // which must consume the whole range (FlyWeb: by range; Chromium 137 uses a
+  // stream).
+  const MediaQueryExpNode* ConsumeIfMediaTest(CSSParserTokenRange&,
+                                              const CSSParserTokenOffsets&);
 
   // https://drafts.csswg.org/mediaqueries-4/#typedef-media-query
   MediaQuery* ConsumeQuery(CSSParserTokenRange&, const CSSParserTokenOffsets&);

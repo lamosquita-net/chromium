@@ -39,6 +39,7 @@ extern const char kInspector[];
 extern const char kKeyframesRuleChange[];
 extern const char kLanguage[];
 extern const char kLinkColorChange[];
+extern const char kMediaQuery[];
 extern const char kPictureSourceChanged[];
 extern const char kPlatformColorChange[];
 extern const char kPluginChanged[];
