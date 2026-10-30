@@ -31,7 +31,7 @@ AudioWorkletProcessor* AudioWorkletProcessor::Create(
     ExceptionState& exception_state) {
   AudioWorkletGlobalScope* global_scope = To<AudioWorkletGlobalScope>(context);
   DCHECK(global_scope);
-  DCHECK(global_scope->IsContextThread());
+  CHECK(global_scope->IsContextThread());
 
   // Get the stored initialization parameter from the global scope.
   std::unique_ptr<ProcessorCreationParams> params =
@@ -71,7 +71,7 @@ bool AudioWorkletProcessor::Process(
   TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("audio-worklet"),
                "AudioWorkletProcessor::Process");
 
-  DCHECK(global_scope_->IsContextThread());
+  CHECK(global_scope_->IsContextThread());
   DCHECK(!hasErrorOccurred());
 
   ScriptState* script_state =
