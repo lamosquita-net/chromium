@@ -43,8 +43,8 @@ void SetSinkIdResolver::Start() {
                audio_utilities::GetSinkIdForTracing(sink_descriptor_));
   DCHECK(IsMainThread());
 
-  ExecutionContext* context = resolver_->GetExecutionContext();
-  if (!context || !audio_context_ || audio_context_->IsContextCleared()) {
+  if (!resolver_ || !resolver_->GetExecutionContext() || !audio_context_ ||
+      audio_context_->IsContextCleared()) {
     // No point in rejecting promise, as it will bail out upon detached
     // context anyway.
     return;
@@ -84,16 +84,35 @@ void SetSinkIdResolver::Start() {
   }
 }
 
-void SetSinkIdResolver::OnSetSinkIdComplete(media::OutputDeviceStatus status) {
-  TRACE_EVENT1("webaudio", "SetSinkIdResolver::OnSetSinkIdComplete", "sink_id",
-               audio_utilities::GetSinkIdForTracing(sink_descriptor_));
+void SetSinkIdResolver::Resolve() {
   DCHECK(IsMainThread());
+  DCHECK(resolver_);
+  resolver_->Resolve();
+  resolver_ = nullptr;
+}
 
-  auto* excecution_context = resolver_->GetExecutionContext();
-  if (!excecution_context || excecution_context->IsContextDestroyed()) {
-    return;
-  }
+void SetSinkIdResolver::Reject(DOMException* exception) {
+  DCHECK(IsMainThread());
+  DCHECK(resolver_);
+  resolver_->Reject(exception);
+  resolver_ = nullptr;
+}
 
+void SetSinkIdResolver::Reject(v8::Local<v8::Value> value) {
+  DCHECK(IsMainThread());
+  DCHECK(resolver_);
+  resolver_->Reject(value);
+  resolver_ = nullptr;
+}
+
+ScriptPromise<IDLUndefined> SetSinkIdResolver::GetPromise() {
+  DCHECK(IsMainThread());
+  DCHECK(resolver_);
+  return resolver_->Promise();
+}
+
+void SetSinkIdResolver::HandleOutputDeviceStatus(
+    media::OutputDeviceStatus status) {
   ScriptState* script_state = resolver_->GetScriptState();
   ScriptState::Scope scope(script_state);
 
@@ -101,31 +120,68 @@ void SetSinkIdResolver::OnSetSinkIdComplete(media::OutputDeviceStatus status) {
     case media::OutputDeviceStatus::OUTPUT_DEVICE_STATUS_OK:
       // Update AudioContext's sink ID and fire the 'onsinkchange' event
       NotifySetSinkIdIsDone();
-      resolver_->Resolve();
-      break;
+      // FlyWeb: 'sinkchange' is dispatched synchronously; a close() from its
+      // handler has already rejected this resolver.
+      if (resolver_) {
+        Resolve();
+      }
+      return;
     case media::OutputDeviceStatus::OUTPUT_DEVICE_STATUS_ERROR_NOT_FOUND:
-      resolver_->Reject(V8ThrowDOMException::CreateOrEmpty(
+      Reject(V8ThrowDOMException::CreateOrEmpty(
           script_state->GetIsolate(), DOMExceptionCode::kNotFoundError,
           "AudioContext.setSinkId(): failed: the device " +
               String(sink_descriptor_.SinkId()) + " is not found."));
-      break;
+      return;
     case media::OutputDeviceStatus::OUTPUT_DEVICE_STATUS_ERROR_NOT_AUTHORIZED:
-      resolver_->Reject(V8ThrowDOMException::CreateOrEmpty(
+      Reject(V8ThrowDOMException::CreateOrEmpty(
           script_state->GetIsolate(), DOMExceptionCode::kNotAllowedError,
           "AudioContext.setSinkId() failed: access to the device " +
               String(sink_descriptor_.SinkId()) + " is not permitted."));
-      break;
+      return;
     case media::OutputDeviceStatus::OUTPUT_DEVICE_STATUS_ERROR_TIMED_OUT:
-      resolver_->Reject(V8ThrowDOMException::CreateOrEmpty(
+      Reject(V8ThrowDOMException::CreateOrEmpty(
           script_state->GetIsolate(), DOMExceptionCode::kTimeoutError,
           "AudioContext.setSinkId() failed: the request for device " +
               String(sink_descriptor_.SinkId()) + " is timed out."));
-      break;
-    default:
-      NOTREACHED_IN_MIGRATION();
+      return;
+    case media::OutputDeviceStatus::OUTPUT_DEVICE_STATUS_ERROR_INTERNAL:
+      Reject(V8ThrowDOMException::CreateOrEmpty(
+          script_state->GetIsolate(), DOMExceptionCode::kInvalidStateError,
+          "AudioContext.setSinkId() failed: the device " +
+              String(sink_descriptor_.SinkId()) + " is not available."));
+      return;
+  }
+  NOTREACHED_IN_MIGRATION();
+  resolver_ = nullptr;
+}
+
+void SetSinkIdResolver::OnSetSinkIdComplete(media::OutputDeviceStatus status) {
+  TRACE_EVENT1("webaudio", "SetSinkIdResolver::OnSetSinkIdComplete", "sink_id",
+               audio_utilities::GetSinkIdForTracing(sink_descriptor_));
+  DCHECK(IsMainThread());
+
+  // FlyWeb: null once the AudioContext was closed (upstream 511088344); the
+  // resolver queue was already cleared, so pop_front() would underflow it.
+  if (!resolver_ || !audio_context_) {
+    return;
   }
 
+  auto* excecution_context = resolver_->GetExecutionContext();
+  if (!excecution_context || excecution_context->IsContextDestroyed()) {
+    return;
+  }
+
+  HandleOutputDeviceStatus(status);
+
+  // FlyWeb: the same close() clears the queue (and the context may be gone);
+  // only pop this resolver.
+  if (!audio_context_) {
+    return;
+  }
   auto& resolvers = audio_context_->GetSetSinkIdResolver();
+  if (resolvers.empty() || resolvers.front().Get() != this) {
+    return;
+  }
 
   resolvers.pop_front();
 

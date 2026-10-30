@@ -532,7 +532,9 @@ void AudioContext::DidClose() {
 
   // Reject all pending resolvers for setSinkId() before closing AudioContext.
   for (auto& set_sink_id_resolver : set_sink_id_resolvers_) {
-    set_sink_id_resolver->Resolver()->Reject(MakeGarbageCollected<DOMException>(
+    // FlyWeb: upstream 511088344 (crbug.com/381126158), invalidates the
+    // resolver so a pending OnSetSinkIdComplete() does nothing.
+    set_sink_id_resolver->Reject(MakeGarbageCollected<DOMException>(
         DOMExceptionCode::kInvalidStateError,
         "Cannot resolve pending promise from setSinkId(), AudioContext is "
         "going away"));
@@ -637,7 +639,7 @@ ScriptPromise<IDLUndefined> AudioContext::setSinkId(
 
   SetSinkIdResolver* resolver =
       MakeGarbageCollected<SetSinkIdResolver>(script_state, *this, *v8_sink_id);
-  auto promise = resolver->Resolver()->Promise();
+  auto promise = resolver->GetPromise();
 
   set_sink_id_resolvers_.push_back(resolver);
 
