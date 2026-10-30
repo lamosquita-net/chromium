@@ -1853,7 +1853,8 @@ bool BoxFragmentPainter::ShouldPaint(
   if (box_fragment_.IsPaginatedRoot())
     return true;
   return paint_state.LocalRectIntersectsCullRect(
-      box_fragment_.InkOverflowRect());
+      To<LayoutBoxModelObject>(box_fragment_.GetLayoutObject())
+          ->ApplyFiltersToRect(box_fragment_.InkOverflowRect()));
 }
 
 void BoxFragmentPainter::PaintTextClipMask(const PaintInfo& paint_info,

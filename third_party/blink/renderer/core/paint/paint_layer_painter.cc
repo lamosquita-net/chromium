@@ -104,6 +104,7 @@ static gfx::Rect FirstFragmentVisualRect(const LayoutBoxModelObject& object) {
   PhysicalRect overflow_rect =
       object.IsBox() ? To<LayoutBox>(object).SelfVisualOverflowRect()
                      : object.VisualOverflowRect();
+  overflow_rect = object.ApplyFiltersToRect(overflow_rect);
   overflow_rect.Move(object.FirstFragment().PaintOffset());
   return ToEnclosingRect(overflow_rect);
 }
@@ -245,6 +246,15 @@ PaintResult PaintLayerPainter::Paint(GraphicsContext& context,
         context.GetPaintController(),
         object.FirstFragment().LocalBorderBoxProperties(), paint_layer_,
         DisplayItem::kLayerChunk);
+
+    // When a reference filter applies to the layer, ensure a chunk is
+    // generated so that the filter paints even if no other content is painted
+    // by the layer (see `SVGContainerPainter::Paint`).
+    auto* properties = object.FirstFragment().PaintProperties();
+    if (properties && properties->Filter() &&
+        properties->Filter()->Filter().HasReferenceFilter()) {
+      context.GetPaintController().EnsureChunk();
+    }
   }
 
   bool should_paint_background =

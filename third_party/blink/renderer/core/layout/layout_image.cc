@@ -340,16 +340,6 @@ void LayoutImage::ComputeIntrinsicSizingInfo(
   }
 
   LayoutReplaced::ComputeIntrinsicSizingInfo(intrinsic_sizing_info);
-
-  // Don't compute an intrinsic ratio to preserve historical WebKit behavior if
-  // we're painting alt text and/or a broken image.
-  // Video is excluded from this behavior because video elements have a default
-  // aspect ratio that a failed poster image load should not override.
-  if (image_resource_ && image_resource_->ErrorOccurred() &&
-      !IsA<LayoutVideo>(this)) {
-    intrinsic_sizing_info.aspect_ratio = gfx::SizeF(1, 1);
-    return;
-  }
 }
 
 SVGImage* LayoutImage::EmbeddedSVGImage() const {
