@@ -342,7 +342,7 @@ const LayoutResult* GridLayoutAlgorithm::LayoutInternal() {
   container_builder_.TransferGridLayoutData(
       std::make_unique<GridLayoutData>(layout_data));
 
-  SetReadingFlowElements(grid_sizing_tree);
+  SetReadingFlowNodes(grid_sizing_tree);
 
   if (constraint_space.HasBlockFragmentation()) {
     container_builder_.SetBreakTokenData(
@@ -4220,7 +4220,7 @@ void GridLayoutAlgorithm::PlaceOutOfFlowItems(
   }
 }
 
-void GridLayoutAlgorithm::SetReadingFlowElements(
+void GridLayoutAlgorithm::SetReadingFlowNodes(
     const GridSizingTree& sizing_tree) {
   const auto& style = Style();
   const EReadingFlow reading_flow = style.ReadingFlow();
@@ -4230,12 +4230,12 @@ void GridLayoutAlgorithm::SetReadingFlowElements(
     return;
   }
   const auto& grid_items = sizing_tree.TreeRootData().grid_items;
-  HeapVector<Member<Element>> reading_flow_elements;
-  reading_flow_elements.ReserveInitialCapacity(grid_items.Size());
-  // Add grid item if it is a DOM element
-  auto AddItemIfNeeded = [&](const GridItemData& grid_item) {
-    if (Element* element = DynamicTo<Element>(grid_item.node.GetDOMNode())) {
-      reading_flow_elements.push_back(element);
+  HeapVector<Member<blink::Node>> reading_flow_nodes;
+  reading_flow_nodes.ReserveInitialCapacity(grid_items.Size());
+  // Add grid item if it is a DOM node
+  auto add_item_if_needed = [&](const GridItemData& grid_item) {
+    if (blink::Node* node = grid_item.node.GetDOMNode()) {
+      reading_flow_nodes.push_back(node);
     }
   };
 
@@ -4244,7 +4244,7 @@ void GridLayoutAlgorithm::SetReadingFlowElements(
     Vector<const GridItemData*, 16> reordered_grid_items;
     reordered_grid_items.ReserveInitialCapacity(grid_items.Size());
     for (const auto& grid_item : grid_items) {
-      reordered_grid_items.emplace_back(&grid_item);
+      reordered_grid_items.push_back(&grid_item);
     }
     // We reorder grid items by their row/column indices.
     // If reading-flow is grid-rows, we should sort by row, then column.
@@ -4256,7 +4256,7 @@ void GridLayoutAlgorithm::SetReadingFlowElements(
       reading_direction_first = kForColumns;
       reading_direction_second = kForRows;
     }
-    auto CompareGridItemsForReadingFlow =
+    auto compare_grid_items_for_reading_flow =
         [reading_direction_first, reading_direction_second](const auto& lhs,
                                                             const auto& rhs) {
           if (lhs->SetIndices(reading_direction_first).begin ==
@@ -4268,16 +4268,16 @@ void GridLayoutAlgorithm::SetReadingFlowElements(
                  rhs->SetIndices(reading_direction_first).begin;
         };
     std::stable_sort(reordered_grid_items.begin(), reordered_grid_items.end(),
-                     CompareGridItemsForReadingFlow);
+                     compare_grid_items_for_reading_flow);
     for (const auto& grid_item : reordered_grid_items) {
-      AddItemIfNeeded(*grid_item);
+      add_item_if_needed(*grid_item);
     }
   } else {
     for (const auto& grid_item : grid_items) {
-      AddItemIfNeeded(grid_item);
+      add_item_if_needed(grid_item);
     }
   }
-  container_builder_.SetReadingFlowElements(std::move(reading_flow_elements));
+  container_builder_.SetReadingFlowNodes(std::move(reading_flow_nodes));
 }
 
 namespace {

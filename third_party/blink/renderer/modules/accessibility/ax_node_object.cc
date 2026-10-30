@@ -5519,39 +5519,20 @@ void AXNodeObject::AddNodeChildren() {
   if (IsA<HTMLFrameElementBase>(GetNode()))
     return;
 
-  // If node is ReadingFlowContainer or if it is display contents and its layout
-  // parent is ReadingFlowContainer, then we should follow reading-flow order.
-  // In this case, the same list of children will be added as in the simple
-  // case using only LayoutTreeBuilderTraversal children, with no additions or
-  // removals, but in the order defined in CSS.
-  // TODO(crbug.com/346979043): If display: contents is a reading flow item,
-  // this order will be different from the reading flow in focus navigation.
-  Element* element = GetElement();
-  Element* closest_layout_parent =
-      element && element->HasDisplayContentsStyle()
-          ? LayoutTreeBuilderTraversal::LayoutParentElement(*element)
-          : element;
-  if (closest_layout_parent &&
-      closest_layout_parent->IsReadingFlowContainer()) {
+  // If node has reading flow children, then we should reading-flow order.
+  // Note that this is only used for the case where the element is a
+  // reading-flow container, and not for the case where the element is a
+  // reading-flow item.
+  HeapVector<Member<Node>> reading_flow_children;
+  if (Element* element = GetElement()) {
+    reading_flow_children = element->ReadingFlowChildren();
+  }
+  if (!reading_flow_children.empty()) {
     HeapHashSet<Member<Node>> ax_children_added;
-    // Add all reading order items first, in the correct order.
-    for (Element* reading_item :
-         closest_layout_parent->GetLayoutBox()->ReadingFlowElements()) {
-      // Filter to only add node child if it is a direct child of current
-      // element.
-      if (LayoutTreeBuilderTraversal::Parent(*reading_item) == element) {
-        AddNodeChild(reading_item);
-        ax_children_added.insert(reading_item);
-      }
-    }
-    // Add all non-reading order items at the end of the reading flow.
-    for (Node* child = LayoutTreeBuilderTraversal::FirstChild(*node_); child;
-         child = LayoutTreeBuilderTraversal::NextSibling(*child)) {
-      if (!ax_children_added.Contains(child)) {
-        AddNodeChild(child);
-#if DCHECK_IS_ON()
-        ax_children_added.insert(child);
-#endif
+    // Add reading flow siblings in order.
+    for (Node* reading_flow_item : reading_flow_children) {
+      if (ax_children_added.insert(reading_flow_item).is_new_entry) {
+        AddNodeChild(reading_flow_item);
       }
     }
 #if DCHECK_IS_ON()

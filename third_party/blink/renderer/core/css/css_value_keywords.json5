@@ -1914,6 +1914,7 @@
     "grid-rows",
     "grid-columns",
     "grid-order",
+    "source-order",
 
     // fill / stroke
     "context-fill",

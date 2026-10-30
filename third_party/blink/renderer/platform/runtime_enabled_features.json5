@@ -1212,7 +1212,14 @@
       // for reading of grid and flexbox items.
       // https://drafts.csswg.org/css-display-4/#reading-flow
       name: "CSSReadingFlow",
-      status: "experimental",
+      status: "stable",
+    },
+    {
+      // TODO(crbug.com/393550130): Non-standard 'reading-order' keyword
+      // to overwrite reading-flow order.
+      name: "CSSReadingOrder",
+      status: "stable",
+      depends_on: ["CSSReadingFlow"],
     },
     {
       // https://drafts.csswg.org/css-color-5/#relative-colors
