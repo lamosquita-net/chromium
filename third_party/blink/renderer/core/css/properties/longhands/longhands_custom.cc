@@ -5124,6 +5124,69 @@ const blink::Color InternalVisitedOutlineColor::ColorIncludingFallback(
                                        is_current_color);
 }
 
+const CSSValue* InternalVisitedFloodColor::ParseSingleValue(
+    CSSParserTokenStream& stream,
+    const CSSParserContext& context,
+    const CSSParserLocalContext& local_context) const {
+  return GetCSSPropertyFloodColor().ParseSingleValue(stream, context,
+                                                     local_context);
+}
+
+const blink::Color InternalVisitedFloodColor::ColorIncludingFallback(
+    bool visited_link,
+    const ComputedStyle& style,
+    bool* is_current_color) const {
+  DCHECK(visited_link);
+  const StyleColor& flood_color = style.InternalVisitedFloodColor();
+  if (style.ShouldForceColor(flood_color)) {
+    return style.GetInternalForcedCurrentColor(is_current_color);
+  }
+  return flood_color.Resolve(style.GetInternalVisitedCurrentColor(),
+                             style.UsedColorScheme(), is_current_color);
+}
+
+const CSSValue* InternalVisitedLightingColor::ParseSingleValue(
+    CSSParserTokenStream& stream,
+    const CSSParserContext& context,
+    const CSSParserLocalContext& local_context) const {
+  return GetCSSPropertyLightingColor().ParseSingleValue(stream, context,
+                                                        local_context);
+}
+
+const blink::Color InternalVisitedLightingColor::ColorIncludingFallback(
+    bool visited_link,
+    const ComputedStyle& style,
+    bool* is_current_color) const {
+  DCHECK(visited_link);
+  const StyleColor& lighting_color = style.InternalVisitedLightingColor();
+  if (style.ShouldForceColor(lighting_color)) {
+    return style.GetInternalForcedCurrentColor(is_current_color);
+  }
+  return lighting_color.Resolve(style.GetInternalVisitedCurrentColor(),
+                                style.UsedColorScheme(), is_current_color);
+}
+
+const CSSValue* InternalVisitedStopColor::ParseSingleValue(
+    CSSParserTokenStream& stream,
+    const CSSParserContext& context,
+    const CSSParserLocalContext& local_context) const {
+  return GetCSSPropertyStopColor().ParseSingleValue(stream, context,
+                                                    local_context);
+}
+
+const blink::Color InternalVisitedStopColor::ColorIncludingFallback(
+    bool visited_link,
+    const ComputedStyle& style,
+    bool* is_current_color) const {
+  DCHECK(visited_link);
+  const StyleColor& stop_color = style.InternalVisitedStopColor();
+  if (style.ShouldForceColor(stop_color)) {
+    return style.GetInternalForcedCurrentColor(is_current_color);
+  }
+  return stop_color.Resolve(style.GetInternalVisitedCurrentColor(),
+                            style.UsedColorScheme(), is_current_color);
+}
+
 const CSSValue* InternalVisitedOutlineColor::ParseSingleValue(
     CSSParserTokenStream& stream,
     const CSSParserContext& context,

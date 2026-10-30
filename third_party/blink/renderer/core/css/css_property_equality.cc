@@ -359,7 +359,8 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
     case CSSPropertyID::kFloat:
       return a.Floating() == b.Floating();
     case CSSPropertyID::kFloodColor:
-      return a.FloodColor() == b.FloodColor();
+      return a.FloodColor() == b.FloodColor() &&
+             a.InternalVisitedFloodColor() == b.InternalVisitedFloodColor();
     case CSSPropertyID::kFloodOpacity:
       return a.FloodOpacity() == b.FloodOpacity();
     case CSSPropertyID::kFontFamily:
@@ -487,7 +488,8 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
     case CSSPropertyID::kLetterSpacing:
       return a.LetterSpacing() == b.LetterSpacing();
     case CSSPropertyID::kLightingColor:
-      return a.LightingColor() == b.LightingColor();
+      return a.LightingColor() == b.LightingColor() &&
+             a.InternalVisitedLightingColor() == b.InternalVisitedLightingColor();
     case CSSPropertyID::kLineBreak:
       return a.GetLineBreak() == b.GetLineBreak();
     case CSSPropertyID::kLineClamp:
@@ -665,7 +667,8 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
     case CSSPropertyID::kSpeak:
       return a.Speak() == b.Speak();
     case CSSPropertyID::kStopColor:
-      return a.StopColor() == b.StopColor();
+      return a.StopColor() == b.StopColor() &&
+             a.InternalVisitedStopColor() == b.InternalVisitedStopColor();
     case CSSPropertyID::kStopOpacity:
       return a.StopOpacity() == b.StopOpacity();
     case CSSPropertyID::kStroke:
@@ -1192,7 +1195,10 @@ bool CSSPropertyEquality::PropertiesEqual(const PropertyHandle& property,
     case CSSPropertyID::kInternalVisitedColor:
     case CSSPropertyID::kInternalVisitedColumnRuleColor:
     case CSSPropertyID::kInternalVisitedFill:
+    case CSSPropertyID::kInternalVisitedFloodColor:
+    case CSSPropertyID::kInternalVisitedLightingColor:
     case CSSPropertyID::kInternalVisitedOutlineColor:
+    case CSSPropertyID::kInternalVisitedStopColor:
     case CSSPropertyID::kInternalVisitedStroke:
     case CSSPropertyID::kInternalVisitedTextDecorationColor:
     case CSSPropertyID::kInternalVisitedTextEmphasisColor:
