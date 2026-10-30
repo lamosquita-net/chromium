@@ -539,7 +539,7 @@ void HTMLAnchorElement::NavigateToHyperlink(ResourceRequest request,
   frame_request.SetNavigationPolicy(navigation_policy);
   frame_request.SetClientRedirectReason(ClientNavigationReason::kAnchorClick);
   frame_request.SetSourceElement(this);
-  const AtomicString& target =
+  const AtomicString target =
       frame_request.CleanNavigationTarget(GetEffectiveTarget());
   if (HasRel(kRelationNoReferrer)) {
     frame_request.SetNoReferrer();
