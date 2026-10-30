@@ -11,6 +11,7 @@
 
 #include <memory>
 
+#include "third_party/blink/renderer/bindings/core/v8/to_v8_traits.h"
 #include "third_party/blink/renderer/bindings/core/v8/worker_or_worklet_script_controller.h"
 #include "third_party/blink/renderer/bindings/modules/v8/v8_blink_audio_worklet_process_callback.h"
 #include "third_party/blink/renderer/core/messaging/message_port.h"
@@ -19,6 +20,7 @@
 #include "third_party/blink/renderer/modules/webaudio/audio_worklet_global_scope.h"
 #include "third_party/blink/renderer/modules/webaudio/audio_worklet_processor_definition.h"
 #include "third_party/blink/renderer/platform/audio/audio_bus.h"
+#include "third_party/blink/renderer/platform/bindings/v8_binding.h"
 #include "third_party/blink/renderer/platform/instrumentation/instance_counters.h"
 #include "third_party/blink/renderer/platform/instrumentation/tracing/trace_event.h"
 
@@ -80,8 +82,6 @@ bool AudioWorkletProcessor::Process(
   v8::MicrotasksScope microtasks_scope(
       isolate, ToMicrotaskQueue(script_state),
       v8::MicrotasksScope::kDoNotRunMicrotasks);
-  AudioWorkletProcessorDefinition* definition =
-      global_scope_->FindDefinition(Name());
 
   // 1st JS arg `inputs_`. Compare `inputs` and `inputs_`. Then allocates the
   // data container if necessary.
@@ -152,7 +152,25 @@ bool AudioWorkletProcessor::Process(
     TRACE_EVENT0(
         TRACE_DISABLED_BY_DEFAULT("audio-worklet"),
         "AudioWorkletProcessor::Process (author script execution)");
-    if (!definition->ProcessFunction()
+
+    v8::Local<v8::Value> processor_v8 =
+        ToV8Traits<AudioWorkletProcessor>::ToV8(script_state, this);
+    v8::Local<v8::Value> process_v8_value;
+    if (!processor_v8.As<v8::Object>()
+             ->Get(context, V8AtomicString(isolate, "process"))
+             .ToLocal(&process_v8_value) ||
+        !process_v8_value->IsFunction()) {
+      SetErrorState(
+          AudioWorkletProcessorErrorState::kProcessError);
+      return false;
+    }
+    if (!cached_process_callback_ ||
+        cached_process_callback_->CallbackObject() != process_v8_value)
+        [[unlikely]] {
+      cached_process_callback_ = V8BlinkAudioWorkletProcessCallback::Create(
+          process_v8_value.As<v8::Function>());
+    }
+    if (!cached_process_callback_
              ->Invoke(this, ScriptValue(isolate, inputs_.Get(isolate)),
                       ScriptValue(isolate, outputs_.Get(isolate)),
                       ScriptValue(isolate, params_.Get(isolate)))
@@ -191,6 +209,7 @@ MessagePort* AudioWorkletProcessor::port() const {
 void AudioWorkletProcessor::Trace(Visitor* visitor) const {
   visitor->Trace(global_scope_);
   visitor->Trace(processor_port_);
+  visitor->Trace(cached_process_callback_);
   visitor->Trace(inputs_);
   visitor->Trace(outputs_);
   visitor->Trace(params_);
