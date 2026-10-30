@@ -2149,7 +2149,7 @@ FlexLayoutAlgorithm::ComputeMinMaxSizeOfMultilineColumnContainer() {
           /* depends_on_block_constraints */ true};
 }
 
-MinMaxSizesResult FlexLayoutAlgorithm::ComputeMinMaxSizeOfRowContainerV3() {
+MinMaxSizesResult FlexLayoutAlgorithm::ComputeMinMaxSizeOfRowContainer() {
   MinMaxSizes container_sizes;
   bool depends_on_block_constraints = false;
 
@@ -2179,20 +2179,35 @@ MinMaxSizesResult FlexLayoutAlgorithm::ComputeMinMaxSizeOfRowContainerV3() {
     const LayoutUnit hypothetical_main_size_border_box =
         item.hypothetical_main_content_size_ + item.main_axis_border_padding_;
 
+    const LayoutUnit main_axis_margins =
+        is_horizontal_flow_ ? item.physical_margins_.HorizontalSum()
+                            : item.physical_margins_.VerticalSum();
+
     if (algorithm_.IsMultiline()) {
-      const LayoutUnit main_axis_margins =
-          is_horizontal_flow_ ? item.physical_margins_.HorizontalSum()
-                              : item.physical_margins_.VerticalSum();
       largest_outer_min_content_contribution = std::max(
           largest_outer_min_content_contribution,
           min_max_content_contributions.sizes.min_size + main_axis_margins);
     } else {
       const LayoutUnit min_contribution =
           min_max_content_contributions.sizes.min_size;
+
+      // Note: |cant_move| is not actually necessary to pass the compat cases
+      // that have broke in the past, but it does restrict the new algorithm to
+      // a smaller set of scenarios where the old algorithm was egregiously
+      // wrong. If this version of the algorithm IS web compatible, we can then
+      // try removing the cant_move requirement.
       const bool cant_move = (min_contribution > flex_base_size_border_box &&
                               child_style.ResolvedFlexGrow(Style()) == 0.f) ||
                              (min_contribution < flex_base_size_border_box &&
                               child_style.ResolvedFlexShrink(Style()) == 0.f);
+      // Note: We could further restrict the new algorithm to only apply to
+      // items that have both a fixed flex basis AND do not use automatic
+      // minimum sizing AND whose min and max properties do not depend on the
+      // item's content (e.g. fit-content, max-content etc). But last time we
+      // enabled this algorithm there were no bugs filed, so hopefully those
+      // further restrictions are not necessary. If we have compat problems this
+      // iteration, we can see if any would be fixed by employing such
+      // restrictions.
       if (cant_move && !item.is_used_flex_basis_indefinite_) {
         item_final_contribution.min_size = hypothetical_main_size_border_box;
       } else {
@@ -2213,10 +2228,6 @@ MinMaxSizesResult FlexLayoutAlgorithm::ComputeMinMaxSizeOfRowContainerV3() {
     }
 
     container_sizes += item_final_contribution;
-
-    const LayoutUnit main_axis_margins =
-        is_horizontal_flow_ ? item.physical_margins_.HorizontalSum()
-                            : item.physical_margins_.VerticalSum();
     container_sizes += main_axis_margins;
   }
 
@@ -2261,9 +2272,9 @@ MinMaxSizesResult FlexLayoutAlgorithm::ComputeMinMaxSizes(
     return ComputeMinMaxSizeOfMultilineColumnContainer();
   }
 
-  if (RuntimeEnabledFeatures::LayoutFlexNewRowAlgorithmV3Enabled() &&
+  if (RuntimeEnabledFeatures::LayoutFlexNewRowAlgorithmEnabled() &&
       !is_column_) {
-    return ComputeMinMaxSizeOfRowContainerV3();
+    return ComputeMinMaxSizeOfRowContainer();
   }
 
   MinMaxSizes sizes;

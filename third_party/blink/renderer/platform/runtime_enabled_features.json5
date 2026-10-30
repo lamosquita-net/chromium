@@ -2671,8 +2671,8 @@
       settable_from_internals: true,
     },
     {
-      name: "LayoutFlexNewRowAlgorithmV3",
-      status: "test",
+      name: "LayoutFlexNewRowAlgorithm",
+      status: "stable",
     },
     {
       name: "LayoutIgnoreMarginsForSticky",
@@ -3826,6 +3826,10 @@
       base_feature: "none",
     },
     {
+      name: "RestrictGetBoundingClientRectForHiddenSVGElements",
+      status: "stable",
+    },
+    {
       // New behavior when line breaker rewinds floats. crbug.com/1499290
       name: "RewindFloats",
       status: "stable",
@@ -4406,6 +4410,10 @@
       status: "stable",
     },
     {
+      name: "TextAutoSizingDisabledOnFlexbox",
+      status: "stable",
+    },
+    {
       name: "SvgGradientColorInterpolationLinearRgbSupport",
       status: "stable",
     },
@@ -4431,6 +4439,10 @@
     {
       name: "SystemWakeLock",
       status: "experimental",
+    },
+    {
+      name: "TableIsAutoFixedLayout",
+      status: "stable",
     },
     // For unit tests.
     {
