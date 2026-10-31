@@ -150,7 +150,7 @@ OffscreenCanvasRenderingContext2D::getContextAttributes() const {
   settings->setAlpha(CreationAttributes().alpha);
   settings->setColorSpace(color_params_.GetColorSpaceAsString());
   if (RuntimeEnabledFeatures::CanvasFloatingPointEnabled()) {
-    settings->setPixelFormat(color_params_.GetPixelFormatAsString());
+    settings->setColorType(color_params_.GetPixelFormatAsString());
   }
   settings->setDesynchronized(CreationAttributes().desynchronized_specified);
   switch (CreationAttributes().will_read_frequently) {

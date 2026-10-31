@@ -137,7 +137,23 @@ ChromeRootStoreData::CreateChromeRootStoreData(
       // fields this code does not know (validity_starts_not_after_sec,
       // index_not_after...). Ignoring one would widen the set (an empty set
       // matches everything), so such a set never matches instead.
-      if (!constraint.unknown_fields().empty()) {
+      // The lite proto of the 128 keeps those fields but does not expose them:
+      // they only show in the serialized size.
+      chrome_root_store::ConstraintSet known;
+      if (constraint.has_sct_not_after_sec()) {
+        known.set_sct_not_after_sec(constraint.sct_not_after_sec());
+      }
+      if (constraint.has_sct_all_after_sec()) {
+        known.set_sct_all_after_sec(constraint.sct_all_after_sec());
+      }
+      if (constraint.has_min_version()) {
+        known.set_min_version(constraint.min_version());
+      }
+      if (constraint.has_max_version_exclusive()) {
+        known.set_max_version_exclusive(constraint.max_version_exclusive());
+      }
+      *known.mutable_permitted_dns_names() = constraint.permitted_dns_names();
+      if (constraint.ByteSizeLong() != known.ByteSizeLong()) {
         LOG(ERROR) << "Unknown constraint field in update; set disabled";
         max_version_exclusive = base::Version("0");
       }

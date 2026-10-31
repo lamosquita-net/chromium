@@ -2025,7 +2025,7 @@ bool StyleCascade::ResolveIfInto(CSSParserTokenStream& stream,
 CSSVariableData* StyleCascade::ResolveLikeVar(const AtomicString& property_name,
                                               CascadeResolver& resolver,
                                               const CSSParserContext& context) {
-  CSSTokenizer property_name_tokenizer(property_name);
+  CSSTokenizer property_name_tokenizer(property_name.GetString());
   CSSParserTokenStream property_name_stream(property_name_tokenizer);
   TokenSequence sequence;
   // To avoid duplicating lookup logic, we pretend that we're resolving
