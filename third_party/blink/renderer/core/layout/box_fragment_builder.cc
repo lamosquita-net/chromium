@@ -565,11 +565,11 @@ const LayoutResult* BoxFragmentBuilder::ToBoxFragment(
       DCHECK(fragment.IsLineBox() ||
              // TODO(kojii): How to place floats and OOF is TBD.
              fragment.IsFloatingOrOutOfFlowPositioned());
-  Finalize();
-
     }
   }
 #endif
+
+  Finalize();
 
   if (UNLIKELY(box_type_ == PhysicalFragment::kNormalBox && node_ &&
                node_.IsBlockInInline())) {
