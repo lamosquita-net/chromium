@@ -1147,6 +1147,51 @@ TEST_F(SQLitePersistentCookieStoreTest, UpdateToEncryption) {
   EXPECT_EQ(contents.find("something456ABC"), std::string::npos);
 }
 
+// FlyWeb: an unreadable `fw1` value loses only its own row; an unreadable
+// value of any other format still drops the whole eTLD+1, as upstream.
+TEST_F(SQLitePersistentCookieStoreTest, UndecryptableFw1DropsOnlyItsRow) {
+  InitializeStore(/*crypt=*/true, /*restore_old_session_cookies=*/false);
+  AddCookie("fw1cookie", "value1", "foo.bar", "/", base::Time::Now());
+  AddCookie("v10cookie", "value2", "foo.bar", "/",
+            base::Time::Now() + base::Microseconds(10));
+  DestroyStore();
+
+  auto set_encrypted_value = [&](const char* name, const char* value) {
+    sql::Database db;
+    ASSERT_TRUE(db.Open(temp_dir_.GetPath().Append(kCookieFilename)));
+    sql::Statement smt(db.GetUniqueStatement(
+        "UPDATE cookies SET encrypted_value = ? WHERE name = ?"));
+    smt.BindBlob(0,
+                 base::as_bytes(base::make_span(std::string_view(value))));
+    smt.BindString(1, name);
+    ASSERT_TRUE(smt.Run());
+  };
+  auto count_rows = [&]() {
+    sql::Database db;
+    EXPECT_TRUE(db.Open(temp_dir_.GetPath().Append(kCookieFilename)));
+    sql::Statement smt(db.GetUniqueStatement("SELECT COUNT(*) FROM cookies"));
+    EXPECT_TRUE(smt.Step());
+    return smt.ColumnInt(0);
+  };
+
+  set_encrypted_value("fw1cookie", "fw1-not-decryptable");
+  CanonicalCookieVector cookies = CreateAndLoad(
+      /*crypt_cookies=*/true, /*restore_old_session_cookies=*/false);
+  ASSERT_EQ(1U, cookies.size());
+  EXPECT_EQ("v10cookie", cookies[0]->Name());
+  EXPECT_EQ("value2", cookies[0]->Value());
+  cookies.clear();
+  DestroyStore();
+  EXPECT_EQ(1, count_rows());
+
+  set_encrypted_value("v10cookie", "v10-not-decryptable");
+  cookies = CreateAndLoad(/*crypt_cookies=*/true,
+                          /*restore_old_session_cookies=*/false);
+  EXPECT_EQ(0U, cookies.size());
+  DestroyStore();
+  EXPECT_EQ(0, count_rows());
+}
+
 bool CompareCookies(const std::unique_ptr<CanonicalCookie>& a,
                     const std::unique_ptr<CanonicalCookie>& b) {
   return a->PartialCompare(*b);

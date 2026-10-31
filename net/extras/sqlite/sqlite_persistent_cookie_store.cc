@@ -101,6 +101,19 @@ void RecordCookieCommitProblem(CookieCommitProblem event) {
                             COOKIE_COMMIT_PROBLEM_LAST_ENTRY);
 }
 
+// FlyWeb: unique key (cookies_unique_index) of a row whose `fw1` value does not
+// decrypt. Only that row is deleted, not its whole eTLD+1 (see
+// LoadCookiesForDomains).
+struct UndecryptableFw1Row {
+  std::string host_key;
+  std::string top_frame_site_key;
+  bool has_cross_site_ancestor;
+  std::string name;
+  std::string path;
+  int source_scheme;
+  int source_port;
+};
+
 // Records metrics around the age in hours of a cookie loaded from the store via
 // MakeCookiesFromSQLStatement for use by some browser context.
 void HistogramCookieAge(const net::CanonicalCookie& cookie) {
@@ -363,7 +376,8 @@ class SQLitePersistentCookieStore::Backend
   bool MakeCookiesFromSQLStatement(
       std::vector<std::unique_ptr<CanonicalCookie>>& cookies,
       sql::Statement& statement,
-      std::unordered_set<std::string>& top_frame_site_keys_to_delete);
+      std::unordered_set<std::string>& top_frame_site_keys_to_delete,
+      std::vector<UndecryptableFw1Row>& undecryptable_fw1);
 
   // Batch a cookie addition.
   void AddCookie(const CanonicalCookie& cc);
@@ -943,16 +957,48 @@ bool SQLitePersistentCookieStore::Backend::LoadCookiesForDomains(
 
   std::vector<std::unique_ptr<CanonicalCookie>> cookies;
   std::unordered_set<std::string> top_frame_site_keys_to_delete;
+  std::vector<UndecryptableFw1Row> undecryptable_fw1;
   auto it = domains.begin();
   bool ok = true;
   for (; it != domains.end() && ok; ++it) {
     smt.BindString(0, *it);
     ok = MakeCookiesFromSQLStatement(cookies, smt,
-                                     top_frame_site_keys_to_delete);
+                                     top_frame_site_keys_to_delete,
+                                     undecryptable_fw1);
     smt.Reset(true);
   }
 
   DeleteTopFrameSiteKeys(std::move(top_frame_site_keys_to_delete));
+
+  // FlyWeb: drop only the `fw1` rows that did not decrypt, so that nothing
+  // left in the database is unknown to CookieMonster (the uniqueness concern
+  // below) while the readable cookies of the same eTLD+1 survive. Not needed
+  // if the whole group is dropped below.
+  if (ok && !undecryptable_fw1.empty()) {
+    sql::Statement delete_row(db()->GetCachedStatement(
+        SQL_FROM_HERE,
+        "DELETE FROM cookies WHERE host_key = ? AND top_frame_site_key = ? "
+        "AND has_cross_site_ancestor = ? AND name = ? AND path = ? "
+        "AND source_scheme = ? AND source_port = ?"));
+    if (!delete_row.is_valid()) {
+      ok = false;
+    } else {
+      for (const UndecryptableFw1Row& row : undecryptable_fw1) {
+        delete_row.BindString(0, row.host_key);
+        delete_row.BindString(1, row.top_frame_site_key);
+        delete_row.BindBool(2, row.has_cross_site_ancestor);
+        delete_row.BindString(3, row.name);
+        delete_row.BindString(4, row.path);
+        delete_row.BindInt(5, row.source_scheme);
+        delete_row.BindInt(6, row.source_port);
+        if (!delete_row.Run()) {
+          ok = false;  // Fall back to dropping the whole group, as upstream.
+          break;
+        }
+        delete_row.Reset(true);
+      }
+    }
+  }
 
   if (ok) {
     base::AutoLock locked(lock_);
@@ -999,7 +1045,8 @@ void SQLitePersistentCookieStore::Backend::DeleteTopFrameSiteKeys(
 bool SQLitePersistentCookieStore::Backend::MakeCookiesFromSQLStatement(
     std::vector<std::unique_ptr<CanonicalCookie>>& cookies,
     sql::Statement& statement,
-    std::unordered_set<std::string>& top_frame_site_keys_to_delete) {
+    std::unordered_set<std::string>& top_frame_site_keys_to_delete,
+    std::vector<UndecryptableFw1Row>& undecryptable_fw1) {
   DCHECK(background_task_runner()->RunsTasksInCurrentSequence());
   bool ok = true;
   while (statement.Step()) {
@@ -1009,6 +1056,20 @@ bool SQLitePersistentCookieStore::Backend::MakeCookiesFromSQLStatement(
       bool decrypt_ok = crypto_->DecryptString(encrypted_value, &value);
       if (!decrypt_ok) {
         RecordCookieLoadProblem(COOKIE_LOAD_PROBLEM_DECRYPT_FAILED);
+        // FlyWeb: an unreadable `fw1` value (key item deleted, keychain
+        // denied) loses only that cookie; the caller deletes the row. An
+        // unreadable `v10` still drops the whole eTLD+1, as upstream.
+        if (base::StartsWith(encrypted_value, "fw1")) {
+          undecryptable_fw1.push_back(UndecryptableFw1Row{
+              .host_key = statement.ColumnString(1),
+              .top_frame_site_key = statement.ColumnString(2),
+              .has_cross_site_ancestor = statement.ColumnBool(19),
+              .name = statement.ColumnString(3),
+              .path = statement.ColumnString(5),
+              .source_scheme = statement.ColumnInt(15),
+              .source_port = statement.ColumnInt(16)});
+          continue;
+        }
         ok = false;
         continue;
       }
