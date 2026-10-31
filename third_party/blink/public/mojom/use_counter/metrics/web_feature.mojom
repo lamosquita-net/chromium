@@ -4404,16 +4404,17 @@ enum WebFeature {
   kWebGPUSubgroupsFeatures = 5035,
   kAudioContextOnError = 5036,
   kNoVarySearchPrerender = 5037,
+  // FlyWeb (level 137): same numbers as Chrome 137. In numeric order: the
+  // implicit kNumberOfFeatures is the last value + 1 (2.6.0 aborted in
+  // UseCounter with 5040/5041 at the end).
+  kSelectionDirection = 5040,
+  kSelectionGetComposedRanges = 5041,
   kFlexNewColumnWrapIntrinsicSize = 5043,
   // FlyWeb (anchor positioning, 4e48c369ccb): same number as Chrome 129.
   kCSSInsetAreaProperty = 5060,
 
   // FlyWeb (level 136): same number as Chrome 136.
   kTextAutoSizingDisabledOnFlexbox = 5374,
-
-  // FlyWeb (level 137): same numbers as Chrome 137.
-  kSelectionDirection = 5040,
-  kSelectionGetComposedRanges = 5041,
 
   // Add new features immediately above this line. Don't change assigned
   // numbers of any item, and don't reuse removed slots. Also don't add extra

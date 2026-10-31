@@ -45,6 +45,14 @@
 #include "third_party/blink/renderer/platform/weborigin/scheme_registry.h"
 
 namespace blink {
+
+// FlyWeb: web_feature.mojom takes Chrome's numbers, which can land out of
+// order. kNumberOfFeatures is implicit (last value + 1) and sizes the
+// UseCounter bitsets, so a value at or above it aborts (2.6.0: 5040/5041 at
+// the end). Raise the reference when a higher value is added.
+static_assert(static_cast<int>(WebFeature::kNumberOfFeatures) >
+              static_cast<int>(WebFeature::kTextAutoSizingDisabledOnFlexbox));
+
 namespace {
 mojom::blink::UseCounterFeatureType ToFeatureType(
     UseCounterImpl::CSSPropertyType type) {
