@@ -133,6 +133,15 @@ ChromeRootStoreData::CreateChromeRootStoreData(
         }
       }
 
+      // FlyWeb: a PKI Metadata update from a newer Chrome can carry constraint
+      // fields this code does not know (validity_starts_not_after_sec,
+      // index_not_after...). Ignoring one would widen the set (an empty set
+      // matches everything), so such a set never matches instead.
+      if (!constraint.unknown_fields().empty()) {
+        LOG(ERROR) << "Unknown constraint field in update; set disabled";
+        max_version_exclusive = base::Version("0");
+      }
+
       constraints.emplace_back(
           constraint.has_sct_not_after_sec()
               ? std::optional(base::Time::UnixEpoch() +
