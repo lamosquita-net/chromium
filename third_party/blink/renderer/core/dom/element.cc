@@ -642,6 +642,7 @@ const HeapVector<Member<Node>> Element::ReadingFlowChildren() const {
     return children;
   }
   // Add all reading flow items first, in the reading flow order.
+  HeapHashSet<Member<Node>> visited_children;
   for (Node* reading_flow_item :
        layout_parent->GetLayoutBox()->ReadingFlowNodes()) {
     // reading_flow_item or its ancestor (display: contents) might not be a
@@ -650,8 +651,7 @@ const HeapVector<Member<Node>> Element::ReadingFlowChildren() const {
     while (reading_flow_item) {
       auto* parent = FlatTreeTraversal::ParentElement(*reading_flow_item);
       if (parent == this) {
-        // TODO(dizhangg) this check is O(n^2)
-        if (!children.Contains(reading_flow_item)) {
+        if (visited_children.insert(reading_flow_item).is_new_entry) {
           children.push_back(reading_flow_item);
         }
         break;
@@ -664,8 +664,7 @@ const HeapVector<Member<Node>> Element::ReadingFlowChildren() const {
   // (including scroll markers) are accounted for.
   for (Node* child = LayoutTreeBuilderTraversal::FirstChild(*this); child;
        child = LayoutTreeBuilderTraversal::NextSibling(*child)) {
-    // TODO(dizhangg) this check is O(n^2)
-    if (!children.Contains(child)) {
+    if (visited_children.insert(child).is_new_entry) {
       children.push_back(child);
     }
   }

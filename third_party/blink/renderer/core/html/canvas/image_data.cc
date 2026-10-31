@@ -28,6 +28,9 @@
 
 #include "third_party/blink/renderer/core/html/canvas/image_data.h"
 
+#include <limits>
+
+#include "base/numerics/safe_conversions.h"
 #include "third_party/blink/renderer/bindings/core/v8/to_v8_traits.h"
 #include "third_party/blink/renderer/bindings/core/v8/v8_image_bitmap_options.h"
 #include "third_party/blink/renderer/bindings/core/v8/v8_union_float16array_float32array_uint8clampedarray.h"
@@ -37,6 +40,15 @@
 #include "v8/include/v8.h"
 
 namespace blink {
+
+namespace {
+
+// Chromium uses partition_alloc::MaxAllocationSize(), which 128 lacks; the
+// bound that matters downstream (Skia) is the 32-bit one it asserts.
+constexpr size_t kMaxImageDataSizeInBytes =
+    static_cast<size_t>(std::numeric_limits<int32_t>::max());
+
+}  // namespace
 
 ImageData* ImageData::ValidateAndCreate(
     unsigned width,
@@ -85,11 +97,11 @@ ImageData* ImageData::ValidateAndCreate(
   }
 
   // Ensure the size does not overflow.
-  unsigned size_in_elements = 0;
+  size_t size_in_elements = 0;
   {
     // Please note that the number "4" in the means number of channels required
     // to describe a pixel, namely, red, green, blue and alpha.
-    base::CheckedNumeric<unsigned> size_in_elements_checked = 4;
+    base::CheckedNumeric<size_t> size_in_elements_checked = 4;
     size_in_elements_checked *= size.width();
     size_in_elements_checked *= size.height();
     if (!params.context_2d_error_mode) {
@@ -102,8 +114,8 @@ ImageData* ImageData::ValidateAndCreate(
       }
     }
     if (!size_in_elements_checked.IsValid() ||
-        size_in_elements_checked.ValueOrDie() >
-            v8::TypedArray::kMaxByteLength) {
+        (!data &&
+         size_in_elements_checked.ValueOrDie() > kMaxImageDataSizeInBytes)) {
       exception_state.ThrowRangeError("Out of memory at ImageData creation.");
       return nullptr;
     }
@@ -169,27 +181,21 @@ ImageData* ImageData::ValidateAndCreate(
             "The input data type is not supported.");
         return nullptr;
     }
-    static_assert(
-        std::numeric_limits<unsigned>::max() >=
-            std::numeric_limits<uint32_t>::max(),
-        "We use UINT32_MAX as the upper bound of the input size and expect "
-        "that the result fits into an `unsigned`.");
 
-    unsigned data_length_in_bytes = 0;
-    if (!base::CheckedNumeric<uint32_t>((*data)->byteLength())
-             .AssignIfValid(&data_length_in_bytes)) {
-      exception_state.ThrowDOMException(
-          DOMExceptionCode::kNotSupportedError,
-          "The input data is too large. The maximum size is 4294967295.");
-      return nullptr;
-    }
+    const size_t data_length_in_bytes = (*data)->byteLength();
     if (!data_length_in_bytes) {
       exception_state.ThrowDOMException(DOMExceptionCode::kInvalidStateError,
                                         "The input data has zero elements.");
       return nullptr;
     }
+    if (data_length_in_bytes > kMaxImageDataSizeInBytes) {
+      exception_state.ThrowDOMException(
+          DOMExceptionCode::kNotSupportedError,
+          "The input data is too large.");
+      return nullptr;
+    }
 
-    const unsigned data_length_in_elements =
+    const size_t data_length_in_elements =
         data_length_in_bytes / (*data)->TypeSize();
     if (data_length_in_elements % 4) {
       exception_state.ThrowDOMException(
@@ -198,7 +204,7 @@ ImageData* ImageData::ValidateAndCreate(
       return nullptr;
     }
 
-    const unsigned data_length_in_pixels = data_length_in_elements / 4;
+    const size_t data_length_in_pixels = data_length_in_elements / 4;
     if (data_length_in_pixels % width) {
       exception_state.ThrowDOMException(
           DOMExceptionCode::kIndexSizeError,
@@ -206,7 +212,7 @@ ImageData* ImageData::ValidateAndCreate(
       return nullptr;
     }
 
-    const unsigned expected_height = data_length_in_pixels / width;
+    const size_t expected_height = data_length_in_pixels / width;
     if (height) {
       if (*height != expected_height) {
         exception_state.ThrowDOMException(
@@ -215,7 +221,13 @@ ImageData* ImageData::ValidateAndCreate(
         return nullptr;
       }
     } else {
-      size.set_height(expected_height);
+      if (!base::CheckedNumeric<int>(expected_height).IsValid()) {
+        exception_state.ThrowDOMException(
+            DOMExceptionCode::kIndexSizeError,
+            "The requested image size exceeds the supported range.");
+        return nullptr;
+      }
+      size.set_height(base::checked_cast<int>(expected_height));
     }
   }
 
@@ -233,12 +245,32 @@ ImageData* ImageData::ValidateAndCreate(
 }
 
 NotShared<DOMArrayBufferView> ImageData::AllocateAndValidateDataArray(
-    const unsigned& length,
+    size_t length,
     ImageDataStorageFormat storage_format,
     bool zero_initialize,
     ExceptionState& exception_state) {
   if (!length)
     return NotShared<DOMArrayBufferView>();
+
+  size_t bytes_per_element = 1;
+  switch (storage_format) {
+    case ImageDataStorageFormat::kUint8:
+      bytes_per_element = 1;
+      break;
+    case ImageDataStorageFormat::kUint16:
+      bytes_per_element = 2;
+      break;
+    case ImageDataStorageFormat::kFloat32:
+      bytes_per_element = 4;
+      break;
+  }
+  size_t size_in_bytes;
+  if (!base::CheckMul(length, bytes_per_element)
+           .AssignIfValid(&size_in_bytes) ||
+      size_in_bytes > kMaxImageDataSizeInBytes) {
+    exception_state.ThrowRangeError("Out of memory at ImageData creation");
+    return NotShared<DOMArrayBufferView>();
+  }
 
   NotShared<DOMArrayBufferView> data_array;
   switch (storage_format) {
@@ -263,9 +295,10 @@ NotShared<DOMArrayBufferView> ImageData::AllocateAndValidateDataArray(
   }
 
   size_t expected_size;
-  if (!data_array || (!base::CheckMul(length, data_array->TypeSize())
-                           .AssignIfValid(&expected_size) &&
-                      expected_size != data_array->byteLength())) {
+  if (!data_array ||
+      !base::CheckMul(length, data_array->TypeSize())
+           .AssignIfValid(&expected_size) ||
+      expected_size != data_array->byteLength()) {
     exception_state.ThrowRangeError("Out of memory at ImageData creation");
     return NotShared<DOMArrayBufferView>();
   }
@@ -276,11 +309,11 @@ NotShared<DOMArrayBufferView> ImageData::AllocateAndValidateDataArray(
 // This function accepts size (0, 0) and always returns the ImageData in
 // "srgb" color space and "uint8" storage format.
 ImageData* ImageData::CreateForTest(const gfx::Size& size) {
-  base::CheckedNumeric<unsigned> data_size = 4;
+  base::CheckedNumeric<size_t> data_size = 4;
   data_size *= size.width();
   data_size *= size.height();
   if (!data_size.IsValid() ||
-      data_size.ValueOrDie() > v8::TypedArray::kMaxByteLength) {
+      data_size.ValueOrDie() > kMaxImageDataSizeInBytes) {
     return nullptr;
   }
 

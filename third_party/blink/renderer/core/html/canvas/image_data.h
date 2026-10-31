@@ -221,7 +221,7 @@ class CORE_EXPORT ImageData final : public ScriptWrappable,
   ImageDataStorageFormat storage_format_ = ImageDataStorageFormat::kUint8;
 
   static NotShared<DOMArrayBufferView> AllocateAndValidateDataArray(
-      const unsigned&,
+      size_t,
       ImageDataStorageFormat,
       bool initialize,
       ExceptionState&);
