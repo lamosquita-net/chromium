@@ -381,9 +381,9 @@ enum class ProgressArgsSimplificationStatus {
 };
 
 // Either all the arguments are numerics and have the same unit type (e.g.
-// progress(1em from 0em to 1em)), or they are all numerics and can be resolved
-// to the canonical unit (e.g. progress(1deg from 0rad to 1deg)). Note: this
-// can't be eagerly simplified - progress(1em from 0px to 1em).
+// progress(1em, 0em, 1em)), or they are all numerics and can be resolved
+// to the canonical unit (e.g. progress(1deg, 0rad, 1deg)). Note: this
+// can't be eagerly simplified - progress(1em, 0px, 1em).
 ProgressArgsSimplificationStatus CanEagerlySimplifyProgressArgs(
     const CSSMathExpressionOperation::Operands& operands) {
   if (std::all_of(operands.begin(), operands.end(),
@@ -2651,9 +2651,9 @@ String CSSMathExpressionOperation::CustomCSSText() const {
       result.Append(ToString(operator_));
       result.Append('(');
       result.Append(operands_.front()->CustomCSSText());
-      result.Append(" from ");
+      result.Append(", ");
       result.Append(operands_[1]->CustomCSSText());
-      result.Append(" to ");
+      result.Append(", ");
       result.Append(operands_.back()->CustomCSSText());
       result.Append(')');
 
@@ -2905,7 +2905,9 @@ double CSSMathExpressionOperation::EvaluateOperator(
     case CSSMathOperator::kMediaProgress:
     case CSSMathOperator::kContainerProgress: {
       CHECK_EQ(operands.size(), 3u);
-      return (operands[0] - operands[1]) / (operands[2] - operands[1]);
+      double progress_value =
+          (operands[0] - operands[1]) / (operands[2] - operands[1]);
+      return std::clamp(progress_value, 0., 1.);
     }
     case CSSMathOperator::kCalcSize: {
       CHECK_EQ(operands.size(), 2u);
@@ -3505,9 +3507,13 @@ class CSSMathExpressionNodeParser {
       case CSSValueID::kSign:
         return RuntimeEnabledFeatures::CSSSignRelatedFunctionsEnabled();
       case CSSValueID::kProgress:
-      case CSSValueID::kMediaProgress:
-      case CSSValueID::kContainerProgress:
         return RuntimeEnabledFeatures::CSSProgressNotationEnabled();
+      // FlyWeb (nivel 138, FM.53): como Chrome 138, media-progress() y
+      // container-progress() van con sus propias banderas (experimentales).
+      case CSSValueID::kMediaProgress:
+        return RuntimeEnabledFeatures::CSSMediaProgressNotationEnabled();
+      case CSSValueID::kContainerProgress:
+        return RuntimeEnabledFeatures::CSSContainerProgressNotationEnabled();
       case CSSValueID::kCalcSize:
         return RuntimeEnabledFeatures::CSSCalcSizeFunctionEnabled();
       // TODO(crbug.com/1284199): Support other math functions.
@@ -3591,17 +3597,17 @@ class CSSMathExpressionNodeParser {
         anchor_query_type, anchor_specifier, value, fallback);
   }
 
-  bool ParseProgressNotationFromTo(
+  bool ParseProgressNotationStartAndEndValues(
       CSSParserTokenRange& tokens,
       State state,
       CSSMathExpressionOperation::Operands& nodes) {
-    if (tokens.ConsumeIncludingWhitespace().Id() != CSSValueID::kFrom) {
+    if (!css_parsing_utils::ConsumeCommaIncludingWhitespace(tokens)) {
       return false;
     }
     if (CSSMathExpressionNode* node = ParseValueExpression(tokens, state)) {
       nodes.push_back(node);
     }
-    if (tokens.ConsumeIncludingWhitespace().Id() != CSSValueID::kTo) {
+    if (!css_parsing_utils::ConsumeCommaIncludingWhitespace(tokens)) {
       return false;
     }
     if (CSSMathExpressionNode* node = ParseValueExpression(tokens, state)) {
@@ -3621,7 +3627,7 @@ class CSSMathExpressionNodeParser {
         function_id != CSSValueID::kContainerProgress) {
       return nullptr;
     }
-    // <media-progress()> = media-progress(<media-feature> from <calc-sum> to
+    // <media-progress()> = media-progress(<media-feature>, <calc-sum>,
     // <calc-sum>)
     CSSMathExpressionOperation::Operands nodes;
     tokens.ConsumeWhitespace();
@@ -3633,7 +3639,7 @@ class CSSMathExpressionNodeParser {
       }
     } else if (function_id == CSSValueID::kContainerProgress) {
       // <container-progress()> = container-progress(<size-feature> [ of
-      // <container-name> ]? from <calc-sum> to <calc-sum>)
+      // <container-name> ]?, <calc-sum>, <calc-sum>)
       const CSSIdentifierValue* size_feature =
           css_parsing_utils::ConsumeIdent(tokens);
       if (!size_feature) {
@@ -3654,10 +3660,10 @@ class CSSMathExpressionNodeParser {
       }
     } else if (CSSMathExpressionNode* node =
                    ParseValueExpression(tokens, state)) {
-      // <progress()> = progress(<calc-sum> from <calc-sum> to <calc-sum>)
+      // <progress()> = progress(<calc-sum>, <calc-sum>, <calc-sum>)
       nodes.push_back(node);
     }
-    if (!ParseProgressNotationFromTo(tokens, state, nodes)) {
+    if (!ParseProgressNotationStartAndEndValues(tokens, state, nodes)) {
       return nullptr;
     }
     if (nodes.size() != 3u || !tokens.AtEnd() ||
@@ -3688,6 +3694,7 @@ class CSSMathExpressionNodeParser {
       }
       double progress_value = (double_values[0] - double_values[1]) /
                               (double_values[2] - double_values[1]);
+      progress_value = std::clamp(progress_value, 0., 1.);
       return CSSMathExpressionNumericLiteral::Create(
           progress_value, CSSPrimitiveValue::UnitType::kNumber);
     }
