@@ -733,7 +733,17 @@ bool AXTreeSerializer<AXSourceNode,
       // to delete the subtree before receiving it, so that the final result
       // does not contain two subtrees with the same node. The LCA now contains
       // subtrees for both the old and new parent.
-      out_update->node_id_to_clear = tree_->GetId(lca);
+      // FlyWeb (upstream a16cd5c0ad + 34258641a0, crbug.com/442619489).
+      if (!lca) {
+        DUMP_WILL_BE_NOTREACHED()
+            << "We should not have a null LCA when ComputeReparentingLCA "
+               "returns with 'true'.";
+        // In this path, our assumptions in the rest of this method are no
+        // longer valid. Abort now so we can recover.
+        return false;
+      } else {
+        out_update->node_id_to_clear = tree_->GetId(lca);
+      }
     }
   } else {
     // First serialization for this tree, after a changed root, or after a
@@ -742,6 +752,7 @@ bool AXTreeSerializer<AXSourceNode,
     CreateClientRoot(lca);
   }
 
+  CHECK(lca);
   CHECK(tree_->GetId(lca) != kInvalidAXNodeID);
   if (!SerializeChangedNodes(lca, out_update, out_error)) {
     return false;

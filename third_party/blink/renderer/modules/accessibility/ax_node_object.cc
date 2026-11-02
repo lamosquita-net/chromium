@@ -5809,7 +5809,14 @@ void AXNodeObject::InsertChild(AXObject* child,
 }
 
 bool AXNodeObject::CanHaveChildren() const {
-  DCHECK(!IsDetached());
+  // When Detached, calling methods such as AXObjectCache can cause a crash,
+  // instead, fail gracefully here. (FlyWeb: upstream a16cd5c0ad,
+  // crbug.com/442619489.)
+  if (IsDetached()) {
+    DUMP_WILL_BE_NOTREACHED()
+        << "Calling CanHaveChildren on a detached node is not allowed." << this;
+    return false;
+  }
 
   // A child tree has been stitched onto this node, hiding its usual subtree.
   if (child_tree_id()) {
