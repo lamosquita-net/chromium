@@ -48,12 +48,12 @@ namespace gpu {
 namespace {
 struct ScopedIOSurfaceLock {
   ScopedIOSurfaceLock(IOSurfaceRef iosurface, IOSurfaceLockOptions options)
-      : io_surface_(iosurface) {
-    IOReturn r = IOSurfaceLock(io_surface_, options, nullptr);
+      : io_surface_(iosurface), options_(options) {
+    IOReturn r = IOSurfaceLock(io_surface_, options_, /*seed=*/nullptr);
     CHECK_EQ(kIOReturnSuccess, r);
   }
   ~ScopedIOSurfaceLock() {
-    IOReturn r = IOSurfaceUnlock(io_surface_, 0, nullptr);
+    IOReturn r = IOSurfaceUnlock(io_surface_, options_, /*seed=*/nullptr);
     CHECK_EQ(kIOReturnSuccess, r);
   }
 
@@ -61,7 +61,8 @@ struct ScopedIOSurfaceLock {
   ScopedIOSurfaceLock& operator=(const ScopedIOSurfaceLock&) = delete;
 
  private:
-  IOSurfaceRef io_surface_;
+  const IOSurfaceRef io_surface_;
+  const IOSurfaceLockOptions options_;
 };
 
 // Returns BufferFormat for given multiplanar `format`.
@@ -1046,7 +1047,8 @@ bool IOSurfaceImageBacking::ReadbackToMemory(
   WaitForANGLECommandsToBeScheduled();
   WaitForDawnCommandsToBeScheduled(/*device_to_exclude=*/nullptr);
 
-  ScopedIOSurfaceLock io_surface_lock(io_surface_.get(), /*options=*/0);
+  ScopedIOSurfaceLock io_surface_lock(io_surface_.get(),
+                                      kIOSurfaceLockReadOnly);
 
   for (int plane_index = 0; plane_index < static_cast<int>(pixmaps.size());
        ++plane_index) {
