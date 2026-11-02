@@ -102,6 +102,20 @@ NOINLINE void ExceptionState::ThrowDOMException(DOMExceptionCode exception_code,
   DoThrowDOMException(exception_code, message);
 }
 
+// FlyWeb (level 138, 1b6ec5ba): throws an already constructed DOMException
+// (e.g. QuotaExceededError). The 128 ExceptionState stores the exception and
+// propagates it later, so store it like RethrowV8Exception does, with the
+// DOMException code.
+NOINLINE void ExceptionState::ThrowDOMException(v8::Local<v8::Value> exception,
+                                                DOMExceptionCode code,
+                                                const String& message) {
+  if (!isolate_ || exception.IsEmpty()) {
+    DoThrowDOMException(code, message);
+    return;
+  }
+  SetException(ToExceptionCode(code), message, exception);
+}
+
 NOINLINE void ExceptionState::ThrowSecurityError(
     const String& sanitized_message,
     const String& unsanitized_message) {

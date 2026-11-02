@@ -49,6 +49,7 @@
 #include "third_party/blink/renderer/core/dom/abort_signal.h"
 #include "third_party/blink/renderer/core/dom/document.h"
 #include "third_party/blink/renderer/core/dom/dom_exception.h"
+#include "third_party/blink/renderer/core/dom/quota_exceeded_error.h"
 #include "third_party/blink/renderer/core/execution_context/execution_context.h"
 #include "third_party/blink/renderer/core/fetch/body.h"
 #include "third_party/blink/renderer/core/fetch/body_stream_buffer.h"
@@ -1588,9 +1589,8 @@ FetchLaterResult* FetchLaterManager::FetchLater(
   if (bytes_for_origin > kMaxScheduledDeferredBytesPerOrigin) {
     UseCounter::Count(GetExecutionContext(),
                       WebFeature::kFetchLaterErrorQuotaExceeded);
-    exception_state.ThrowDOMException(
-        DOMExceptionCode::kQuotaExceededError,
-        "fetchLater exceeds its quota for the origin.");
+    QuotaExceededError::Throw(exception_state,
+                              "fetchLater exceeds its quota for the origin.");
     return nullptr;
   }
 
@@ -1610,9 +1610,8 @@ FetchLaterResult* FetchLaterManager::FetchLater(
     if (bytes_for_origin > kMaxScheduledDeferredBytesPerOrigin) {
       UseCounter::Count(GetExecutionContext(),
                         WebFeature::kFetchLaterErrorQuotaExceeded);
-      exception_state.ThrowDOMException(
-          DOMExceptionCode::kQuotaExceededError,
-          "fetchLater exceeds its quota for the origin.");
+      QuotaExceededError::Throw(exception_state,
+                                "fetchLater exceeds its quota for the origin.");
       return nullptr;
     }
   }

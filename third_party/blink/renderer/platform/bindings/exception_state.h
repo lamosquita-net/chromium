@@ -146,6 +146,11 @@ class PLATFORM_EXPORT ExceptionState {
   // Throws a DOMException due to the given exception code.
   NOINLINE void ThrowDOMException(DOMExceptionCode, const String& message);
 
+  // Throws a constructed DOMException.
+  NOINLINE void ThrowDOMException(v8::Local<v8::Value> exception,
+                                  DOMExceptionCode code,
+                                  const String& message);
+
   // Throws a DOMException with SECURITY_ERR.
   NOINLINE void ThrowSecurityError(
       const String& sanitized_message,

@@ -3738,6 +3738,10 @@
       status: "experimental",
     },
     {
+      name: "QuotaExceededErrorUpdate",
+      status: "stable",
+    },
+    {
       name: "RadioInputNextButtonInScope",
       status: "stable",
     },
