@@ -4,6 +4,8 @@
 
 #include "services/network/public/cpp/integrity_policy_parser.h"
 
+#include <string>
+
 #include "base/strings/stringprintf.h"
 #include "net/http/http_response_headers.h"
 #include "net/http/structured_headers.h"
@@ -24,10 +26,13 @@ void HandleKeyValue(base::cstring_view key,
   }
   for (const auto& parameter : value.member) {
     if (!parameter.item.is_token()) {
-      policy.parsing_errors.emplace_back(base::StringPrintf(
-          "The %s item '%s' is not a token. "
-          "Did you accidentally add it as a string?",
-          header_name.c_str(), parameter.item.GetString().c_str()));
+      // FlyWeb (FS.39): GetString() on an integer, decimal or boolean item is
+      // a fatal QUICHE_CHECK in the network service (upstream d71f062d656).
+      std::string serialized =
+          net::structured_headers::SerializeItem(parameter.item).value_or("");
+      policy.parsing_errors.emplace_back(
+          base::StringPrintf("The %s item '%s' is not a token.",
+                             header_name.c_str(), serialized.c_str()));
       continue;
     }
     const base::cstring_view parameter_value = parameter.item.GetString();
