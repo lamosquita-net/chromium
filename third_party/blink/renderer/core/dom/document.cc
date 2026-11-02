@@ -4721,21 +4721,19 @@ void Document::ProcessBaseElement() {
 
   // Find the first href attribute in a base element and the first target
   // attribute in a base element.
-  const AtomicString* href = nullptr;
-  const AtomicString* target = nullptr;
+  // FlyWeb (upstream dffb572d0b, crbug.com/515155946): keep copies, not
+  // pointers into the element's attribute storage, which may change while
+  // this function runs.
+  AtomicString href;
+  AtomicString target;
   for (HTMLBaseElement* base = Traversal<HTMLBaseElement>::FirstWithin(*this);
-       base && (!href || !target);
+       base && (href.IsNull() || target.IsNull());
        base = Traversal<HTMLBaseElement>::Next(*base)) {
-    if (!href) {
-      const AtomicString& value = base->FastGetAttribute(html_names::kHrefAttr);
-      if (!value.IsNull())
-        href = &value;
+    if (href.IsNull()) {
+      href = base->FastGetAttribute(html_names::kHrefAttr);
     }
-    if (!target) {
-      const AtomicString& value =
-          base->FastGetAttribute(html_names::kTargetAttr);
-      if (!value.IsNull())
-        target = &value;
+    if (target.IsNull()) {
+      target = base->FastGetAttribute(html_names::kTargetAttr);
     }
     if (GetExecutionContext() &&
         GetExecutionContext()->GetContentSecurityPolicy()->IsActive()) {
@@ -4747,8 +4745,8 @@ void Document::ProcessBaseElement() {
   // FIXME: Since this doesn't share code with completeURL it may not handle
   // encodings correctly.
   KURL base_element_url;
-  if (href) {
-    String stripped_href = StripLeadingAndTrailingHTMLSpaces(*href);
+  if (!href.IsNull()) {
+    String stripped_href = StripLeadingAndTrailingHTMLSpaces(href);
     if (!stripped_href.empty())
       base_element_url = KURL(FallbackBaseURL(), stripped_href);
   }
@@ -4791,12 +4789,12 @@ void Document::ProcessBaseElement() {
   }
 
   AtomicString old_base_target = base_target_;
-  if (target) {
-    if (target->Contains('\n') || target->Contains('\r'))
+  if (!target.IsNull()) {
+    if (target.Contains('\n') || target.Contains('\r'))
       UseCounter::Count(*this, WebFeature::kBaseWithNewlinesInTarget);
-    if (target->Contains('<'))
+    if (target.Contains('<'))
       UseCounter::Count(*this, WebFeature::kBaseWithOpenBracketInTarget);
-    base_target_ = *target;
+    base_target_ = target;
   } else {
     base_target_ = g_null_atom;
   }
