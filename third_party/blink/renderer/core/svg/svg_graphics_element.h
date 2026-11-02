@@ -25,6 +25,7 @@
 #include "third_party/blink/renderer/core/core_export.h"
 #include "third_party/blink/renderer/core/svg/svg_tests.h"
 #include "third_party/blink/renderer/core/svg/svg_transformable_element.h"
+#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
 
 namespace blink {
 
@@ -55,6 +56,8 @@ class CORE_EXPORT SVGGraphicsElement : public SVGTransformableElement,
 
   void Trace(Visitor*) const override;
 
+  bool IsNonRendered(const LayoutObject* object) const;
+
  protected:
   SVGGraphicsElement(const QualifiedName&,
                      Document&,
@@ -62,6 +65,10 @@ class CORE_EXPORT SVGGraphicsElement : public SVGTransformableElement,
 
   bool SupportsFocus(UpdateBehavior update_behavior =
                          UpdateBehavior::kStyleAndLayout) const override {
+    if (RuntimeEnabledFeatures::RestrictTabFocusForHiddenSVGElementsEnabled() &&
+        IsNonRendered(GetLayoutObject())) {
+      return false;
+    }
     return Element::SupportsFocus(update_behavior) || HasFocusEventListeners();
   }
 

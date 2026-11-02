@@ -6,6 +6,7 @@
 
 #include "third_party/blink/renderer/platform/fonts/font.h"
 #include "third_party/blink/renderer/platform/fonts/font_description.h"
+#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
 #include "third_party/blink/renderer/platform/text/text_run.h"
 
 namespace blink {
@@ -114,7 +115,8 @@ float ShapeResultSpacing<TextContainerType>::NextExpansion() {
 template <typename TextContainerType>
 float ShapeResultSpacing<TextContainerType>::ComputeSpacing(
     const ComputeSpacingParameters& parameters,
-    float& offset) {
+    float& offset,
+    bool is_cursive_script) {
   DCHECK(has_spacing_);
   unsigned index = parameters.index;
   UChar32 character = text_[index];
@@ -129,8 +131,14 @@ float ShapeResultSpacing<TextContainerType>::ComputeSpacing(
   float spacing = 0;
 
   bool has_letter_spacing = letter_spacing_;
-  if (has_letter_spacing && !Character::TreatAsZeroWidthSpace(character))
+  bool apply_letter_spacing =
+      RuntimeEnabledFeatures::IgnoreLetterSpacingInCursiveScriptsEnabled()
+          ? !is_cursive_script
+          : true;
+  if (has_letter_spacing && !Character::TreatAsZeroWidthSpace(character) &&
+      apply_letter_spacing) {
     spacing += letter_spacing_;
+  }
 
   if (treat_as_space && (allow_word_spacing_anywhere_ || index ||
                          character == kNoBreakSpaceCharacter))

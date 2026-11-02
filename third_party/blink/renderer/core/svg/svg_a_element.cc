@@ -47,6 +47,7 @@
 #include "third_party/blink/renderer/core/xlink_names.h"
 #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
 #include "third_party/blink/renderer/platform/loader/fetch/resource_request.h"
+#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
 
 namespace blink {
 
@@ -232,7 +233,14 @@ bool SVGAElement::SupportsFocus(UpdateBehavior update_behavior) const {
   }
   // If not a link we should still be able to focus the element if it has
   // tabIndex.
-  return IsLink() || SVGGraphicsElement::SupportsFocus(update_behavior);
+  if (IsLink()) {
+    if (RuntimeEnabledFeatures::RestrictTabFocusForHiddenSVGElementsEnabled() &&
+        IsNonRendered(GetLayoutObject())) {
+      return false;
+    }
+    return true;
+  }
+  return SVGGraphicsElement::SupportsFocus(update_behavior);
 }
 
 bool SVGAElement::ShouldHaveFocusAppearance() const {

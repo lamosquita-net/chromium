@@ -66,11 +66,15 @@ class PLATFORM_EXPORT ShapeResultSpacing final {
     unsigned index;
     float original_advance = 0.0;
   };
-  float ComputeSpacing(unsigned index, float& offset) {
-    return ComputeSpacing(ComputeSpacingParameters{.index = index}, offset);
+  float ComputeSpacing(unsigned index,
+                       float& offset,
+                       bool is_cursive_script = false) {
+    return ComputeSpacing(ComputeSpacingParameters{.index = index}, offset,
+                          is_cursive_script);
   }
   float ComputeSpacing(const ComputeSpacingParameters& parameters,
-                       float& offset);
+                       float& offset,
+                       bool is_cursive_script);
 
  private:
   bool IsAfterExpansion() const { return is_after_expansion_; }
