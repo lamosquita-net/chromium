@@ -63,6 +63,8 @@ enum DisallowActivationReasonId : uint64_t {
   kFileSystemAccessLockingContention = 39,
   kIndexedDBTransactionIsStartingWhileBlockingOthers = 40,
   kIndexedDBTransactionIsOngoingAndBlockingOthers = 41,
+  // FlyWeb (FS.39): same value as upstream 0dcb0580163.
+  kDidCommitNavigation = 44,
   // New entries go above here. New entries should be added to
   // tools/metrics/histograms/enums.xml .
   kMinEmbedderDisallowActivationReason = 2 << 16,
