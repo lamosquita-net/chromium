@@ -147,6 +147,11 @@ const SelectionInDOMTree& FrameSelection::GetSelectionInDOMTree() const {
 }
 
 Element* FrameSelection::RootEditableElementOrDocumentElement() const {
+  // FlyWeb (upstream 9fb841bf28, crbug.com/523292588): the selection may be
+  // gone (document_ cleared) after a layout forced by a caller.
+  if (!IsAvailable()) {
+    return nullptr;
+  }
   Element* selection_root =
       ComputeVisibleSelectionInDOMTreeDeprecated().RootEditableElement();
   // Note that RootEditableElementOrDocumentElement can return null if the

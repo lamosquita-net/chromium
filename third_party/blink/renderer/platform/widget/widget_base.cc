@@ -1333,8 +1333,17 @@ void WidgetBase::UpdateCompositionInfo(bool immediate_request) {
     // Composition information is only available on editable node.
     range = gfx::Range::InvalidRange();
   } else {
+    // FlyWeb (upstream 9fb841bf28, crbug.com/523292588): CompositionRange()
+    // forces a style and layout update, after which this widget may be gone.
+    base::WeakPtr<WidgetBase> weak_this = weak_ptr_factory_.GetWeakPtr();
     GetCompositionRange(&range);
+    if (!weak_this) {
+      return;
+    }
     GetCompositionCharacterBounds(&character_bounds);
+    if (!weak_this) {
+      return;
+    }
   }
 
   if (!immediate_request &&
