@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cfloat>
+#include <cmath>
 #include <numeric>
 
 #include "base/memory/scoped_refptr.h"
@@ -198,23 +199,23 @@ CalculationExpressionOperationNode::CreateSimplified(Children&& children,
     }
     case CalculationOperator::kMultiply: {
       DCHECK_EQ(children.size(), 2u);
-      if (children.front()->IsOperation() || children.back()->IsOperation()) {
+      // FlyWeb (FS.39): check both sides before the downcasts (upstream
+      // 61d51b2d398).
+      const CalculationExpressionNode& lhs = *children[0];
+      const CalculationExpressionNode& rhs = *children[1];
+      const bool lhs_is_number = lhs.IsNumber();
+      const auto* number_node =
+          DynamicTo<CalculationExpressionNumberNode>(lhs_is_number ? lhs : rhs);
+      const auto* pixels_and_percent_node =
+          DynamicTo<CalculationExpressionPixelsAndPercentNode>(
+              lhs_is_number ? rhs : lhs);
+      if (!number_node || !pixels_and_percent_node) {
         return base::MakeRefCounted<CalculationExpressionOperationNode>(
             Children({std::move(children[0]), std::move(children[1])}), op);
       }
-      auto& maybe_pixels_and_percent_node =
-          children[0]->IsNumber() ? children[1] : children[0];
-      if (!maybe_pixels_and_percent_node->IsPixelsAndPercent()) {
-        return base::MakeRefCounted<CalculationExpressionOperationNode>(
-            Children({std::move(children[0]), std::move(children[1])}), op);
-      }
-      auto& number_node = children[0]->IsNumber() ? children[0] : children[1];
-      const auto& number = To<CalculationExpressionNumberNode>(*number_node);
       PixelsAndPercent pixels_and_percent =
-          To<CalculationExpressionPixelsAndPercentNode>(
-              *maybe_pixels_and_percent_node)
-              .GetPixelsAndPercent();
-      pixels_and_percent *= number.Value();
+          pixels_and_percent_node->GetPixelsAndPercent();
+      pixels_and_percent *= number_node->Value();
       return base::MakeRefCounted<CalculationExpressionPixelsAndPercentNode>(
           pixels_and_percent);
     }
@@ -368,7 +369,10 @@ CalculationExpressionOperationNode::CreateSimplified(Children&& children,
         float from_px = operand_pixels[1];
         float to_px = operand_pixels[2];
         float progress_value = (progress_px - from_px) / (to_px - from_px);
-        float progress = std::clamp(progress_value, 0.f, 1.f);
+        // FlyWeb (FS.39): no std::clamp() on NaN (upstream f27c40425db).
+        float progress = std::isnan(progress_value)
+                             ? progress_value
+                             : std::clamp(progress_value, 0.f, 1.f);
         return base::MakeRefCounted<CalculationExpressionPixelsAndPercentNode>(
             PixelsAndPercent(progress));
       }
@@ -542,6 +546,9 @@ float CalculationExpressionOperationNode::Evaluate(
       float from = children_[1]->Evaluate(max_value, input);
       float to = children_[2]->Evaluate(max_value, input);
       float progress_value = (progress - from) / (to - from);
+      if (std::isnan(progress_value)) {
+        return progress_value;
+      }
       return std::clamp(progress_value, 0.f, 1.f);
     }
     case CalculationOperator::kPow: {

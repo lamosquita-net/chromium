@@ -2907,6 +2907,11 @@ double CSSMathExpressionOperation::EvaluateOperator(
       CHECK_EQ(operands.size(), 3u);
       double progress_value =
           (operands[0] - operands[1]) / (operands[2] - operands[1]);
+      // FlyWeb (FS.39): std::clamp() with NaN is unspecified (upstream
+      // f27c40425db, 2c28ee75bf8).
+      if (std::isnan(progress_value)) {
+        return progress_value;
+      }
       return std::clamp(progress_value, 0., 1.);
     }
     case CSSMathOperator::kCalcSize: {
@@ -3694,7 +3699,9 @@ class CSSMathExpressionNodeParser {
       }
       double progress_value = (double_values[0] - double_values[1]) /
                               (double_values[2] - double_values[1]);
-      progress_value = std::clamp(progress_value, 0., 1.);
+      if (!std::isnan(progress_value)) {
+        progress_value = std::clamp(progress_value, 0., 1.);
+      }
       return CSSMathExpressionNumericLiteral::Create(
           progress_value, CSSPrimitiveValue::UnitType::kNumber);
     }
