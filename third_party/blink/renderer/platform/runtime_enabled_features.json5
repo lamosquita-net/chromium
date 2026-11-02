@@ -2991,6 +2991,10 @@
       base_feature: "none",
     },
     {
+      name: "MixedContentAutoupgradesUseIsMixedContentRestrictedInFrame",
+      status: "stable",
+    },
+    {
       name: "MobileLayoutTheme",
     },
     {
