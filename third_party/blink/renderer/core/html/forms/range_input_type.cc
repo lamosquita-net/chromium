@@ -303,7 +303,12 @@ void RangeInputType::CreateShadowSubtree() {
   track->SetShadowPseudoId(shadow_element_names::kPseudoSliderTrack);
   track->setAttribute(html_names::kIdAttr,
                       shadow_element_names::kIdSliderTrack);
-  track->AppendChild(MakeGarbageCollected<SliderThumbElement>(document));
+  // FlyWeb (upstream 926d3d2597): the id is set here, not in the
+  // SliderThumbElement constructor, so clones start without attributes.
+  auto* thumb = MakeGarbageCollected<SliderThumbElement>(document);
+  thumb->setAttribute(html_names::kIdAttr,
+                      shadow_element_names::kIdSliderThumb);
+  track->AppendChild(thumb);
   auto* container = MakeGarbageCollected<SliderContainerElement>(document);
   container->AppendChild(track);
   GetElement().UserAgentShadowRoot()->AppendChild(container);

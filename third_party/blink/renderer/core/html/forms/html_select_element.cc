@@ -369,7 +369,11 @@ void HTMLSelectElement::ParseAttribute(
     if (size_ != old_size) {
       ChangeRendering();
       UpdateUserAgentShadowTree(*UserAgentShadowRoot());
-      ResetToDefaultSelection();
+      // The selection can't change if there are no children; this is a
+      // common case during parsing.
+      if (hasChildren()) {
+        ResetToDefaultSelection();
+      }
       select_type_->UpdateTextStyleAndContent();
       select_type_->SaveListboxActiveSelection();
     }

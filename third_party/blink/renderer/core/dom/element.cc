@@ -876,6 +876,16 @@ void Element::DetachAttrNodeAtIndex(Attr* attr, wtf_size_t index) {
   RemoveAttributeInternal(index, AttributeModificationReason::kDirectly);
 }
 
+void Element::RemoveAllAttributes() {
+  while (hasAttributes()) {
+    const AttributeCollection& attributes = GetElementData()->Attributes();
+    // Use a reason of kByCloning since our caller is going to use the cloning
+    // process to restore a different set of attributes.
+    RemoveAttributeInternal(attributes.size() - 1,
+                            AttributeModificationReason::kByCloning);
+  }
+}
+
 void Element::removeAttribute(const QualifiedName& name) {
   wtf_size_t index = FindAttributeIndex(name);
   if (index == kNotFound) {
@@ -2949,9 +2959,15 @@ void Element::StripScriptingAttributes(
 
 void Element::ParserSetAttributes(
     const Vector<Attribute, kAttributePrealloc>& attribute_vector) {
+  // We must start with a newly-created element.  If we don't, it would not be
+  // safe to batch the AttributeChanged notifications the way we do, since on
+  // elements that are not newly-created, AttributeChanged might run script.
+  // (FlyWeb: upstream 155b785d0e and 6aa38f2d02, crbug.com/496280532.)
   DCHECK(!isConnected());
   DCHECK(!parentNode());
   DCHECK(!element_data_);
+  DCHECK(!HasChildren());
+  EventDispatchForbiddenScope assert_no_event_dispatch;
 
   if (!attribute_vector.empty()) {
     if (GetDocument().GetElementDataCache()) {
@@ -9134,9 +9150,17 @@ void Element::AdjustStyle(ComputedStyleBuilder&) {
 }
 
 void Element::CloneAttributesFrom(const Element& other) {
-  if (GetElementRareData()) {
-    DetachAllAttrNodesFromElement();
-  }
+  // We must start with a newly-created element.  If we don't, it would not be
+  // safe to batch the AttributeChanged notifications the way we do, since on
+  // elements that are not newly-created, AttributeChanged might run script.
+  // (FlyWeb: upstream 155b785d0e and 6aa38f2d02, crbug.com/496280532.)
+  DCHECK(!isConnected());
+  DCHECK(!parentNode());
+  DCHECK(!element_data_);
+  DCHECK(!HasChildren());
+  CHECK(!hasAttributes());
+  CHECK(!GetAttrNodeList());
+  EventDispatchForbiddenScope assert_no_event_dispatch;
 
   other.SynchronizeAllAttributes();
   if (!other.element_data_) {
