@@ -33,6 +33,7 @@ ScrollManager::ScrollManager(LocalFrame& frame) : frame_(frame) {
 void ScrollManager::Clear() {
   resize_scrollable_area_ = nullptr;
   offset_from_resize_corner_ = {};
+  resize_position_to_size_transform_ = {};
 }
 
 void ScrollManager::Trace(Visitor* visitor) const {
@@ -337,7 +338,7 @@ void ScrollManager::Resize(const WebMouseEvent& evt) {
       return;
     resize_scrollable_area_->Resize(
         gfx::ToFlooredPoint(evt.PositionInRootFrame()),
-        offset_from_resize_corner_);
+        offset_from_resize_corner_, resize_position_to_size_transform_);
   }
 }
 
@@ -353,6 +354,8 @@ void ScrollManager::ClearResizeScrollableArea(bool should_not_be_null) {
 void ScrollManager::SetResizeScrollableArea(PaintLayer* layer, gfx::Point p) {
   resize_scrollable_area_ = layer->GetScrollableArea();
   resize_scrollable_area_->SetInResizeMode(true);
+  resize_position_to_size_transform_ =
+      resize_scrollable_area_->InitializeResizeTransform(p);
   offset_from_resize_corner_ =
       resize_scrollable_area_->OffsetFromResizeCorner(p);
 }

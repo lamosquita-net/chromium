@@ -4489,6 +4489,10 @@
       status: "stable",
     },
     {
+      name: "TextareaStableResizing",
+      status: "stable",
+    },
+    {
       name: "TextAutoSizingDisabledOnFlexbox",
       status: "stable",
     },

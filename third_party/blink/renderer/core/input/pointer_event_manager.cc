@@ -118,6 +118,7 @@ void PointerEventManager::Clear() {
   dispatching_pointer_id_ = 0;
   resize_scrollable_area_.Clear();
   offset_from_resize_corner_ = {};
+  resize_position_to_size_transform_ = {};
   skip_touch_filter_discrete_ = false;
   skip_touch_filter_all_ = false;
   discarded_event_.target = kInvalidDOMNodeId;
@@ -839,6 +840,8 @@ bool PointerEventManager::HandleResizerDrag(
         resize_scrollable_area_->SetInResizeMode(true);
         frame_->GetPage()->GetChromeClient().SetTouchAction(frame_,
                                                             TouchAction::kNone);
+        resize_position_to_size_transform_ =
+            resize_scrollable_area_->InitializeResizeTransform(p);
         offset_from_resize_corner_ =
             resize_scrollable_area_->OffsetFromResizeCorner(p);
         return true;
@@ -850,7 +853,8 @@ bool PointerEventManager::HandleResizerDrag(
           resize_scrollable_area_->Layer()->GetLayoutBox() &&
           resize_scrollable_area_->InResizeMode()) {
         gfx::Point pos = gfx::ToRoundedPoint(event.PositionInWidget());
-        resize_scrollable_area_->Resize(pos, offset_from_resize_corner_);
+        resize_scrollable_area_->Resize(pos, offset_from_resize_corner_,
+                                        resize_position_to_size_transform_);
         return true;
       }
       break;
@@ -860,6 +864,7 @@ bool PointerEventManager::HandleResizerDrag(
         resize_scrollable_area_->SetInResizeMode(false);
         resize_scrollable_area_.Clear();
         offset_from_resize_corner_ = {};
+        resize_position_to_size_transform_ = {};
         return true;
       }
       break;
