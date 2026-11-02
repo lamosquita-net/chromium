@@ -47,6 +47,7 @@
 #include "services/network/public/cpp/no_vary_search_header_parser.h"
 #include "services/network/public/cpp/parsed_headers.h"
 #include "services/network/public/cpp/timing_allow_origin_parser.h"
+#include "services/network/public/mojom/integrity_policy.mojom-blink.h"
 #include "services/network/public/mojom/no_vary_search.mojom-blink-forward.h"
 #include "services/network/public/mojom/no_vary_search.mojom-blink.h"
 #include "services/network/public/mojom/parsed_headers.mojom-blink.h"
@@ -159,6 +160,16 @@ blink::CSPSourcePtr ConvertToBlink(const CSPSourcePtr& in) {
       ConvertToBlink(in->path), in->is_host_wildcard, in->is_port_wildcard);
 }
 
+blink::IntegrityPolicy::Destination ConvertToBlink(
+    const IntegrityPolicy::Destination& in) {
+  return blink::IntegrityPolicy::Destination(in);
+}
+
+blink::IntegrityPolicy::Source ConvertToBlink(
+    const IntegrityPolicy::Source& in) {
+  return blink::IntegrityPolicy::Source(in);
+}
+
 blink::CSPHashSourcePtr ConvertToBlink(const CSPHashSourcePtr& in) {
   DCHECK(in);
   Vector<uint8_t> hash_value = ConvertToBlink(in->value);
@@ -188,6 +199,14 @@ blink::ContentSecurityPolicyHeaderPtr ConvertToBlink(
   DCHECK(in);
   return blink::ContentSecurityPolicyHeader::New(
       ConvertToBlink(in->header_value), in->type, in->source);
+}
+
+blink::IntegrityPolicyPtr ConvertToBlink(const IntegrityPolicyPtr& in) {
+  Vector<blink::IntegrityPolicy::Destination> blocked_destinations =
+      ConvertToBlink(in->blocked_destinations);
+  return blink::IntegrityPolicy::New(
+      std::move(blocked_destinations), ConvertToBlink(in->sources),
+      ConvertToBlink(in->endpoints), ConvertToBlink(in->parsing_errors));
 }
 
 blink::CSPTrustedTypesPtr ConvertToBlink(const CSPTrustedTypesPtr& in) {
@@ -287,6 +306,7 @@ blink::ParsedHeadersPtr ConvertToBlink(const ParsedHeadersPtr& in) {
       ConvertToBlink(in->content_security_policy),
       ConvertToBlink(in->allow_csp_from), in->cross_origin_embedder_policy,
       in->cross_origin_opener_policy, in->document_isolation_policy,
+      in->integrity_policy, in->integrity_policy_report_only,
       in->origin_agent_cluster,
       in->accept_ch.has_value()
           ? std::make_optional(ConvertToBlink(in->accept_ch.value()))

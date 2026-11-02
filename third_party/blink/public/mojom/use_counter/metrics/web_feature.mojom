@@ -4416,6 +4416,9 @@ enum WebFeature {
   // FlyWeb (level 136): same number as Chrome 136.
   kTextAutoSizingDisabledOnFlexbox = 5374,
 
+  // FlyWeb (level 138, Integrity-Policy): same number as Chrome 138.
+  kIntegrityPolicyInServiceWorkerResponse = 5557,
+
   // Add new features immediately above this line. Don't change assigned
   // numbers of any item, and don't reuse removed slots. Also don't add extra
   // spaces or comments in this file. Comments belong next to the usage of

@@ -82,6 +82,8 @@ component("cpp") {
     "header_util.h",
     "initiator_lock_compatibility.cc",
     "initiator_lock_compatibility.h",
+    "integrity_policy_parser.cc",
+    "integrity_policy_parser.h",
     "ip_address_space_util.cc",
     "ip_address_space_util.h",
     "is_potentially_trustworthy.cc",
@@ -234,6 +236,20 @@ component("host_resolver_mojom_support") {
   ]
   configs += [ "//build/config/compiler:wexit_time_destructors" ]
   defines = [ "IS_NETWORK_CPP_HOST_RESOLVER_IMPL" ]
+}
+
+component("integrity_policy") {
+  sources = [
+    "integrity_policy.cc",
+    "integrity_policy.h",
+    "integrity_policy_mojom_traits.cc",
+    "integrity_policy_mojom_traits.h",
+  ]
+  deps = [
+    "//base",
+    "//services/network/public/mojom:mojom_integrity_policy_shared",
+  ]
+  defines = [ "IS_NETWORK_CPP_INTEGRITY_POLICY_IMPL" ]
 }
 
 component("cookies_mojom_support") {
@@ -457,6 +473,7 @@ component("cpp_base") {
     ":crash_keys",
     ":cross_origin_embedder_policy",
     ":document_isolation_policy",
+    ":integrity_policy",
     ":ip_address_mojom_support",
     ":network_param_mojom_support",
     ":proxy_config_mojom_support",

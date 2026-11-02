@@ -1123,7 +1123,7 @@ ServiceWorkerRegistry::GetOrCreateRegistration(
     version->set_used_features(std::move(used_features));
     // policy_container_host could be null for registration restored from old DB
     if (data.policy_container_policies) {
-      version->set_policy_container_host(
+      version->SetPolicyContainerHost(
           base::MakeRefCounted<PolicyContainerHost>(
               PolicyContainerPolicies(*data.policy_container_policies)));
     }

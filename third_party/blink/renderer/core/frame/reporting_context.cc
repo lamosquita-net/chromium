@@ -12,6 +12,7 @@
 #include "third_party/blink/renderer/core/frame/csp/csp_violation_report_body.h"
 #include "third_party/blink/renderer/core/frame/deprecation/deprecation_report_body.h"
 #include "third_party/blink/renderer/core/frame/document_policy_violation_report_body.h"
+#include "third_party/blink/renderer/core/frame/integrity_violation_report_body.h"
 #include "third_party/blink/renderer/core/frame/intervention_report_body.h"
 #include "third_party/blink/renderer/core/frame/permissions_policy_violation_report_body.h"
 #include "third_party/blink/renderer/core/frame/report.h"
@@ -173,8 +174,19 @@ void ReportingContext::SendToReportingAPI(Report* report,
   const String& type = report->type();
   if (!(type == ReportType::kCSPViolation || type == ReportType::kDeprecation ||
         type == ReportType::kPermissionsPolicyViolation ||
+        type == ReportType::kIntegrityViolation ||
         type == ReportType::kIntervention ||
         type == ReportType::kDocumentPolicyViolation)) {
+    return;
+  }
+
+  // IntegrityPolicy reports are not a LocationReportBody.
+  if (type == ReportType::kIntegrityViolation) {
+    const IntegrityViolationReportBody* body =
+        static_cast<IntegrityViolationReportBody*>(report->body());
+    GetReportingService()->QueueIntegrityViolationReport(
+        KURL(report->url()), endpoint, body->documentURL(), body->blockedURL(),
+        body->destination(), body->reportOnly());
     return;
   }
 

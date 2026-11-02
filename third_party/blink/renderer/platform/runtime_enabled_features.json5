@@ -2651,6 +2651,12 @@
       base_feature: "none",
     },
     {
+      name: "IntegrityPolicyScript",
+      status: "stable",
+      base_feature: "none",
+      public: true,
+    },
+    {
       name: "InteroperablePrivateAttribution",
       status: "experimental",
     },

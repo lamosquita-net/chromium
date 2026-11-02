@@ -5,6 +5,7 @@
 #ifndef THIRD_PARTY_BLINK_PUBLIC_PLATFORM_WEB_POLICY_CONTAINER_H_
 #define THIRD_PARTY_BLINK_PUBLIC_PLATFORM_WEB_POLICY_CONTAINER_H_
 
+#include "services/network/public/cpp/integrity_policy.h"
 #include "services/network/public/mojom/cross_origin_embedder_policy.mojom-shared.h"
 #include "services/network/public/mojom/ip_address_space.mojom-shared.h"
 #include "services/network/public/mojom/referrer_policy.mojom-shared.h"
@@ -21,6 +22,8 @@ namespace blink {
 struct WebPolicyContainerPolicies {
   network::mojom::CrossOriginEmbedderPolicyValue cross_origin_embedder_policy =
       network::mojom::CrossOriginEmbedderPolicyValue::kNone;
+  network::IntegrityPolicy integrity_policy;
+  network::IntegrityPolicy integrity_policy_report_only;
   network::mojom::ReferrerPolicy referrer_policy =
       network::mojom::ReferrerPolicy::kDefault;
   WebVector<WebContentSecurityPolicy> content_security_policies;

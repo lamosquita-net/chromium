@@ -676,10 +676,8 @@ class CONTENT_EXPORT ServiceWorkerVersion
     reporting_observer_receiver_ = std::move(reporting_observer_receiver);
   }
 
-  void set_policy_container_host(
-      scoped_refptr<PolicyContainerHost> policy_container_host) {
-    policy_container_host_ = std::move(policy_container_host);
-  }
+  void SetPolicyContainerHost(
+      scoped_refptr<PolicyContainerHost> policy_container_host);
 
   // Initializes the global scope of the ServiceWorker on the renderer side.
   void InitializeGlobalScope();

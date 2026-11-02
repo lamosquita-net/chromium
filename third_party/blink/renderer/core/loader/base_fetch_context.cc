@@ -17,6 +17,7 @@
 #include "third_party/blink/public/mojom/loader/request_context_frame_type.mojom-blink.h"
 #include "third_party/blink/public/platform/web_content_settings_client.h"
 #include "third_party/blink/renderer/core/execution_context/execution_context.h"
+#include "third_party/blink/renderer/core/frame/integrity_policy.h"
 #include "third_party/blink/renderer/core/frame/settings.h"
 #include "third_party/blink/renderer/core/frame/web_feature.h"
 #include "third_party/blink/renderer/core/inspector/console_message.h"
@@ -502,6 +503,7 @@ BaseFetchContext::CheckCSPForRequestInternal(
                          reporting_disposition, check_header_type)) {
     return ResourceRequestBlockedReason::kCSP;
   }
+
   return std::nullopt;
 }
 
@@ -586,6 +588,15 @@ BaseFetchContext::CanRequestInternal(
           ContentSecurityPolicy::CheckHeaderType::kCheckEnforce) ==
       ResourceRequestBlockedReason::kCSP) {
     return ResourceRequestBlockedReason::kCSP;
+  }
+
+  CHECK(!GetResourceFetcherProperties().IsDetached() ||
+        resource_request.GetKeepalive() || redirect_info.has_value());
+
+  if (!IntegrityPolicy::AllowRequest(
+          GetExecutionContext(), options.world_for_csp.Get(),
+          request_destination, request_mode, options.integrity_metadata, url)) {
+    return ResourceRequestBlockedReason::kIntegrity;
   }
 
   if (type == ResourceType::kScript) {

@@ -408,6 +408,13 @@ BASE_FEATURE(kPreloadedDictionaryConditionalUse,
              "PreloadedDictionaryConditionalUse",
              base::FEATURE_DISABLED_BY_DEFAULT);
 
+// Enables support for the `Integrity-Policy` header with script destinations,
+// which enables developers to ensure all their external scripts have their
+// integrity enforced.
+BASE_FEATURE(kIntegrityPolicyScript,
+             "IntegrityPolicyScript",
+             base::FEATURE_ENABLED_BY_DEFAULT);
+
 BASE_FEATURE(kVisibilityAwareResourceScheduler,
              "VisibilityAwareResourceScheduler",
              base::FEATURE_DISABLED_BY_DEFAULT);
