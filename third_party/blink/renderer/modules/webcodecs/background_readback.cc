@@ -223,8 +223,10 @@ void BackgroundReadback::ReadbackRGBTextureBackedFrameToMemory(
       mailbox_holder.mailbox, mailbox_holder.texture_target, origin,
       texture_size, src_point, info, base::saturated_cast<GLuint>(rgba_stide),
       dst_pixels,
+      // FlyWeb (FS.39): cross-thread handle (upstream 9cad4244e46).
       WTF::BindOnce(&BackgroundReadback::OnARGBPixelsFrameReadCompleted,
-                    WrapWeakPersistent(this), std::move(result_cb),
+                    MakeUnwrappingCrossThreadWeakHandle(this),
+                    std::move(result_cb),
                     std::move(txt_frame), std::move(result)));
 }
 
@@ -305,7 +307,8 @@ void BackgroundReadback::ReadbackRGBTextureBackedFrameToBuffer(
       texture_size, src_point, info, base::saturated_cast<GLuint>(stride),
       dst_pixels,
       WTF::BindOnce(&BackgroundReadback::OnARGBPixelsBufferReadCompleted,
-                    WrapWeakPersistent(this), std::move(txt_frame), src_rect,
+                    MakeUnwrappingCrossThreadWeakHandle(this),
+                    std::move(txt_frame), src_rect,
                     dest_layout, dest_buffer, std::move(done_cb)));
 }
 

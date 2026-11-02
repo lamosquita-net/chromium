@@ -1308,8 +1308,11 @@ bool VideoFrame::CopyToAsync(
           resolver->Reject();
         }
       };
-  auto done_cb = WTF::BindOnce(readback_done_handler, std::move(contents),
-                               WrapPersistent(resolver), dest_layout);
+  // FlyWeb (FS.39): the callback may be destroyed off the main thread
+  // (upstream 9cad4244e46).
+  auto done_cb =
+      WTF::BindOnce(readback_done_handler, std::move(contents),
+                    MakeUnwrappingCrossThreadHandle(resolver), dest_layout);
 
   auto buffer = AsSpan<uint8_t>(destination);
   background_readback->ReadbackTextureBackedFrameToBuffer(
