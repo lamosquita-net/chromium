@@ -469,19 +469,22 @@ void VTVideoEncodeAccelerator::Encode(scoped_refptr<VideoFrame> frame,
   auto request = std::make_unique<InProgressFrameEncode>(
       std::move(frame), encoder_color_space_.value_or(gfx::ColorSpace()));
 
-  // We can pass the ownership of |request| to the encode callback if
-  // successful. Otherwise let it fall out of scope.
+  // Pass the ownership of `request` to the encode callback, then release the
+  // smart pointer.
+  //
+  // NOTE: When encoding fails, VT still holds the `sourceFrameRefcon`, and
+  // either the `CompressionCallback` or VT itself may still use this resource
+  // afterwards. Therefore, we always release the smart pointer here.
+  // (FlyWeb: upstream cdf876cf92ec, crbug.com/416294710.)
   OSStatus status = VTCompressionSessionEncodeFrame(
       compression_session_.get(), pixel_buffer.get(), timestamp_cm, duration_cm,
-      NSToCFPtrCast(frame_props), reinterpret_cast<void*>(request.get()),
+      NSToCFPtrCast(frame_props), reinterpret_cast<void*>(request.release()),
       nullptr);
+  ++pending_encodes_;
   if (status != noErr) {
     NotifyErrorStatus({EncoderStatus::Codes::kEncoderFailedEncode,
                        "VTCompressionSessionEncodeFrame failed: " +
                            logging::DescriptionFromOSStatus(status)});
-  } else {
-    ++pending_encodes_;
-    CHECK(request.release());
   }
 }
 
