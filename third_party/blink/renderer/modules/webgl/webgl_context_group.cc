@@ -46,6 +46,13 @@ void WebGLContextGroup::LoseContextGroup(
     context->LoseContextImpl(mode, auto_recovery_method);
 }
 
+void WebGLContextGroup::OnContextRestored() {
+  // FlyWeb (crbug.com/485935305, upstream c1433740f3ea / M138-LTS 60f004b926):
+  // objects created while the context was lost must not be valid after the
+  // context is restored, so the restore also starts a new "generation".
+  ++number_of_context_losses_;
+}
+
 uint32_t WebGLContextGroup::NumberOfContextLosses() const {
   return number_of_context_losses_;
 }

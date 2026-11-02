@@ -8577,6 +8577,9 @@ void WebGLRenderingContextBase::MaybeRestoreContext(TimerBase*) {
   restore_allowed_ = false;
   RemoveFromEvictedList(this);
 
+  // Objects created while the context was lost must not be usable now.
+  context_group_->OnContextRestored();
+
   SetupFlags();
   InitializeNewContext();
   MarkContextChanged(kCanvasContextChanged,

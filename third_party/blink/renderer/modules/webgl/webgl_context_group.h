@@ -62,6 +62,10 @@ class WebGLContextGroup final : public GarbageCollected<WebGLContextGroup>,
   // created, in order to validate itself.
   uint32_t NumberOfContextLosses() const;
 
+  // Invalidates every object created before the context was restored
+  // (including those created while it was lost).
+  void OnContextRestored();
+
   void Trace(Visitor* visitor) const { visitor->Trace(contexts_); }
   const char* NameInHeapSnapshot() const override {
     return "WebGLContextGroup";
