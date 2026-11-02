@@ -193,6 +193,10 @@ class CORE_EXPORT SystemClipboard final
   void TakeSnapshot();
   void DropSnapshot();
 
+  // Resets the clipboard snapshot if a write operation occurs
+  // while the snapshot is active.
+  void ResetSnapshot();
+
   HeapMojoRemote<mojom::blink::ClipboardHost> clipboard_;
   // In some Linux environments, |buffer_| may equal ClipboardBuffer::kStandard
   // or kSelection.  In other platforms |buffer_| always equals

@@ -1119,6 +1119,7 @@ String FrameSelection::SelectedHTMLForClipboard() const {
   return CreateMarkup(range.StartPosition(), range.EndPosition(),
                       builder.SetShouldAnnotateForInterchange(true)
                           .SetShouldResolveURLs(kResolveNonLocalURLs)
+                          .SetShouldSkipUnselectableContent(true)
                           .Build());
 }
 

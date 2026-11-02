@@ -138,7 +138,11 @@ void SystemClipboard::ReadPlainText(
 
 void SystemClipboard::WritePlainText(const String& plain_text,
                                      SmartReplaceOption) {
-  DCHECK(!snapshot_);
+  if (RuntimeEnabledFeatures::ClipboardSnapshotResetOnWriteEnabled()) {
+    ResetSnapshot();
+  } else {
+    DCHECK(!snapshot_);
+  }
 
   if (!clipboard_.is_bound())
     return;
@@ -203,7 +207,11 @@ void SystemClipboard::ReadHTML(
 void SystemClipboard::WriteHTML(const String& markup,
                                 const KURL& document_url,
                                 SmartReplaceOption smart_replace_option) {
-  DCHECK(!snapshot_);
+  if (RuntimeEnabledFeatures::ClipboardSnapshotResetOnWriteEnabled()) {
+    ResetSnapshot();
+  } else {
+    DCHECK(!snapshot_);
+  }
 
   if (!clipboard_.is_bound())
     return;
@@ -222,7 +230,11 @@ void SystemClipboard::ReadSvg(
 }
 
 void SystemClipboard::WriteSvg(const String& markup) {
-  DCHECK(!snapshot_);
+  if (RuntimeEnabledFeatures::ClipboardSnapshotResetOnWriteEnabled()) {
+    ResetSnapshot();
+  } else {
+    DCHECK(!snapshot_);
+  }
 
   if (!clipboard_.is_bound())
     return;
@@ -273,7 +285,12 @@ String SystemClipboard::ReadImageAsImageMarkup(
 void SystemClipboard::WriteImageWithTag(Image* image,
                                         const KURL& url,
                                         const String& title) {
-  DCHECK(!snapshot_);
+  if (RuntimeEnabledFeatures::ClipboardSnapshotResetOnWriteEnabled()) {
+    ResetSnapshot();
+  } else {
+    DCHECK(!snapshot_);
+  }
+
   DCHECK(image);
 
   if (!clipboard_.is_bound())
@@ -318,7 +335,11 @@ void SystemClipboard::WriteImageWithTag(Image* image,
 }
 
 void SystemClipboard::WriteImage(const SkBitmap& bitmap) {
-  DCHECK(!snapshot_);
+  if (RuntimeEnabledFeatures::ClipboardSnapshotResetOnWriteEnabled()) {
+    ResetSnapshot();
+  } else {
+    DCHECK(!snapshot_);
+  }
 
   if (!clipboard_.is_bound())
     return;
@@ -360,7 +381,12 @@ String SystemClipboard::ReadDataTransferCustomData(const String& type) {
 }
 
 void SystemClipboard::WriteDataObject(DataObject* data_object) {
-  DCHECK(!snapshot_);
+  if (RuntimeEnabledFeatures::ClipboardSnapshotResetOnWriteEnabled()) {
+    ResetSnapshot();
+  } else {
+    DCHECK(!snapshot_);
+  }
+
   DCHECK(data_object);
   if (!clipboard_.is_bound())
     return;
@@ -394,7 +420,12 @@ void SystemClipboard::WriteDataObject(DataObject* data_object) {
 }
 
 void SystemClipboard::CommitWrite() {
-  DCHECK(!snapshot_);
+  if (RuntimeEnabledFeatures::ClipboardSnapshotResetOnWriteEnabled()) {
+    ResetSnapshot();
+  } else {
+    DCHECK(!snapshot_);
+  }
+
   if (!clipboard_.is_bound())
     return;
   clipboard_->CommitWrite();
@@ -431,7 +462,11 @@ void SystemClipboard::ReadUnsanitizedCustomFormat(
 
 void SystemClipboard::WriteUnsanitizedCustomFormat(const String& type,
                                                    mojo_base::BigBuffer data) {
-  DCHECK(!snapshot_);
+  if (RuntimeEnabledFeatures::ClipboardSnapshotResetOnWriteEnabled()) {
+    ResetSnapshot();
+  } else {
+    DCHECK(!snapshot_);
+  }
 
   if (!clipboard_.is_bound() ||
       data.size() >= mojom::blink::ClipboardHost::kMaxDataSize) {
@@ -469,6 +504,12 @@ void SystemClipboard::DropSnapshot() {
   --snapshot_count_;
   if (snapshot_count_ == 0) {
     snapshot_.reset();
+  }
+}
+
+void SystemClipboard::ResetSnapshot() {
+  if (snapshot_) {
+    snapshot_ = std::make_unique<Snapshot>();
   }
 }
 

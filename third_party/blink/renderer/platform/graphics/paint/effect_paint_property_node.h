@@ -212,6 +212,9 @@ class PLATFORM_EXPORT EffectPaintPropertyNode final
     return state_.backdrop_filter_info->mask_element_id;
   }
 
+  bool HasReferenceFilter() const {
+    return state_.filter.HasReferenceFilter();
+  }
   bool HasFilterThatMovesPixels() const {
     return state_.filter.HasFilterThatMovesPixels();
   }
