@@ -676,6 +676,13 @@ VideoFrame* VideoFrame::Create(ScriptState* script_state,
     return nullptr;
   }
 
+  media::VideoTransformation transformation = media::kNoTransformation;
+  bool transformed = false;
+  if (RuntimeEnabledFeatures::WebCodecsOrientationEnabled()) {
+    transformation = media::VideoTransformation(init->rotation(), init->flip());
+    transformed = transformation != media::kNoTransformation;
+  }
+
   constexpr char kAlphaDiscard[] = "discard";
 
   // Special case <video> and VideoFrame to directly use the underlying frame.
@@ -717,7 +724,7 @@ VideoFrame* VideoFrame::Create(ScriptState* script_state,
     // We can't modify frame metadata directly since there may be other owners
     // accessing these fields concurrently.
     if (init->hasTimestamp() || init->hasDuration() || force_opaque ||
-        init->hasVisibleRect() || init->hasDisplayWidth()) {
+        init->hasVisibleRect() || transformed || init->hasDisplayWidth()) {
       auto wrapped_frame = media::VideoFrame::WrapVideoFrame(
           source_frame, wrapped_format, parsed_init.visible_rect,
           parsed_init.display_size);
@@ -742,6 +749,12 @@ VideoFrame* VideoFrame::Create(ScriptState* script_state,
         wrapped_frame->metadata().frame_duration =
             base::Microseconds(init->duration());
       }
+      if (transformed) {
+        wrapped_frame->metadata().transformation =
+            wrapped_frame->metadata()
+                .transformation.value_or(media::kNoTransformation)
+                .add(transformation);
+      }
       source_frame = std::move(wrapped_frame);
     }
 
@@ -754,8 +767,7 @@ VideoFrame* VideoFrame::Create(ScriptState* script_state,
       // Note: It's possible for another realm (Worker) to destroy our handle if
       // this frame was transferred via BroadcastChannel to multiple realms.
       if (local_handle && local_handle->sk_image() && !force_opaque &&
-          !init->hasVisibleRect() && !init->hasDisplayWidth() &&
-          !init->hasDisplayHeight()) {
+          !init->hasVisibleRect() && !transformed && !init->hasDisplayWidth()) {
         sk_image = local_handle->sk_image();
       }
     }
@@ -904,10 +916,8 @@ VideoFrame* VideoFrame::Create(ScriptState* script_state,
   if (init->hasDuration()) {
     frame->metadata().frame_duration = base::Microseconds(init->duration());
   }
-  if (orientation != ImageOrientationEnum::kDefault) {
-    frame->metadata().transformation =
-        ImageOrientationToVideoTransformation(orientation);
-  }
+  frame->metadata().transformation =
+      ImageOrientationToVideoTransformation(orientation).add(transformation);
   return MakeGarbageCollected<VideoFrame>(
       base::MakeRefCounted<VideoFrameHandle>(
           std::move(frame), std::move(sk_image),
@@ -1073,6 +1083,11 @@ VideoFrame* VideoFrame::Create(ScriptState* script_state,
     frame->metadata().frame_duration = base::Microseconds(init->duration());
   }
 
+  if (RuntimeEnabledFeatures::WebCodecsOrientationEnabled()) {
+    frame->metadata().transformation =
+        media::VideoTransformation(init->rotation(), init->flip());
+  }
+
   return MakeGarbageCollected<VideoFrame>(std::move(frame),
                                           ExecutionContext::From(script_state));
 }
@@ -1130,6 +1145,37 @@ DOMRectReadOnly* VideoFrame::visibleRect() {
   return visible_rect_.Get();
 }
 
+uint32_t VideoFrame::rotation() const {
+  auto local_frame = handle_->frame();
+  if (!local_frame) {
+    return 0;
+  }
+
+  const auto transform =
+      local_frame->metadata().transformation.value_or(media::kNoTransformation);
+  switch (transform.rotation) {
+    case media::VIDEO_ROTATION_0:
+      return 0;
+    case media::VIDEO_ROTATION_90:
+      return 90;
+    case media::VIDEO_ROTATION_180:
+      return 180;
+    case media::VIDEO_ROTATION_270:
+      return 270;
+  }
+}
+
+bool VideoFrame::flip() const {
+  auto local_frame = handle_->frame();
+  if (!local_frame) {
+    return false;
+  }
+
+  const auto transform =
+      local_frame->metadata().transformation.value_or(media::kNoTransformation);
+  return transform.mirrored;
+}
+
 uint32_t VideoFrame::displayWidth() const {
   auto local_frame = handle_->frame();
   if (!local_frame)
@@ -1137,8 +1183,7 @@ uint32_t VideoFrame::displayWidth() const {
 
   const auto transform =
       local_frame->metadata().transformation.value_or(media::kNoTransformation);
-  if (transform == media::kNoTransformation ||
-      transform.rotation == media::VIDEO_ROTATION_0 ||
+  if (transform.rotation == media::VIDEO_ROTATION_0 ||
       transform.rotation == media::VIDEO_ROTATION_180) {
     return local_frame->natural_size().width();
   }
@@ -1149,10 +1194,10 @@ uint32_t VideoFrame::displayHeight() const {
   auto local_frame = handle_->frame();
   if (!local_frame)
     return 0;
+
   const auto transform =
       local_frame->metadata().transformation.value_or(media::kNoTransformation);
-  if (transform == media::kNoTransformation ||
-      transform.rotation == media::VIDEO_ROTATION_0 ||
+  if (transform.rotation == media::VIDEO_ROTATION_0 ||
       transform.rotation == media::VIDEO_ROTATION_180) {
     return local_frame->natural_size().height();
   }
