@@ -38,6 +38,7 @@
 #include "third_party/blink/renderer/core/editing/visible_units.h"
 #include "third_party/blink/renderer/core/frame/local_frame.h"
 #include "third_party/blink/renderer/core/html/html_span_element.h"
+#include "third_party/blink/renderer/platform/runtime_enabled_features.h"
 
 namespace blink {
 
@@ -269,7 +270,12 @@ void InsertTextCommand::DoApply(EditingState* editing_state) {
 
   SelectionInDOMTree::Builder builder;
   const VisibleSelection& selection = EndingVisibleSelection();
-  builder.SetAffinity(selection.Affinity());
+  if (RuntimeEnabledFeatures::CaretWithTextAffinityUpstreamEnabled() &&
+      text_ == " " && !IsRichlyEditablePosition(start_position)) {
+    builder.SetAffinity(TextAffinity::kUpstreamIfPossible);
+  } else {
+    builder.SetAffinity(selection.Affinity());
+  }
   if (selection.End().IsNotNull())
     builder.Collapse(selection.End());
   SetEndingSelection(SelectionForUndoStep::From(builder.Build()));
