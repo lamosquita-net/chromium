@@ -297,7 +297,14 @@ InterpolationValue CSSInterpolationType::MaybeConvertCustomPropertyDeclaration(
 
   const CSSValue* value = &declaration;
   value = css_environment.Resolve(GetProperty(), value);
-  DCHECK(value) << "CSSVarCycleInterpolationType should have handled nullptr";
+
+  if (!value) {
+    // The custom property is in a cycle. This is supposed to be handled
+    // by CSSVarCycleInterpolationType, but we can still reach here when
+    // neutral keyframes are involved.
+    // (FlyWeb: upstream 70c9c1f16b, crbug.com/433196586.)
+    value = cssvalue::CSSUnsetValue::Create();
+  }
 
   if (declaration.IsRevertValue()) {
     conversion_checkers.push_back(

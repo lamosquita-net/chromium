@@ -60,7 +60,14 @@ InterpolationValue CSSVarCycleInterpolationType::MaybeConvertSingle(
     const InterpolationEnvironment& environment,
     const InterpolationValue& underlying,
     ConversionCheckers& conversion_checkers) const {
-  const CSSValue& value = *To<CSSPropertySpecificKeyframe>(keyframe).Value();
+  // FlyWeb (upstream 70c9c1f16b, crbug.com/433196586): neutral keyframes
+  // have no value.
+  const CSSValue* value_ptr = To<CSSPropertySpecificKeyframe>(keyframe).Value();
+  if (!value_ptr) {
+    DCHECK(keyframe.IsNeutral());
+    return nullptr;
+  }
+  const CSSValue& value = *value_ptr;
 
   // It is only possible to form a cycle if the value points to something else.
   // This is only possible with var(), or with revert-[layer] which may revert
