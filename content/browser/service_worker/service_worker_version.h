@@ -862,8 +862,10 @@ class CONTENT_EXPORT ServiceWorkerVersion
     base::Time start_time;
     base::TimeTicks start_time_ticks;
     ServiceWorkerMetrics::EventType event_type;
-    // Points to this request's entry in |request_timeouts_|.
-    std::set<InflightRequestTimeoutInfo>::iterator timeout_iter;
+    // Points to this request's entry in |request_timeouts_|. Please invalidate
+    // this when the corresponding entry is removed from `request_timeouts_`
+    // (FlyWeb FS.39, upstream 405dcf07fd1).
+    std::optional<std::set<InflightRequestTimeoutInfo>::iterator> timeout_iter;
   };
 
   // The timeout timer interval.
