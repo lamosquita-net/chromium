@@ -780,7 +780,7 @@ bool ContentSecurityPolicy::AllowRequest(
   }
 
   std::optional<CSPDirectiveName> type =
-      GetDirectiveTypeFromRequestContextType(request_context);
+      GetDirectiveTypeFromRequestContextType(context);
 
   if (!type)
     return true;

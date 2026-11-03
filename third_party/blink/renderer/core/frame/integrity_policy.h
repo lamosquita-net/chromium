@@ -7,6 +7,7 @@
 
 #include "services/network/public/mojom/fetch_api.mojom-blink-forward.h"
 #include "third_party/blink/renderer/core/core_export.h"
+#include "third_party/blink/renderer/platform/loader/fetch/integrity_metadata.h"
 
 namespace network {
 struct IntegrityPolicy;
@@ -17,7 +18,8 @@ namespace blink {
 class KURL;
 class ExecutionContext;
 class DOMWrapperWorld;
-struct IntegrityMetadataSet;
+// FlyWeb (level 138): IntegrityMetadataSet is a HashSet alias in the 128
+// (integrity_metadata.h), not a struct.
 
 class IntegrityPolicy {
  public:

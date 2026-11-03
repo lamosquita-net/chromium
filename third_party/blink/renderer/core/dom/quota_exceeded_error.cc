@@ -43,7 +43,9 @@ void QuotaExceededError::Throw(ExceptionState& exception_state,
                                std::optional<double> quota,
                                std::optional<double> requested) {
   if (RuntimeEnabledFeatures::QuotaExceededErrorUpdateEnabled()) {
-    v8::Isolate* isolate = exception_state.GetIsolate();
+    // FlyWeb (level 138): ExceptionState::GetIsolate() is protected in the
+    // 128; the exception is thrown into the isolate of the calling thread.
+    v8::Isolate* isolate = v8::Isolate::TryGetCurrent();
     if (!isolate) {
       // FlyWeb: record the error even without an isolate (upstream returns
       // silently; with the 128 ExceptionState the caller would see success).

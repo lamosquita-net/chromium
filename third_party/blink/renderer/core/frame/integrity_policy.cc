@@ -7,7 +7,6 @@
 #include "base/containers/contains.h"
 #include "services/network/public/cpp/integrity_policy.h"
 #include "services/network/public/cpp/request_destination.h"
-#include "services/network/public/mojom/integrity_algorithm.mojom-blink.h"
 #include "services/network/public/mojom/integrity_policy.mojom-blink.h"
 #include "third_party/blink/public/mojom/fetch/fetch_api_request.mojom-blink.h"
 #include "third_party/blink/renderer/core/execution_context/execution_context.h"

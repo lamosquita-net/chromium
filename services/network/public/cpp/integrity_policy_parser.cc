@@ -6,6 +6,7 @@
 
 #include <string>
 
+#include "base/strings/cstring_view.h"
 #include "base/strings/stringprintf.h"
 #include "net/http/http_response_headers.h"
 #include "net/http/structured_headers.h"
@@ -74,8 +75,9 @@ IntegrityPolicy ParseIntegrityPolicyFromHeaders(
                                       ? "Integrity-Policy"
                                       : "Integrity-Policy-Report-Only";
 
-  const std::string integrity_policy_header =
-      headers.GetNormalizedHeader(header_name).value_or("");
+  // FlyWeb (level 138): the 128 GetNormalizedHeader() takes an out parameter.
+  std::string integrity_policy_header;
+  headers.GetNormalizedHeader(header_name, &integrity_policy_header);
   if (integrity_policy_header.empty()) {
     return parsed_policy;
   }

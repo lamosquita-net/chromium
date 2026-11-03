@@ -63,7 +63,10 @@ static void SwapInNodePreservingAttributesAndChildren(
   // Make a copy of element_to_replace's attributes since setting attributes
   // on new_element could run script and thus modify attributes on either
   // element.
-  AttributeVector attributes(element_to_replace.Attributes());
+  AttributeVector attributes;
+  for (const Attribute& attr : element_to_replace.Attributes()) {
+    attributes.push_back(attr);
+  }
   for (const Attribute& attr : attributes) {
     new_element->setAttribute(attr.GetName(), attr.Value());
   }
