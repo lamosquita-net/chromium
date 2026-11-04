@@ -438,7 +438,8 @@ class HDRProxy {
 GpuDataManagerImplPrivate::GpuDataManagerImplPrivate(GpuDataManagerImpl* owner)
     : owner_(owner),
 #if BUILDFLAG(IS_MAC)
-      supports_gpu_mode_hardware_gl_(false),
+      // FlyWeb B1d: Ganesh/GL over ANGLE Metal on macOS 10.14 (no Graphite).
+      supports_gpu_mode_hardware_gl_(features::IsMacOSBelow10_15()),
 #elif BUILDFLAG(IS_ANDROID)
       supports_gpu_mode_hardware_gl_(
           !base::android::device_info::is_desktop() ||

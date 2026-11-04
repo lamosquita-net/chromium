@@ -201,8 +201,9 @@ std::vector<GpuFeatureData> GetGpuFeatureData(
       "webgpu",
       SafeGetFeatureStatus(
           gpu_feature_info, gpu::GPU_FEATURE_TYPE_ACCELERATED_WEBGPU,
-          !command_line.HasSwitch(switches::kEnableUnsafeWebGPU) &&
-              !base::FeatureList::IsEnabled(::features::kWebGPUService)),
+          (!command_line.HasSwitch(switches::kEnableUnsafeWebGPU) &&
+           !base::FeatureList::IsEnabled(::features::kWebGPUService)) ||
+              ::features::IsMacOSBelow10_15()),  // FlyWeb B1d
       DisableInfo::Problem(
           "WebGPU has been disabled via blocklist or the command line."),
       false);
