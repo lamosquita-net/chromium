@@ -204,7 +204,9 @@ ImmersiveModeControllerCocoa::ImmersiveModeControllerCocoa(
   // A style of NSTitlebarSeparatorStyleAutomatic (default) will show a black
   // line separator when removing the NSWindowStyleMaskFullSizeContentView style
   // bit. We do not want a separator.
-  browser_window_.titlebarSeparatorStyle = NSTitlebarSeparatorStyleNone;
+  if (@available(macOS 11, *)) {  // FlyWeb B1d: macOS 11+ property.
+    browser_window_.titlebarSeparatorStyle = NSTitlebarSeparatorStyleNone;
+  }
 
   // Create a new NSTitlebarAccessoryViewController that will host the
   // overlay_view_.
@@ -264,7 +266,9 @@ ImmersiveModeControllerCocoa::~ImmersiveModeControllerCocoa() {
   overlay_window_.contentView = overlay_content_view_;
   [immersive_mode_titlebar_view_controller_ removeFromParentViewController];
   browser_window_.styleMask |= NSWindowStyleMaskFullSizeContentView;
-  browser_window_.titlebarSeparatorStyle = NSTitlebarSeparatorStyleAutomatic;
+  if (@available(macOS 11, *)) {  // FlyWeb B1d: macOS 11+ property.
+    browser_window_.titlebarSeparatorStyle = NSTitlebarSeparatorStyleAutomatic;
+  }
 }
 
 void ImmersiveModeControllerCocoa::Init() {
@@ -629,9 +633,12 @@ double ImmersiveModeControllerCocoa::GetOffscreenYOrigin() {
   // where the y origin is not 0, such as vertically aligned displays. Make sure
   // to make it past the safe area insets, otherwise some portion of the window
   // may still be displayed.
+  CGFloat safe_area_top = 0;
+  if (@available(macOS 12, *)) {  // FlyWeb B1d: safeAreaInsets is macOS 12+.
+    safe_area_top = browser_window_.screen.safeAreaInsets.top;
+  }
   return browser_window_.screen.frame.size.height +
-         browser_window_.frame.origin.y +
-         browser_window_.screen.safeAreaInsets.top;
+         browser_window_.frame.origin.y + safe_area_top;
 }
 
 void ImmersiveModeControllerCocoa::

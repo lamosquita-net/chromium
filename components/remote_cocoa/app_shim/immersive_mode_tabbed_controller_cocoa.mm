@@ -88,7 +88,9 @@ ImmersiveModeTabbedControllerCocoa::~ImmersiveModeTabbedControllerCocoa() {
   SetAlwaysShowTrafficLights(browser_window(), false);
   StopObservingChildWindows(tab_window_);
   browser_window().toolbar = nil;
-  browser_window().toolbarStyle = NSWindowToolbarStyleAutomatic;
+  if (@available(macOS 11, *)) {  // FlyWeb B1d: macOS 11+ property.
+    browser_window().toolbarStyle = NSWindowToolbarStyleAutomatic;
+  }
   BridgedContentView* tab_content_view = tab_content_view_;
   [tab_content_view removeFromSuperview];
   tab_window_.contentView = tab_content_view;
@@ -148,7 +150,9 @@ void ImmersiveModeTabbedControllerCocoa::Init() {
   // This style is available since macOS 11.0. It is a no-op for Chrome on
   // pre-macOS 26. However, if Chrome starts using NSToolbarItem in the future,
   // their height will be affected by this style.
-  browser_window().toolbarStyle = NSWindowToolbarStyleUnifiedCompact;
+  if (@available(macOS 11, *)) {  // FlyWeb B1d: macOS 11+ property.
+    browser_window().toolbarStyle = NSWindowToolbarStyleUnifiedCompact;
+  }
 
   // `UpdateToolbarVisibility()` will make the toolbar visible as necessary.
   UpdateToolbarVisibility(last_used_style());
