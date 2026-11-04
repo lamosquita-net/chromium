@@ -1186,8 +1186,10 @@ void CARendererLayerTree::ContentLayer::CommitToCA(
     update_opacity = old_layer_->opacity_ != opacity_;
     update_ca_filter = old_layer_->ca_filter_ != ca_filter_;
     if (type_ == CALayerType::kVideo) {
-      av_layer_.preventsCapture =
-          protected_video_type_ != gfx::ProtectedVideoType::kClear;
+      if (@available(macOS 13.1, *)) {  // FlyWeb B1d: macOS 13.1+ property.
+        av_layer_.preventsCapture =
+            protected_video_type_ != gfx::ProtectedVideoType::kClear;
+      }
     }
   } else {
     switch (type_) {
@@ -1205,8 +1207,10 @@ void CARendererLayerTree::ContentLayer::CommitToCA(
         av_layer_.geometryFlipped = YES;
         ca_layer_ = av_layer_;
         av_layer_.videoGravity = AVLayerVideoGravityResize;
-        if (protected_video_type_ != gfx::ProtectedVideoType::kClear) {
-          av_layer_.preventsCapture = true;
+        if (@available(macOS 13.1, *)) {  // FlyWeb B1d: macOS 13.1+.
+          if (protected_video_type_ != gfx::ProtectedVideoType::kClear) {
+            av_layer_.preventsCapture = true;
+          }
         }
         break;
       case CALayerType::kDefault:
