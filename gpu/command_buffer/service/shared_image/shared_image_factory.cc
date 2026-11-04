@@ -253,6 +253,10 @@ SharedImageFactory::SharedImageFactory(
       gr_context_type_(context_state_ ? context_state_->gr_context_type()
                                       : GrContextType::kNone),
       gpu_preferences_(gpu_preferences),
+      // FlyWeb B1c: IOSurface texture target (rectangle on ANGLE GL), from 150.
+#if BUILDFLAG(IS_MAC)
+      texture_target_for_io_surfaces_(GetTextureTargetForIOSurfaces()),
+#endif
       workarounds_(workarounds) {
 
   factory_ref_ = base::MakeRefCounted<SharedImageFactoryRef>(this);
@@ -423,7 +427,12 @@ SharedImageFactory::SharedImageFactory(
         std::make_unique<IOSurfaceImageBackingFactory>(
             gr_context_type_, context_state_->GetMaxTextureSize(),
             feature_info.get(), context_state_->progress_reporter(),
+            // FlyWeb B1c
+#if BUILDFLAG(IS_MAC)
+            texture_target_for_io_surfaces_
+#else
             GL_TEXTURE_2D
+#endif
         );
     factories_.push_back(std::move(iosurface_backing_factory));
   }
@@ -979,6 +988,12 @@ gpu::SharedImageCapabilities SharedImageFactory::MakeCapabilities() {
       D3DImageBackingFactory::IsSwapChainSupported(
           gpu_preferences_, context_state_->dawn_context_provider());
 #endif  // BUILDFLAG(IS_WIN)
+
+  // FlyWeb B1c: IOSurface texture target (rectangle on ANGLE GL), from 150.
+#if BUILDFLAG(IS_MAC)
+  shared_image_caps.texture_target_for_io_surfaces =
+      texture_target_for_io_surfaces_;
+#endif
 
   return shared_image_caps;
 }
