@@ -76,8 +76,19 @@ scoped_refptr<base::TaskRunner> IconLoader::GetReadIconTaskRunner() {
 }
 
 void IconLoader::ReadIcon() {
-  UTType* type = [UTType typeWithIdentifier:base::SysUTF8ToNSString(group_)];
-  NSImage* icon = [NSWorkspace.sharedWorkspace iconForContentType:type];
+  NSImage* icon = nil;
+  if (@available(macOS 11, *)) {
+    UTType* type = [UTType typeWithIdentifier:base::SysUTF8ToNSString(group_)];
+    icon = [NSWorkspace.sharedWorkspace iconForContentType:type];
+  } else {
+    // FlyWeb B1d: UTType and iconForContentType: are macOS 11+; group_ is a
+    // UTI here, which iconForFileType: accepts.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    icon = [NSWorkspace.sharedWorkspace
+        iconForFileType:base::SysUTF8ToNSString(group_)];
+#pragma clang diagnostic pop
+  }
 
   gfx::Image image;
   if (icon_size_ == ALL) {
