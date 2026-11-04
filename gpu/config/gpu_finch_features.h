@@ -245,6 +245,9 @@ GPU_CONFIG_EXPORT bool IsDrDcEnabled(
     const gpu::GpuFeatureInfo& gpu_feature_info);
 GPU_CONFIG_EXPORT bool ShouldEnableDrDc();
 GPU_CONFIG_EXPORT bool NeedThreadSafeAndroidMedia();
+// FlyWeb B1d: true on macOS 10.14 (no Graphite, no WebGPU).
+GPU_CONFIG_EXPORT bool IsMacOSBelow10_15();
+
 GPU_CONFIG_EXPORT bool IsSkiaGraphiteEnabled(
     const base::CommandLine* command_line);
 GPU_CONFIG_EXPORT bool IsSkiaGraphiteWinIntelEnabled();

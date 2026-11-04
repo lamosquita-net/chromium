@@ -270,8 +270,9 @@ GpuPreferences ParseGpuPreferences(const base::CommandLine* command_line) {
     }
   }
   gpu_preferences.enable_webgpu =
-      command_line->HasSwitch(switches::kEnableUnsafeWebGPU) ||
-      base::FeatureList::IsEnabled(features::kWebGPUService);
+      !features::IsMacOSBelow10_15() &&  // FlyWeb B1d: no WebGPU on 10.14.
+      (command_line->HasSwitch(switches::kEnableUnsafeWebGPU) ||
+       base::FeatureList::IsEnabled(features::kWebGPUService));
   gpu_preferences.enable_unsafe_webgpu =
       command_line->HasSwitch(switches::kEnableUnsafeWebGPU);
   gpu_preferences.enable_webgpu_developer_features =
@@ -331,7 +332,9 @@ GpuPreferences ParseGpuPreferences(const base::CommandLine* command_line) {
 
 GrContextType ParseDefaultGrContextType(const base::CommandLine* command_line) {
 #if BUILDFLAG(SKIA_USE_DAWN)
-  if (base::FeatureList::IsEnabled(features::kLateGraphiteFeatureCheck)) {
+  // FlyWeb B1d: no Graphite on macOS 10.14.
+  if (features::IsMacOSBelow10_15()) {
+  } else if (base::FeatureList::IsEnabled(features::kLateGraphiteFeatureCheck)) {
     // With late check, only the disable flag gates Graphite; the full
     // feature/device check is deferred to the GPU process post-blocklist.
     if (!command_line->HasSwitch(switches::kDisableSkiaGraphite)) {

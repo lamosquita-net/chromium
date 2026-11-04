@@ -20,6 +20,10 @@
 #include "ui/gl/gl_switches.h"
 #include "ui/gl/gl_utils.h"
 
+#if BUILDFLAG(IS_MAC)
+#include "base/mac/mac_util.h"  // FlyWeb B1d
+#endif
+
 #if BUILDFLAG(IS_ANDROID)
 #include "base/android/android_info.h"
 #include "base/android/device_info.h"
@@ -583,6 +587,10 @@ bool NeedThreadSafeAndroidMedia() {
 namespace {
 bool IsSkiaGraphiteSupportedByDevice() {
 #if BUILDFLAG(IS_APPLE)
+  // FlyWeb B1d: Graphite (Skia Metal and Dawn) needs macOS 10.15+.
+  if (IsMacOSBelow10_15()) {
+    return false;
+  }
   return UsePassthroughCommandDecoder();
 #elif BUILDFLAG(IS_ANDROID)
   // Desktop Android isn't ready to pick up the fieldtrial_testing_config.json
@@ -617,6 +625,15 @@ bool IsSkiaGraphiteSupportedByDevice() {
 #endif
 }
 }  // namespace
+
+// FlyWeb B1d: Graphite and WebGPU are off on macOS 10.14 (Metal 2.1).
+bool IsMacOSBelow10_15() {
+#if BUILDFLAG(IS_MAC)
+  return base::mac::MacOSVersion() < 10'15'00;
+#else
+  return false;
+#endif
+}
 
 bool IsSkiaGraphiteEnabled(const base::CommandLine* command_line) {
   // Force disabling graphite if --disable-skia-graphite flag is specified.
