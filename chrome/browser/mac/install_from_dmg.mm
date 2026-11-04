@@ -194,7 +194,7 @@ RunningFromDiskImageResult IsPathOnReadOnlyDiskImage(const char path[]) {
   dmg_bsd_device_name = dmg_bsd_device_name.substr(dev_root.size());
 
   base::apple::ScopedCFTypeRef<CFMutableDictionaryRef> match_dict(
-      IOBSDNameMatching(kIOMainPortDefault, /*options=*/0,
+      IOBSDNameMatching(MACH_PORT_NULL /* FlyWeb B1b: kIOMainPortDefault is macOS 12+ */, /*options=*/0,
                         dmg_bsd_device_name.c_str()));
   if (!match_dict) {
     LOG(ERROR) << "IOBSDNameMatching " << dmg_bsd_device_name;
@@ -203,7 +203,7 @@ RunningFromDiskImageResult IsPathOnReadOnlyDiskImage(const char path[]) {
 
   base::mac::ScopedIOObject<io_iterator_t> iterator;
   kern_return_t kr = IOServiceGetMatchingServices(
-      kIOMainPortDefault, match_dict.release(), iterator.InitializeInto());
+      MACH_PORT_NULL /* FlyWeb B1b: kIOMainPortDefault is macOS 12+ */, match_dict.release(), iterator.InitializeInto());
   if (kr != KERN_SUCCESS) {
     MACH_LOG(ERROR, kr) << "IOServiceGetMatchingServices";
     return {.status = DiskImageStatus::kFailure};

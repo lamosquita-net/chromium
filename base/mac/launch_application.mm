@@ -76,9 +76,11 @@ NSWorkspaceOpenConfiguration* GetOpenConfiguration(
   if (options.hidden_in_background) {
     config.addsToRecentItems = NO;
     config.hides = YES;
-    config._additionalLSOpenOptions = @{
-      apple::CFToNSPtrCast(_kLSOpenOptionBackgroundLaunchKey) : @YES,
-    };
+    if (&_kLSOpenOptionBackgroundLaunchKey != nullptr) {  // FlyWeb B1b
+      config._additionalLSOpenOptions = @{
+        apple::CFToNSPtrCast(_kLSOpenOptionBackgroundLaunchKey) : @YES,
+      };
+    }
   }
 
   return config;

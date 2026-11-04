@@ -449,10 +449,12 @@ bool IOSurfaceSetColorSpace(IOSurfaceRef io_surface,
   // https://crbug.com/1061723: Discussion of issues related to HLG.
   if (color_space.GetPrimaryID() == ColorSpace::PrimaryID::BT2020 &&
       color_space.GetMatrixID() == ColorSpace::MatrixID::BT2020_NCL) {
-    if (color_space.GetTransferID() == ColorSpace::TransferID::PQ) {
-      color_space_name = kCGColorSpaceITUR_2100_PQ;
-    } else if (color_space.GetTransferID() == ColorSpace::TransferID::HLG) {
-      color_space_name = kCGColorSpaceITUR_2100_HLG;
+    if (__builtin_available(macOS 10.15.4, *)) {  // FlyWeb B1b
+      if (color_space.GetTransferID() == ColorSpace::TransferID::PQ) {
+        color_space_name = kCGColorSpaceITUR_2100_PQ;
+      } else if (color_space.GetTransferID() == ColorSpace::TransferID::HLG) {
+        color_space_name = kCGColorSpaceITUR_2100_HLG;
+      }
     }
   }
 

@@ -180,7 +180,7 @@ std::optional<EnergyImpactCoefficients> ReadCoefficientsForBoardIdOrDefault(
 
 std::optional<std::string> GetBoardIdForThisMachine() {
   base::mac::ScopedIOObject<io_service_t> platform_expert(
-      IOServiceGetMatchingService(kIOMainPortDefault,
+      IOServiceGetMatchingService(MACH_PORT_NULL /* FlyWeb B1b: kIOMainPortDefault is macOS 12+ */,
                                   IOServiceMatching("IOPlatformExpertDevice")));
   if (!platform_expert)
     return std::nullopt;

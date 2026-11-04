@@ -26,7 +26,7 @@ bool IOPMPowerSourceSamplingEventSource::Start(SamplingEventCallback callback) {
   callback_ = callback;
 
   service_.reset(IOServiceGetMatchingService(
-      kIOMainPortDefault, IOServiceMatching("IOPMPowerSource")));
+      MACH_PORT_NULL /* FlyWeb B1b: kIOMainPortDefault is macOS 12+ */, IOServiceMatching("IOPMPowerSource")));
 
   if (!service_) {
     VLOG(1) << "IOPMPowerSource service not found. This is expected on desktop "
@@ -34,7 +34,7 @@ bool IOPMPowerSourceSamplingEventSource::Start(SamplingEventCallback callback) {
     return false;
   }
 
-  notify_port_.reset(IONotificationPortCreate(kIOMainPortDefault));
+  notify_port_.reset(IONotificationPortCreate(MACH_PORT_NULL /* FlyWeb B1b: kIOMainPortDefault is macOS 12+ */));
   if (!notify_port_.is_valid()) {
     LOG(ERROR) << "Could not create a notification port";
     return false;

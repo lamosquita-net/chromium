@@ -81,7 +81,18 @@ OSStatus CopyCertChain(
     // building a cert chain, not whether it is trusted (the server is the
     // only one that can decide that.)
     std::ignore = SecTrustEvaluateWithError(trust.get(), nullptr);
-    out_cert_chain->reset(SecTrustCopyCertificateChain(trust.get()));
+    if (__builtin_available(macOS 12, *)) {
+      out_cert_chain->reset(SecTrustCopyCertificateChain(trust.get()));
+    } else {
+      // FlyWeb B1b: SecTrustCopyCertificateChain is macOS 12+.
+      CFMutableArrayRef chain =
+          CFArrayCreateMutable(nullptr, 0, &kCFTypeArrayCallBacks);
+      const CFIndex n = SecTrustGetCertificateCount(trust.get());
+      for (CFIndex i = 0; i < n; ++i) {
+        CFArrayAppendValue(chain, SecTrustGetCertificateAtIndex(trust.get(), i));
+      }
+      out_cert_chain->reset(chain);
+    }
   }
   return result;
 }

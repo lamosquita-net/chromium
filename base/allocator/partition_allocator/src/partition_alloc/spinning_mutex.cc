@@ -4,6 +4,10 @@
 
 #include "partition_alloc/spinning_mutex.h"
 
+#include <sys/sysctl.h>
+#include <stdlib.h>
+#include <atomic>
+
 #include <atomic>
 #include <optional>
 
@@ -317,7 +321,19 @@ os_unfair_lock_lock_with_options(os_unfair_lock* lock,
 }
 
 void SpinningMutex::LockSlow() {
-  if (os_unfair_lock_lock_with_options) {
+  // FlyWeb B1b: OS_UNFAIR_LOCK_ADAPTIVE_SPIN is macOS 10.15+ (Darwin 19); on
+  // 10.14 libplatform traps with "Invalid options". __builtin_available must
+  // not be used here: its first call allocates and re-enters this lock.
+  static std::atomic<int> options_ok{-1};
+  int ok = options_ok.load(std::memory_order_relaxed);
+  if (ok < 0) {
+    char release[32] = {};
+    size_t size = sizeof(release) - 1;
+    ok = sysctlbyname("kern.osrelease", release, &size, nullptr, 0) == 0 &&
+         atoi(release) >= 19;
+    options_ok.store(ok, std::memory_order_relaxed);
+  }
+  if (ok && os_unfair_lock_lock_with_options) {
     const os_unfair_lock_options_t options =
         static_cast<os_unfair_lock_options_t>(
             OS_UNFAIR_LOCK_DATA_SYNCHRONIZATION | OS_UNFAIR_LOCK_ADAPTIVE_SPIN);

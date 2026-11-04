@@ -29,6 +29,12 @@
 #include "util/mach/excServer.h"
 #include "util/mach/exception_behaviors.h"
 #include "util/mach/mach_exc.h"
+
+// FlyWeb B1b: weak so dyld loads on macOS < 11.3; the call is checked below.
+extern "C" kern_return_t task_identity_token_get_task_port(
+    task_id_token_t token,
+    task_flavor_t flavor,
+    task_t* task_port) __attribute__((weak_import));
 #include "util/mach/mach_excServer.h"
 #include "util/mach/mach_message.h"
 
@@ -500,7 +506,8 @@ bool ExcServer<Traits>::MachMessageServerFunction(
         }
 
         task_t task_port = TASK_NULL;
-        if (in_request->task_id_token_t.name != MACH_PORT_NULL) {
+        if (in_request->task_id_token_t.name != MACH_PORT_NULL &&
+            task_identity_token_get_task_port != nullptr) {  // FlyWeb B1b
           kr = task_identity_token_get_task_port(
               in_request->task_id_token_t.name,
               TASK_FLAVOR_CONTROL,
@@ -598,7 +605,8 @@ bool ExcServer<Traits>::MachMessageServerFunction(
         }
 
         task_t task_port = TASK_NULL;
-        if (in_request->task_id_token_t.name != MACH_PORT_NULL) {
+        if (in_request->task_id_token_t.name != MACH_PORT_NULL &&
+            task_identity_token_get_task_port != nullptr) {  // FlyWeb B1b
           kr = task_identity_token_get_task_port(
               in_request->task_id_token_t.name,
               TASK_FLAVOR_CONTROL,

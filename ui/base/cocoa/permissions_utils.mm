@@ -103,11 +103,17 @@ void CaptureScreenshot() {
 }  // namespace
 
 bool IsScreenCaptureAllowed() {
+  if (@available(macOS 10.15, *)) {  // FlyWeb B1b
     return CGPreflightScreenCaptureAccess();
+  }
+  return true;  // macOS 10.14 has no screen capture permission.
 }
 
 bool TryPromptUserForScreenCapture() {
+  if (@available(macOS 10.15, *)) {  // FlyWeb B1b
     return CGRequestScreenCaptureAccess();
+  }
+  return true;
 }
 
 void WarmScreenCapture() {

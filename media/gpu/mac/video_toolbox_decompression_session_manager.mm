@@ -294,7 +294,8 @@ bool VideoToolboxDecompressionSessionManager::CreateSession(
       const auto found = kFormatMap.find(pixel_format);
       if (found != kFormatMap.end()) {
         const auto compressed_format = found->second;
-        if (CVIsCompressedPixelFormatAvailable(compressed_format)) {
+        if (&CVIsCompressedPixelFormatAvailable != nullptr &&  // FlyWeb B1b
+            CVIsCompressedPixelFormatAvailable(compressed_format)) {
           pixel_format = compressed_format;
         }
       }

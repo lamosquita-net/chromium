@@ -22,7 +22,7 @@ double FromSMCFixedPoint(uint8_t* bytes, size_t fraction_bits) {
 // static
 std::unique_ptr<SMCReader> SMCReader::Create() {
   const base::mac::ScopedIOObject<io_service_t> smc_service(
-      IOServiceGetMatchingService(kIOMainPortDefault,
+      IOServiceGetMatchingService(MACH_PORT_NULL /* FlyWeb B1b: kIOMainPortDefault is macOS 12+ */,
                                   IOServiceMatching("AppleSMC")));
   base::mac::ScopedIOObject<io_object_t> connect;
   if (IOServiceOpen(smc_service.get(), mach_task_self(), 1,

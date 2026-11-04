@@ -162,8 +162,11 @@ class PosixSpawnFileActions {
   void Chdir(const char* path) {
     if (__builtin_available(macOS 26, *)) {
       DPSXCHECK(posix_spawn_file_actions_addchdir(&file_actions_, path));
-    } else {
+    } else if (__builtin_available(macOS 10.15, *)) {
       DPSXCHECK(posix_spawn_file_actions_addchdir_np(&file_actions_, path));
+    } else {
+      // FlyWeb B1b: no addchdir on macOS 10.14; the child keeps the cwd.
+      DLOG(WARNING) << "posix_spawn chdir unsupported on 10.14: " << path;
     }
   }
 #endif
@@ -347,7 +350,9 @@ Process LaunchProcess(const std::vector<std::string>& argv,
                                     : argv_cstr[0];
 
   if (options.enable_cpu_security_mitigations) {
-    DPSXCHECK(posix_spawnattr_set_csm_np(attr.get(), POSIX_SPAWN_NP_CSM_ALL));
+    if (__builtin_available(macOS 11, *)) {  // FlyWeb B1b
+      DPSXCHECK(posix_spawnattr_set_csm_np(attr.get(), POSIX_SPAWN_NP_CSM_ALL));
+    }
   }
 
   if (!options.current_directory.empty()) {

@@ -82,7 +82,7 @@ scoped_refptr<HidDeviceInfo> CreateDeviceInfo(
 }  // namespace
 
 HidServiceMac::HidServiceMac() : weak_factory_(this) {
-  notify_port_.reset(IONotificationPortCreate(kIOMainPortDefault));
+  notify_port_.reset(IONotificationPortCreate(MACH_PORT_NULL /* FlyWeb B1b: kIOMainPortDefault is macOS 12+ */));
   CFRunLoopAddSource(CFRunLoopGetMain(),
                      IONotificationPortGetRunLoopSource(notify_port_.get()),
                      kCFRunLoopDefaultMode);
@@ -159,7 +159,7 @@ HidServiceMac::OpenOnBlockingThread(scoped_refptr<HidDeviceInfo> device_info) {
   // IOServiceGetMatchingService consumes a reference to the matching dictionary
   // passed to it.
   base::mac::ScopedIOObject<io_service_t> service(
-      IOServiceGetMatchingService(kIOMainPortDefault, matching_dict.release()));
+      IOServiceGetMatchingService(MACH_PORT_NULL /* FlyWeb B1b: kIOMainPortDefault is macOS 12+ */, matching_dict.release()));
   if (!service.get()) {
     HID_LOG(DEBUG) << "IOService not found for ID: " << platform_device_id;
     return base::apple::ScopedCFTypeRef<IOHIDDeviceRef>();

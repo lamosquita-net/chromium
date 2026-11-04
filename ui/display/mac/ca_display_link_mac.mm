@@ -173,7 +173,9 @@ scoped_refptr<DisplayLinkMac> CADisplayLinkMac::GetForDisplay(
 
     objc_state->target = [[CADisplayLinkTarget alloc] init];
     objc_state->display_link =
-        SLSGetDisplayLink(display_id, objc_state->target, @selector(step:));
+        &SLSGetDisplayLink != nullptr  // FlyWeb B1b
+            ? SLSGetDisplayLink(display_id, objc_state->target, @selector(step:))
+            : nil;
 
     if (!objc_state->display_link) {
       TryRecordDisplayLinkCreation(display_id, /*success=*/false,

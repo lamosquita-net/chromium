@@ -126,7 +126,7 @@ std::optional<std::string> GetUsbDriverName(
 }  // namespace
 
 SerialDeviceEnumeratorMac::SerialDeviceEnumeratorMac() {
-  notify_port_.reset(IONotificationPortCreate(kIOMainPortDefault));
+  notify_port_.reset(IONotificationPortCreate(MACH_PORT_NULL /* FlyWeb B1b: kIOMainPortDefault is macOS 12+ */));
   CFRunLoopAddSource(CFRunLoopGetMain(),
                      IONotificationPortGetRunLoopSource(notify_port_.get()),
                      kCFRunLoopDefaultMode);

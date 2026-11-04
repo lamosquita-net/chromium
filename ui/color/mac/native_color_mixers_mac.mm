@@ -101,6 +101,19 @@ SkColor NSSystemColorToSkColor(NSColor* color) {
   return SkColor4f{gray_value, gray_value, gray_value, alpha_value}.toSkColor();
 }
 
+// FlyWeb B1b: -performAsCurrentDrawingAppearance: is macOS 11+.
+static void FlyWebPerformAsAppearance(NSAppearance* appearance,
+                                      void (^block)(void)) {
+  if (@available(macOS 11, *)) {
+    [appearance performAsCurrentDrawingAppearance:block];
+    return;
+  }
+  NSAppearance* saved = NSAppearance.currentAppearance;
+  NSAppearance.currentAppearance = appearance;
+  block();
+  NSAppearance.currentAppearance = saved;
+}
+
 }  // namespace
 
 void AddNativeCoreColorMixer(ColorProvider* provider,
@@ -111,7 +124,7 @@ void AddNativeCoreColorMixer(ColorProvider* provider,
         NSSystemColorToSkColor(NSColor.keyboardFocusIndicatorColor), 0x66)};
   };
 
-  [AppearanceForKey(key) performAsCurrentDrawingAppearance:load_colors];
+  FlyWebPerformAsAppearance(AppearanceForKey(key), load_colors);
 }
 
 void AddNativeColorSetInColorMixer(ColorMixer& mixer) {
@@ -160,7 +173,7 @@ void AddNativeUiColorMixer(ColorProvider* provider,
     mixer[kColorTableRowHighlight] = {kColorSysStateHoverOnSubtle};
   };
 
-  [AppearanceForKey(key) performAsCurrentDrawingAppearance:load_colors];
+  FlyWebPerformAsAppearance(AppearanceForKey(key), load_colors);
 }
 
 void AddNativePostprocessingMixer(ColorProvider* provider,

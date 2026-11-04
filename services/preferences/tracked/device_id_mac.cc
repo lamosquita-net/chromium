@@ -13,7 +13,7 @@
 
 MachineIdStatus GetDeterministicMachineSpecificId(std::string* machine_id) {
   base::mac::ScopedIOObject<io_service_t> platform_expert(
-      IOServiceGetMatchingService(kIOMainPortDefault,
+      IOServiceGetMatchingService(MACH_PORT_NULL /* FlyWeb B1b: kIOMainPortDefault is macOS 12+ */,
                                   IOServiceMatching("IOPlatformExpertDevice")));
   if (!platform_expert.get())
     return MachineIdStatus::FAILURE;

@@ -36,7 +36,7 @@ std::unique_ptr<BatteryLevelProvider> BatteryLevelProvider::Create() {
 std::optional<BatteryLevelProviderMac::BatteryState>
 BatteryLevelProviderMac::GetBatteryStateImpl() {
   const base::mac::ScopedIOObject<io_service_t> service(
-      IOServiceGetMatchingService(kIOMainPortDefault,
+      IOServiceGetMatchingService(MACH_PORT_NULL /* FlyWeb B1b: kIOMainPortDefault is macOS 12+ */,
                                   IOServiceMatching("IOPMPowerSource")));
   if (!service) {
     // Macs without a battery don't necessarily provide the IOPMPowerSource

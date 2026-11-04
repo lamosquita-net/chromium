@@ -27,8 +27,10 @@ base::TimeDelta GetNSScreenRefreshInterval(CGDirectDisplayID display_id) {
   NSScreen* screen = GetNSScreenFromDisplayID(display_id);
   base::TimeDelta interval;
 
-  if (screen) {
-    interval = base::Seconds(1) * screen.minimumRefreshInterval;
+  if (@available(macOS 12.0, *)) {  // FlyWeb B1b
+    if (screen) {
+      interval = base::Seconds(1) * screen.minimumRefreshInterval;
+    }
   }
 
   // For ExternalDisplayLinkMac, we start to use a display link before it's
@@ -48,10 +50,16 @@ void GetNSScreenRefreshIntervalRange(CGDirectDisplayID display_id,
                                      base::TimeDelta& granularity) {
   NSScreen* screen = GetNSScreenFromDisplayID(display_id);
 
-  if (screen) {
-    min_interval = base::Seconds(1) * screen.minimumRefreshInterval;
-    max_interval = base::Seconds(1) * screen.maximumRefreshInterval;
-    granularity = base::Seconds(1) * screen.displayUpdateGranularity;
+  bool has_range = false;  // FlyWeb B1b: these are macOS 12+.
+  if (@available(macOS 12.0, *)) {
+    has_range = true;
+  }
+  if (screen && has_range) {
+    if (@available(macOS 12.0, *)) {
+      min_interval = base::Seconds(1) * screen.minimumRefreshInterval;
+      max_interval = base::Seconds(1) * screen.maximumRefreshInterval;
+      granularity = base::Seconds(1) * screen.displayUpdateGranularity;
+    }
   } else {
     min_interval = max_interval = granularity = base::Seconds(1) / 60.0;
   }

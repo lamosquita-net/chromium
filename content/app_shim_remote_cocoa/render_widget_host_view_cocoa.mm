@@ -2994,6 +2994,10 @@ extern NSString* NSTextInputReplacementRangeAttributeName;
 
 - (id)validRequestorForSendType:(NSString*)sendType
                      returnType:(NSString*)returnType {
+  if (@available(macOS 11, *)) {
+  } else {  // FlyWeb B1b: UTType is macOS 11+.
+    return [super validRequestorForSendType:sendType returnType:returnType];
+  }
   UTType* sendUTType = ui::UTTypeForServicesType(sendType);
   UTType* acceptUTType = ui::UTTypeForServicesType(returnType);
 
@@ -3105,6 +3109,10 @@ extern NSString* NSTextInputReplacementRangeAttributeName;
 @implementation RenderWidgetHostViewCocoa (NSServicesRequests)
 
 - (BOOL)writeSelectionToPasteboard:(NSPasteboard*)pboard types:(NSArray*)types {
+  if (@available(macOS 11, *)) {
+  } else {  // FlyWeb B1b: UTType is macOS 11+.
+    return NO;
+  }
   NSSet<UTType*>* typeSet = ui::UTTypesForServicesTypeArray(types);
 
   bool wasAbleToWriteAtLeastOneType = false;
@@ -3119,6 +3127,10 @@ extern NSString* NSTextInputReplacementRangeAttributeName;
 }
 
 - (BOOL)readSelectionFromPasteboard:(NSPasteboard*)pboard {
+  if (@available(macOS 11, *)) {
+  } else {  // FlyWeb B1b: UTType is macOS 11+.
+    return NO;
+  }
   NSArray* objects = [pboard readObjectsForClasses:@[ [NSString class] ]
                                            options:nil];
   if (!objects.count) {

@@ -22,6 +22,12 @@
 #include "util/mach/exc.h"
 #include "util/mach/mach_exc.h"
 
+// FlyWeb B1b: weak so dyld loads on macOS < 11.3; calls are behind
+// __builtin_available.
+extern "C" kern_return_t task_create_identity_token(task_t task,
+                                                   task_id_token_t* token)
+    __attribute__((weak_import));
+
 namespace crashpad {
 
 kern_return_t UniversalExceptionRaise(exception_behavior_t behavior,

@@ -252,10 +252,12 @@ bool AVSampleBufferDisplayLayerEnqueueIOSurface(
                               kCVImageBufferTransferFunctionKey,
                               kCVImageBufferTransferFunction_ITU_R_2100_HLG,
                               kCVAttachmentMode_ShouldPropagate);
-        CVBufferSetAttachment(cv_pixel_buffer.get(),
-                              kCVImageBufferAmbientViewingEnvironmentKey,
-                              gfx::GenerateAmbientViewingEnvironment().get(),
-                              kCVAttachmentMode_ShouldPropagate);
+        if (&kCVImageBufferAmbientViewingEnvironmentKey != nullptr) {  // FlyWeb B1b
+          CVBufferSetAttachment(cv_pixel_buffer.get(),
+                                kCVImageBufferAmbientViewingEnvironmentKey,
+                                gfx::GenerateAmbientViewingEnvironment().get(),
+                                kCVAttachmentMode_ShouldPropagate);
+        }
         break;
       case gfx::ColorSpace::TransferID::PQ:
         CVBufferSetAttachment(cv_pixel_buffer.get(),

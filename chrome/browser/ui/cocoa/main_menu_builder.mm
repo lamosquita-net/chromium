@@ -724,12 +724,14 @@ NSMenuItem* MenuItemBuilder::Build() const {
   item.keyEquivalentModifierMask = key_equivalent_flags;
   item.alternate = is_alternate_;
   item.hidden = is_hidden_;
+  if (@available(macOS 11, *)) {  // FlyWeb B1b: SF Symbols are macOS 11+.
   if (sf_symbol_name_) {
     item.image = [NSImage imageWithSystemSymbolName:sf_symbol_name_
                            accessibilityDescription:nil];
     if (@available(macOS 27, *)) {
       item.preferredImageVisibility = NSMenuItemImageVisibilityVisible;
     }
+  }
   }
 
   if (submenu_.has_value()) {

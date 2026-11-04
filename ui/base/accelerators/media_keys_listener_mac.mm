@@ -27,7 +27,10 @@ namespace {
 const int kSystemDefinedEventMediaKeysSubtype = 8;
 
 IOHIDAccessType CheckPostEventAccess() {
-  return IOHIDCheckAccess(kIOHIDRequestTypePostEvent);
+  if (@available(macOS 10.15, *)) {  // FlyWeb B1b
+    return IOHIDCheckAccess(kIOHIDRequestTypePostEvent);
+  }
+  return kIOHIDAccessTypeGranted;  // No TCC for posting events on 10.14.
 }
 
 KeyboardCode MediaKeyCodeToKeyboardCode(int key_code) {

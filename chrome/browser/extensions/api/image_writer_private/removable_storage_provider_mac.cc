@@ -36,7 +36,7 @@ RemovableStorageProvider::PopulateDeviceList() {
   // IOServiceGetMatchingServices consumes a reference to the matching
   // dictionary passed to it.
   base::mac::ScopedIOObject<io_service_t> disk_iterator;
-  if (IOServiceGetMatchingServices(kIOMainPortDefault, matching.release(),
+  if (IOServiceGetMatchingServices(MACH_PORT_NULL /* FlyWeb B1b: kIOMainPortDefault is macOS 12+ */, matching.release(),
                                    disk_iterator.InitializeInto()) !=
       KERN_SUCCESS) {
     LOG(ERROR) << "Unable to get disk services.";

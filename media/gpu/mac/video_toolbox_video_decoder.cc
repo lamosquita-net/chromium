@@ -47,7 +47,9 @@ bool SupportsH264() {
 
 bool InitializeVP9() {
 #if BUILDFLAG(IS_MAC)
-  VTRegisterSupplementalVideoDecoderIfAvailable(kCMVideoCodecType_VP9);
+  if (__builtin_available(macOS 11, *)) {  // FlyWeb B1b
+    VTRegisterSupplementalVideoDecoderIfAvailable(kCMVideoCodecType_VP9);
+  }
   return VTIsHardwareDecodeSupported(kCMVideoCodecType_VP9);
 #else
   // TODO(crbug.com/40269929): Enable VP9 on iOS.

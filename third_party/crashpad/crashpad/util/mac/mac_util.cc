@@ -248,7 +248,7 @@ bool MacOSVersionComponents(int* major,
 
 void MacModelAndBoard(std::string* model, std::string* board_id) {
   base::mac::ScopedIOObject<io_service_t> platform_expert(
-      IOServiceGetMatchingService(kIOMainPortDefault,
+      IOServiceGetMatchingService(MACH_PORT_NULL /* FlyWeb B1b: kIOMainPortDefault is macOS 12+ */,
                                   IOServiceMatching("IOPlatformExpertDevice")));
   if (platform_expert) {
     model->assign(IORegistryEntryDataPropertyAsString(platform_expert.get(),

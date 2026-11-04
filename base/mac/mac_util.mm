@@ -376,7 +376,11 @@ int MacOSVersion() {
 bool IsVirtualMachine() {
   int ret;
   size_t size = sizeof(ret);
-  PCHECK(sysctlbyname("kern.hv_vmm_present", &ret, &size, nullptr, 0) != -1);
+  // FlyWeb B1b: kern.hv_vmm_present does not exist on macOS 10.14.
+  if (sysctlbyname("kern.hv_vmm_present", &ret, &size, nullptr, 0) == -1) {
+    PCHECK(errno == ENOENT);
+    return false;
+  }
   return ret;
 }
 
@@ -430,7 +434,7 @@ std::string GetOSDisplayName() {
 
 std::string GetPlatformSerialNumber() {
   base::mac::ScopedIOObject<io_service_t> expert_device(
-      IOServiceGetMatchingService(kIOMainPortDefault,
+      IOServiceGetMatchingService(MACH_PORT_NULL /* FlyWeb B1b: kIOMainPortDefault is macOS 12+ */,
                                   IOServiceMatching("IOPlatformExpertDevice")));
   if (!expert_device) {
     DLOG(ERROR) << "Error retrieving the machine serial number.";

@@ -22,9 +22,14 @@ bool AuthenticatorMac::CheckIfBiometricsAvailable() {
         [context canEvaluatePolicy:
                      LAPolicyDeviceOwnerAuthenticationWithBiometricsOrCompanion
                              error:nil];
-  } else {
+  } else if (@available(macOS 10.15, *)) {
     return [context
         canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometricsOrWatch
+                    error:nil];
+  } else {
+    // FlyWeb B1b: policy 4 is macOS 10.15+; 10.14 throws on it.
+    return [context
+        canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics
                     error:nil];
   }
 }

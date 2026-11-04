@@ -158,10 +158,12 @@ const std::vector<CVImageTransferFn>& GetSupportedImageTransferFn() {
             {kCVImageBufferTransferFunction_Linear,
              kCMFormatDescriptionTransferFunction_Linear,
              gfx::ColorSpace::TransferID::LINEAR});
-        supported_transfer_funcs.push_back(
-            {kCVImageBufferTransferFunction_sRGB,
-             kCMFormatDescriptionTransferFunction_sRGB,
-             gfx::ColorSpace::TransferID::SRGB});
+        if (&kCMFormatDescriptionTransferFunction_sRGB != nullptr) {  // FlyWeb B1b
+          supported_transfer_funcs.push_back(
+              {kCVImageBufferTransferFunction_sRGB,
+               kCMFormatDescriptionTransferFunction_sRGB,
+               gfx::ColorSpace::TransferID::SRGB});
+        }
 
         return supported_transfer_funcs;
       }());

@@ -112,8 +112,12 @@ DisplayMac BuildDisplayForScreen(NSScreen* screen) {
   // Examine the presence of HDR.
   bool enable_hdr = false;
   float hdr_max_lum_relative = 1.f;
-  const float max_potential_edr_value =
-      screen.maximumPotentialExtendedDynamicRangeColorComponentValue;
+  // FlyWeb B1b: guarded for macOS 10.14.
+  float max_potential_edr_value = 1.f;
+  if (@available(macOS 10.15, *)) {
+    max_potential_edr_value =
+        screen.maximumPotentialExtendedDynamicRangeColorComponentValue;
+  }
   const float max_edr_value =
       screen.maximumExtendedDynamicRangeColorComponentValue;
   if (max_potential_edr_value > 1.f) {
@@ -186,9 +190,12 @@ DisplayMac BuildDisplayForScreen(NSScreen* screen) {
   // Query the display's refresh rate. To get a float number such as 59.95Hz,
   // use 1.0/screen.minimumRefreshInterval instead of
   // screen.maximumFramesPerSecond, which is an integer.
-  float refresh_rate = (screen.minimumRefreshInterval > 0)
-                           ? (1.0 / screen.minimumRefreshInterval)
-                           : screen.maximumFramesPerSecond;
+  float refresh_rate = 60.f;  // FlyWeb B1b: guarded for macOS < 12.
+  if (@available(macOS 12.0, *)) {
+    refresh_rate = (screen.minimumRefreshInterval > 0)
+                       ? (1.0 / screen.minimumRefreshInterval)
+                       : screen.maximumFramesPerSecond;
+  }
   display.set_display_frequency(refresh_rate);
 
   // CGDisplayRotation returns a double. Display::SetRotationAsDegree will
@@ -201,7 +208,9 @@ DisplayMac BuildDisplayForScreen(NSScreen* screen) {
     SetInternalDisplayIds({display_id});
   }
 
-  display.set_label(base::SysNSStringToUTF8(screen.localizedName));
+  if (@available(macOS 10.15, *)) {  // FlyWeb B1b
+    display.set_label(base::SysNSStringToUTF8(screen.localizedName));
+  }
 
   return DisplayMac{display, screen};
 }

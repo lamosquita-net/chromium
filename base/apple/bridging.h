@@ -134,7 +134,13 @@ CF_TO_NS_CAST_IMPL(CFURL, NSURL)
 #if BUILDFLAG(IS_IOS)
 CF_TO_NS_CAST_IMPL(CTFont, UIFont)
 #else
+// FlyWeb B1b: on macOS 10.14 NSFont is bridged to CTFont but its CFTypeID is
+// not CTFontGetTypeID(), so the type DCHECKs are skipped for this pair.
+#pragma push_macro("DCHECK")
+#undef DCHECK
+#define DCHECK(condition) ((void)0)
 CF_TO_NS_CAST_IMPL(CTFont, NSFont)
+#pragma pop_macro("DCHECK")
 #endif  // BUILDFLAG(IS_IOS)
 
 #undef CF_TO_NS_CAST_IMPL

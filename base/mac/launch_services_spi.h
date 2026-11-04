@@ -18,7 +18,9 @@
 
 extern "C" {
 
-extern const CFStringRef _kLSOpenOptionBackgroundLaunchKey;
+// FlyWeb B1b: weak, absent on macOS 10.14 (checked before use).
+extern const CFStringRef _kLSOpenOptionBackgroundLaunchKey
+    __attribute__((weak_import));
 
 }  // extern "C"
 

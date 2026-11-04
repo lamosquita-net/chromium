@@ -193,7 +193,7 @@ bool XboxDataFetcher::RegisterForNotifications() {
   if (listening_)
     return true;
   if (port_ == nullptr)
-    port_.reset(IONotificationPortCreate(kIOMainPortDefault));
+    port_.reset(IONotificationPortCreate(MACH_PORT_NULL /* FlyWeb B1b: kIOMainPortDefault is macOS 12+ */));
   if (!port_.is_valid())
     return false;
   source_ = IONotificationPortGetRunLoopSource(port_.get());

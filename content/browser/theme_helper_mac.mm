@@ -324,23 +324,34 @@ void ThemeHelperMac::LoadSystemColorsForCurrentAppearance(
   }
 }
 
+// FlyWeb B1b: -performAsCurrentDrawingAppearance: is macOS 11+.
+static void FlyWebPerformAsAppearance(NSAppearance* appearance,
+                                      void (^block)(void)) {
+  if (@available(macOS 11, *)) {
+    [appearance performAsCurrentDrawingAppearance:block];
+    return;
+  }
+  NSAppearance* saved = NSAppearance.currentAppearance;
+  NSAppearance.currentAppearance = appearance;
+  block();
+  NSAppearance.currentAppearance = saved;
+}
+
 void ThemeHelperMac::LoadSystemColors() {
   static_assert(blink::kMacSystemColorSchemeCount == 2,
                 "Light and dark color scheme system colors loaded.");
   base::span<SkColor> values = writable_color_map_.GetMemoryAsSpan<SkColor>(
       blink::kMacSystemColorIDCount * blink::kMacSystemColorSchemeCount);
 
-  [[NSAppearance appearanceNamed:NSAppearanceNameAqua]
-      performAsCurrentDrawingAppearance:^{
+  FlyWebPerformAsAppearance([NSAppearance appearanceNamed:NSAppearanceNameAqua], ^{
         LoadSystemColorsForCurrentAppearance(
             values.first<blink::kMacSystemColorIDCount>());
-      }];
-  [[NSAppearance appearanceNamed:NSAppearanceNameDarkAqua]
-      performAsCurrentDrawingAppearance:^{
+      });
+  FlyWebPerformAsAppearance([NSAppearance appearanceNamed:NSAppearanceNameDarkAqua], ^{
         LoadSystemColorsForCurrentAppearance(
             values.subspan<blink::kMacSystemColorIDCount,
                            blink::kMacSystemColorIDCount>());
-      }];
+      });
 }
 
 void ThemeHelperMac::OnRenderProcessHostCreated(
