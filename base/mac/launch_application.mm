@@ -61,6 +61,7 @@ NSArray* CommandLineArgsToArgsArray(const CommandLineArgs& command_line_args) {
   return @[];
 }
 
+API_AVAILABLE(macos(10.15))  // FlyWeb B1d
 NSWorkspaceOpenConfiguration* GetOpenConfiguration(
     LaunchApplicationOptions options,
     const CommandLineArgs& command_line_args) {
@@ -140,6 +141,46 @@ void LaunchApplication(const base::FilePath& app_bundle_path,
           std::move(callback_block_access).Run(app, error);
         });
       };
+
+  // FlyWeb B1d: NSWorkspaceOpenConfiguration and the configuration: launch
+  // methods are macOS 10.15+; use the dictionary-based API on macOS 10.14.
+  if (@available(macOS 10.15, *)) {
+  } else {
+    NSWorkspaceLaunchOptions launch_options = NSWorkspaceLaunchDefault;
+    if (!options.activate) {
+      launch_options |= NSWorkspaceLaunchWithoutActivation;
+    }
+    if (options.create_new_instance) {
+      launch_options |= NSWorkspaceLaunchNewInstance;
+    }
+    if (options.hidden_in_background) {
+      launch_options |= NSWorkspaceLaunchAndHide |
+                        NSWorkspaceLaunchWithoutAddingToRecents;
+    }
+    NSDictionary* legacy_config = @{
+      NSWorkspaceLaunchConfigurationArguments :
+          CommandLineArgsToArgsArray(command_line_args)
+    };
+    NSError* error = nil;
+    NSRunningApplication* app = nil;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    if (ns_urls) {
+      app = [NSWorkspace.sharedWorkspace openURLs:ns_urls
+                             withApplicationAtURL:bundle_url
+                                          options:launch_options
+                                    configuration:legacy_config
+                                            error:&error];
+    } else {
+      app = [NSWorkspace.sharedWorkspace launchApplicationAtURL:bundle_url
+                                                        options:launch_options
+                                                  configuration:legacy_config
+                                                          error:&error];
+    }
+#pragma clang diagnostic pop
+    action_block(app, error);
+    return;
+  }
 
   NSWorkspaceOpenConfiguration* configuration =
       GetOpenConfiguration(options, command_line_args);

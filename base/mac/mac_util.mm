@@ -551,10 +551,18 @@ void OpenSystemSettingsPane(SystemSettingsPane pane,
       NOTREACHED();
   }
 
-  [NSWorkspace.sharedWorkspace
-                openURL:[NSURL URLWithString:url]
-          configuration:[NSWorkspaceOpenConfiguration configuration]
-      completionHandler:nil];
+  // FlyWeb B1d: openURL:configuration:… is macOS 10.15+.
+  if (@available(macOS 10.15, *)) {
+    [NSWorkspace.sharedWorkspace
+                  openURL:[NSURL URLWithString:url]
+            configuration:[NSWorkspaceOpenConfiguration configuration]
+        completionHandler:nil];
+  } else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    [NSWorkspace.sharedWorkspace openURL:[NSURL URLWithString:url]];
+#pragma clang diagnostic pop
+  }
 }
 
 }  // namespace base::mac
