@@ -17,6 +17,19 @@ BASE_FEATURE(kUseAVCaptureDeviceTypeContinuity,
 #endif  // BUILDFLAG(IS_MAC)
 
 NSArray<AVCaptureDevice*>* GetVideoCaptureDevices() {
+#if BUILDFLAG(IS_MAC)
+  // FlyWeb B1d: the device type constants and AVCaptureDeviceDiscoverySession
+  // are macOS 10.15+ (weak NULL on 10.14: crash on enumerateDevices()).
+  if (@available(macOS 10.15, *)) {
+  } else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    NSArray<AVCaptureDevice*>* devices =
+        [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+#pragma clang diagnostic pop
+    return devices ? devices : @[];
+  }
+#endif  // BUILDFLAG(IS_MAC)
   // Camera device types available on all apple platforms.
   NSArray* captureDeviceTypes = @[ AVCaptureDeviceTypeBuiltInWideAngleCamera ];
 

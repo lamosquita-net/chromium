@@ -35,19 +35,31 @@ GetImageBufferPixelFormatDescription(CVImageBufferRef image_buffer) {
           nullptr, CVPixelBufferGetPixelFormatType(image_buffer)));
 }
 
+// FlyWeb B1d: CVBufferCopyAttachment is macOS 10.15+; use the Get variant
+// (retained) on macOS 10.14.
+CFTypeRef FlyWebCopyAttachment(CVImageBufferRef image_buffer, CFStringRef key) {
+  if (@available(macOS 10.15, *)) {
+    return CVBufferCopyAttachment(image_buffer, key, /*attachmentMode=*/nullptr);
+  }
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+  CFTypeRef value =
+      CVBufferGetAttachment(image_buffer, key, /*attachmentMode=*/nullptr);
+#pragma clang diagnostic pop
+  return value ? CFRetain(value) : nullptr;
+}
+
 }  // namespace
 
 gfx::ColorSpace GetImageBufferColorSpace(CVImageBufferRef image_buffer) {
   base::apple::ScopedCFTypeRef<CFTypeRef> color_primaries(
-      CVBufferCopyAttachment(image_buffer, kCVImageBufferColorPrimariesKey,
-                             /*attachmentMode=*/nullptr));
+      FlyWebCopyAttachment(image_buffer, kCVImageBufferColorPrimariesKey));
   base::apple::ScopedCFTypeRef<CFTypeRef> transfer_function(
-      CVBufferCopyAttachment(image_buffer, kCVImageBufferTransferFunctionKey,
-                             /*attachmentMode=*/nullptr));
-  base::apple::ScopedCFTypeRef<CFTypeRef> gamma_level(CVBufferCopyAttachment(
-      image_buffer, kCVImageBufferGammaLevelKey, /*attachmentMode=*/nullptr));
-  base::apple::ScopedCFTypeRef<CFTypeRef> ycbcr_matrix(CVBufferCopyAttachment(
-      image_buffer, kCVImageBufferYCbCrMatrixKey, /*attachmentMode=*/nullptr));
+      FlyWebCopyAttachment(image_buffer, kCVImageBufferTransferFunctionKey));
+  base::apple::ScopedCFTypeRef<CFTypeRef> gamma_level(FlyWebCopyAttachment(
+      image_buffer, kCVImageBufferGammaLevelKey));
+  base::apple::ScopedCFTypeRef<CFTypeRef> ycbcr_matrix(FlyWebCopyAttachment(
+      image_buffer, kCVImageBufferYCbCrMatrixKey));
   const auto pixel_format_description =
       GetImageBufferPixelFormatDescription(image_buffer);
   const CFTypeRef component_range =
