@@ -213,7 +213,7 @@ void MacNotificationServiceUN::DoDisplayNotification(
     // that the file is of type PNG, as NotificationImageRetainer converts files
     // to PNG before writing them.
     NSDictionary* options =
-        @{UNNotificationAttachmentOptionsTypeHintKey : UTTypePNG.identifier};
+        @{UNNotificationAttachmentOptionsTypeHintKey : @"public.png"};  // FlyWeb B1d
 
     UNNotificationAttachment* attachment =
         [UNNotificationAttachment attachmentWithIdentifier:notification_id_ns

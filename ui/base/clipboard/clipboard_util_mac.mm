@@ -155,6 +155,10 @@ URLAndTitle* ExtractStandardURLAndTitle(NSPasteboardItem* item) {
       // there is no official constant for that. However, that type does conform
       // to the generic "internet location" type (aka .inetloc), so check for
       // that.
+      if (@available(macOS 11, *)) {
+      } else {
+        return nil;  // FlyWeb B1d: UTType/NSURLContentTypeKey are macOS 11+.
+      }
       UTType* type;
       if (![file_url getResourceValue:&type
                                forKey:NSURLContentTypeKey
@@ -186,6 +190,10 @@ URLAndTitle* ExtractURLFromURLFile(NSPasteboardItem* item) {
   }
   NSURL* file_url = [NSURL URLWithString:file].filePathURL;
 
+  if (@available(macOS 11, *)) {
+  } else {
+    return nil;  // FlyWeb B1d: UTType/NSURLContentTypeKey are macOS 11+.
+  }
   NSDictionary* resource_values;
   resource_values =
       [file_url resourceValuesForKeys:@[ NSURLFileSizeKey, NSURLContentTypeKey ]

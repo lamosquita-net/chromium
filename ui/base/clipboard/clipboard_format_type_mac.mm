@@ -125,7 +125,8 @@ const ClipboardFormatType& ClipboardFormatType::HtmlType() {
 }
 
 const ClipboardFormatType& ClipboardFormatType::SvgType() {
-  static base::NoDestructor<ClipboardFormatType> type(UTTypeSVG.identifier);
+  // FlyWeb B1d: UTTypeSVG is macOS 11+ (weak, null on 10.14).
+  static base::NoDestructor<ClipboardFormatType> type(@"public.svg-image");
   return *type;
 }
 

@@ -25,6 +25,24 @@ IconLoader::IconGroup IconLoader::GroupForFilepath(
   // The last and worst option is to fall back to `public.content` which will
   // give a generic file icon.
 
+  if (@available(macOS 11, *)) {
+  } else {
+    // FlyWeb B1d: UTType/NSURLContentTypeKey are macOS 11+; CoreServices call.
+    std::string ext = file_path.FinalExtension();
+    if (!ext.empty()) {
+      ext.erase(ext.begin());
+      base::apple::ScopedCFTypeRef<CFStringRef> uti(
+          UTTypeCreatePreferredIdentifierForTag(
+              kUTTagClassFilenameExtension,
+              (__bridge CFStringRef)base::SysUTF8ToNSString(ext),
+              nullptr));
+      if (uti) {
+        return base::SysCFStringRefToUTF8(uti.get());
+      }
+    }
+    return "public.content";
+  }
+
   UTType* type;
   NSURL* file_url = base::apple::FilePathToNSURL(file_path);
   if (file_url && [file_url getResourceValue:&type
@@ -45,7 +63,10 @@ IconLoader::IconGroup IconLoader::GroupForFilepath(
     }
   }
 
-  return base::SysNSStringToUTF8(UTTypeContent.identifier);
+  if (@available(macOS 11, *)) {
+    return base::SysNSStringToUTF8(UTTypeContent.identifier);
+  }
+  return "public.content";  // FlyWeb B1d: UTTypeContent is macOS 11+.
 }
 
 // static

@@ -11,6 +11,7 @@
 #include <optional>
 #include <string_view>
 
+#include "base/apple/bridging.h"  // FlyWeb B1d
 #include "base/apple/foundation_util.h"
 #include "base/check_op.h"
 #include "base/containers/span.h"
@@ -322,14 +323,26 @@ OSExchangeDataProviderMac::GetFileContents() const {
 
   NSArray* types = [pboard types];
   for (NSString* type in types) {
-    UTType* utType = [UTType typeWithIdentifier:type];
-    if ([utType conformsToType:UTTypeImage]) {
+    // FlyWeb B1d: UTType is macOS 11+; older systems use the CoreServices call.
+    bool isImage = false;
+    if (@available(macOS 11, *)) {
+      isImage = [[UTType typeWithIdentifier:type] conformsToType:UTTypeImage];
+    } else {
+      isImage = UTTypeConformsTo((__bridge CFStringRef)type, kUTTypeImage);
+    }
+    if (isImage) {
       NSData* data = [pboard dataForType:type];
       if (data) {
         base::span<const uint8_t> span = base::apple::NSDataToSpan(data);
         std::vector<uint8_t> file_contents(span.begin(), span.end());
         base::FilePath filename;
-        NSString* ext = utType.preferredFilenameExtension;
+        NSString* ext = nil;
+        if (@available(macOS 11, *)) {
+          ext = [UTType typeWithIdentifier:type].preferredFilenameExtension;
+        } else {
+          ext = base::apple::CFToNSOwnershipCast(UTTypeCopyPreferredTagWithClass(
+              (__bridge CFStringRef)type, kUTTagClassFilenameExtension));
+        }
         if (ext) {
           filename = base::FilePath(base::SysNSStringToUTF8(ext));
         }
@@ -349,8 +362,14 @@ bool OSExchangeDataProviderMac::HasFileContents() const {
 
   NSArray* types = [pboard types];
   for (NSString* type in types) {
-    UTType* utType = [UTType typeWithIdentifier:type];
-    if ([utType conformsToType:UTTypeImage]) {
+    // FlyWeb B1d: UTType is macOS 11+; older systems use the CoreServices call.
+    bool isImage = false;
+    if (@available(macOS 11, *)) {
+      isImage = [[UTType typeWithIdentifier:type] conformsToType:UTTypeImage];
+    } else {
+      isImage = UTTypeConformsTo((__bridge CFStringRef)type, kUTTypeImage);
+    }
+    if (isImage) {
       return true;
     }
   }
