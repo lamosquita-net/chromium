@@ -35,10 +35,16 @@ enum class MetalFamilyMac {
 };
 
 MetalFamilyMac GetMetalFamilyMac(id<MTLDevice> device) {
-  if ([device supportsFamily:MTLGPUFamilyMac2]) {
-    return MetalFamilyMac::kMac2;
+  if (@available(macOS 10.15, *)) {
+    if ([device supportsFamily:MTLGPUFamilyMac2]) {
+      return MetalFamilyMac::kMac2;
+    }
+    return MetalFamilyMac::kMac1;
   }
-  return MetalFamilyMac::kMac1;
+  // FlyWeb B1c: -supportsFamily: is macOS 10.15+.
+  return [device supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily2_v1]
+             ? MetalFamilyMac::kMac2
+             : MetalFamilyMac::kMac1;
 }
 
 void RecordHistograms() {
