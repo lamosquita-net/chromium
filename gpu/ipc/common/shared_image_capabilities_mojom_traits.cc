@@ -33,6 +33,11 @@ bool StructTraits<gpu::mojom::SharedImageCapabilitiesDataView,
   out->shared_image_swap_chain = data.shared_image_swap_chain();
 #endif
 
+  // FlyWeb B1c: IOSurface texture target (rectangle on ANGLE GL), from 150.
+#if BUILDFLAG(IS_MAC)
+  out->texture_target_for_io_surfaces = data.texture_target_for_io_surfaces();
+#endif
+
   return true;
 }
 

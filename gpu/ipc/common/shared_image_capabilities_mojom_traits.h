@@ -79,6 +79,14 @@ struct GPU_IPC_COMMON_EXPORT StructTraits<
     return input.shared_image_swap_chain;
   }
 #endif
+
+  // FlyWeb B1c: IOSurface texture target (rectangle on ANGLE GL), from 150.
+#if BUILDFLAG(IS_MAC)
+  static uint32_t texture_target_for_io_surfaces(
+      const gpu::SharedImageCapabilities& input) {
+    return input.texture_target_for_io_surfaces;
+  }
+#endif
 };
 
 }  // namespace mojo
