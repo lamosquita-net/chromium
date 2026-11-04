@@ -63,7 +63,7 @@ namespace gpu {
 
 namespace {
 
-#if BUILDFLAG(IS_OZONE) || BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_OZONE) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_MAC)  // FlyWeb B1c
 bool GMBIsNative(gfx::GpuMemoryBufferType gmb_type) {
   return gmb_type != gfx::EMPTY_BUFFER && gmb_type != gfx::SHARED_MEMORY_BUFFER;
 }
@@ -88,12 +88,27 @@ bool GMBIsNative(gfx::GpuMemoryBufferType gmb_type) {
 //   supported in Chromium only on Ozone).
 uint32_t ComputeTextureTargetForSharedImage(
     SharedImageMetadata metadata,
-    gfx::GpuMemoryBufferType client_gmb_type) {
+    gfx::GpuMemoryBufferType client_gmb_type,
+    scoped_refptr<SharedImageInterface> sii) {  // FlyWeb B1c: sii
   CHECK_GE(metadata.array_layers, 1u);
 #if !BUILDFLAG(IS_ANDROID)
   CHECK_EQ(metadata.array_layers, 1u);
 #endif
-#if !BUILDFLAG(IS_OZONE) && !BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_MAC)
+  // FlyWeb B1c: IOSurface texture target (rectangle on ANGLE GL), from 150.
+  // IOSurfaces are inferred from scanout or WebGPU usage, as in the 150.
+  constexpr gpu::SharedImageUsageSet kUsagesRequiringNativeBuffer =
+      SHARED_IMAGE_USAGE_SCANOUT | SHARED_IMAGE_USAGE_WEBGPU_READ |
+      SHARED_IMAGE_USAGE_WEBGPU_WRITE;
+  const bool uses_native_buffer =
+      GMBIsNative(client_gmb_type) ||
+      metadata.usage.HasAny(kUsagesRequiringNativeBuffer);
+  if (!uses_native_buffer || !sii) {
+    return GL_TEXTURE_2D;
+  }
+  const uint32_t target = sii->GetCapabilities().texture_target_for_io_surfaces;
+  return target ? target : GL_TEXTURE_2D;
+#elif !BUILDFLAG(IS_OZONE) && !BUILDFLAG(IS_ANDROID)
   return GL_TEXTURE_2D;
 #else  // Ozone or Android
 #if BUILDFLAG(IS_ANDROID)
@@ -375,7 +390,8 @@ ClientSharedImage::ClientSharedImage(
                : nullptr) {
   CHECK(!mailbox.IsZero());
   CHECK(sii_holder_);
-  texture_target_ = ComputeTextureTargetForSharedImage(metadata_, gmb_type);
+  texture_target_ = ComputeTextureTargetForSharedImage(
+      metadata_, gmb_type, GetSharedImageInterface());  // FlyWeb B1c
   StoreSyncTokenInternal(sync_token);
 }
 
@@ -483,7 +499,8 @@ ClientSharedImage::ClientSharedImage(
   CHECK(sii_holder_);
   CHECK(mappable_buffer_);
   texture_target_ = ComputeTextureTargetForSharedImage(
-      metadata_, mappable_buffer_->GetType());
+      metadata_, mappable_buffer_->GetType(),
+      GetSharedImageInterface());  // FlyWeb B1c
   StoreSyncTokenInternal(sync_token);
 }
 
