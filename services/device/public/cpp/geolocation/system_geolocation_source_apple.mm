@@ -209,7 +209,15 @@ void SystemGeolocationSourceApple::OpenSystemPermissionSetting() {
 }
 
 void SystemGeolocationSourceApple::RequestPermission() {
+#if BUILDFLAG(IS_MAC)
+  // FlyWeb B1d: requestWhenInUseAuthorization is macOS 10.15+; on 10.14 the
+  // system asks when location updates start.
+  if (@available(macOS 10.15, *)) {
+    [location_manager_ requestWhenInUseAuthorization];
+  }
+#else
   [location_manager_ requestWhenInUseAuthorization];
+#endif
 }
 
 void SystemGeolocationSourceApple::AddPositionUpdateObserver(
