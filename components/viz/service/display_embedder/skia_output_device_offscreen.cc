@@ -105,6 +105,16 @@ void SkiaOutputDeviceOffscreen::EnsureBackbuffer() {
   if (auto* gr_context = context_state_->gr_context()) {
     auto backend_format =
         gr_context->defaultBackendFormat(sk_color_type_, GrRenderable::kYes);
+#if BUILDFLAG(IS_MAC)
+    // FlyWeb B1c: IOSurface texture target (rectangle on ANGLE GL), from 150.
+    // SkiaOutputSurface may use IOSurface: match its texture target or
+    // validateSurface fails on the textureType mismatch.
+    if (context_state_->gr_context_type() == gpu::GrContextType::kGL) {
+      backend_format = GrBackendFormats::MakeGL(
+          GrBackendFormats::AsGLFormatEnum(backend_format),
+          gpu::GetTextureTargetForIOSurfaces());
+    }
+#endif
     DCHECK(backend_format.isValid())
         << "GrBackendFormat is invalid for color_type: " << sk_color_type_;
 

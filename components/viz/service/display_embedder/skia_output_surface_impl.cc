@@ -1217,6 +1217,15 @@ SkiaOutputSurfaceImpl::CreateGrSurfaceCharacterizationRenderPass(
   auto backend_format = gr_context_thread_safe_->defaultBackendFormat(
       color_type, GrRenderable::kYes);
   DCHECK(backend_format.isValid());
+#if BUILDFLAG(IS_MAC)
+  // FlyWeb B1c: IOSurface texture target (rectangle on ANGLE GL), from 150.
+  // For overlays IOSurface is used: use its texture target on Ganesh/GL.
+  if (is_overlay && gr_context_type_ == gpu::GrContextType::kGL) {
+    backend_format = GrBackendFormats::MakeGL(
+        GrBackendFormats::AsGLFormatEnum(backend_format),
+        gpu::GetTextureTargetForIOSurfaces());
+  }
+#endif
   auto image_info =
       SkImageInfo::Make(surface_size.width(), surface_size.height(), color_type,
                         alpha_type, std::move(color_space));
@@ -1255,6 +1264,15 @@ SkiaOutputSurfaceImpl::CreateGrSurfaceCharacterizationCurrentFrame(
       gr_context_thread_safe_->maxSurfaceSampleCountForColorType(color_type));
   auto backend_format = gr_context_thread_safe_->defaultBackendFormat(
       color_type, GrRenderable::kYes);
+#if BUILDFLAG(IS_MAC)
+  // FlyWeb B1c: IOSurface texture target (rectangle on ANGLE GL), from 150.
+  // The root render pass uses IOSurface on Mac.
+  if (gr_context_type_ == gpu::GrContextType::kGL) {
+    backend_format = GrBackendFormats::MakeGL(
+        GrBackendFormats::AsGLFormatEnum(backend_format),
+        gpu::GetTextureTargetForIOSurfaces());
+  }
+#endif
   DCHECK(backend_format.isValid())
       << "GrBackendFormat is invalid for color_type: " << color_type;
   auto surface_origin =
