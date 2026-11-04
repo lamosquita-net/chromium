@@ -121,7 +121,13 @@ NSAttributedString* AttributedSubstringFromRange(LocalFrame* frame,
 
     NSFont* font = nil;
     if (original_font) {
-      font = [original_font fontWithSize:desired_size];
+      if (@available(macOS 14, *)) {
+        font = [original_font fontWithSize:desired_size];
+      } else {
+        // FlyWeb B1d: -[NSFont fontWithSize:] is macOS 14+.
+        font = [NSFont fontWithDescriptor:original_font.fontDescriptor
+                                     size:desired_size];
+      }
     }
 
     // If the platform font can't be loaded, or the size is incorrect comparing
