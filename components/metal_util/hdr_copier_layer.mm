@@ -540,6 +540,12 @@ void UpdateHDRCopierLayer(CALayer* layer,
 bool ShouldUseHDRCopier(IOSurfaceRef buffer,
                         const gfx::HDRMetadata& hdr_metadata,
                         const gfx::ColorSpace& color_space) {
+  // FlyWeb B1d: CAEDRMetadata, -[CAMetalLayer setEDRMetadata:] and
+  // preferredDevice are macOS 10.15+ (unrecognized selector on 10.14).
+  if (@available(macOS 10.15, *)) {
+  } else {
+    return false;
+  }
   // Only some transfer functions are supported.
   if (!GetTransferFunctionIndex(color_space)) {
     return false;
