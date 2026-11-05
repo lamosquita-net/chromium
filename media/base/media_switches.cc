@@ -2004,7 +2004,10 @@ bool IsMacCatapSystemLoopbackCaptureSupported() {
 bool IsMacSckSystemLoopbackCaptureSupported() {
   // Disabled on macOS 15.0 due to problems with permission prompt.
   // The override feature is useful for testing on unsupported versions.
-  return (base::mac::MacOSVersion() < 15'00'00) ||
+  // FlyWeb B1d: the ScreenCaptureKit audio APIs are macOS 13.0+. Without the
+  // lower bound, 10.14 offered system audio and the capture stalled for 5 s.
+  return (base::mac::MacOSVersion() >= 13'00'00 &&
+          base::mac::MacOSVersion() < 15'00'00) ||
          base::FeatureList::IsEnabled(kMacSckSystemAudioLoopbackOverride);
 }
 

@@ -6,6 +6,7 @@
 
 #include <AppKit/AppKit.h>
 #import <Carbon/Carbon.h>
+#include <CoreServices/CoreServices.h>
 #include <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #include <algorithm>
@@ -860,8 +861,15 @@ DropData PopulateDropDataFromPasteboard(NSPasteboard* pboard) {
   // scavenge any generic images that might be present.
   if (file_data.length == 0 && drop_data.filenames.empty()) {
     for (NSString* type in types) {
-      UTType* utType = [UTType typeWithIdentifier:type];
-      if (utType && [utType conformsToType:UTTypeImage]) {
+      bool is_image = false;
+      if (@available(macOS 11.0, *)) {
+        UTType* utType = [UTType typeWithIdentifier:type];
+        is_image = utType && [utType conformsToType:UTTypeImage];
+      } else {
+        // FlyWeb B1d: UTType is macOS 11+; use the UTI functions on 10.14.
+        is_image = UTTypeConformsTo(base::apple::NSToCFPtrCast(type), kUTTypeImage);
+      }
+      if (is_image) {
         NSData* data = [pboard dataForType:type];
         if (data) {
           file_data = data;
@@ -878,10 +886,19 @@ DropData PopulateDropDataFromPasteboard(NSPasteboard* pboard) {
         base::ToVector(base::apple::NSDataToSpan(file_data));
 
     if (content_type_id) {
-      UTType* utType = [UTType typeWithIdentifier:content_type_id];
-      if (utType && utType.preferredFilenameExtension) {
+      NSString* extension = nil;
+      if (@available(macOS 11.0, *)) {
+        UTType* utType = [UTType typeWithIdentifier:content_type_id];
+        extension = utType.preferredFilenameExtension;
+      } else {
+        // FlyWeb B1d: UTType is macOS 11+; use the UTI functions on 10.14.
+        extension = base::apple::CFToNSOwnershipCast(UTTypeCopyPreferredTagWithClass(
+            base::apple::NSToCFPtrCast(content_type_id),
+            kUTTagClassFilenameExtension));
+      }
+      if (extension) {
         drop_data.file_contents_filename_extension =
-            base::SysNSStringToUTF8(utType.preferredFilenameExtension);
+            base::SysNSStringToUTF8(extension);
       }
     }
 

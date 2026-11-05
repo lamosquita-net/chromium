@@ -383,7 +383,10 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
   // 1. Unlock any configuration (if locked)
   [_captureDevice unlockForConfiguration];
   // 2. Remove observer
-  [_captureDevice removeObserver:self forKeyPath:@"portraitEffectActive"];
+  // FlyWeb B1d: the portraitEffectActive key is macOS 12+ (observed only there).
+  if (@available(macOS 12.0, *)) {
+    [_captureDevice removeObserver:self forKeyPath:@"portraitEffectActive"];
+  }
   // 3. Release and deallocate the capture device
   _captureDevice = nil;
 
@@ -429,7 +432,9 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
     [self stopPhotoOutput];
     if (_captureDeviceInput) {
       DCHECK(_captureDevice);
-      [_captureDevice removeObserver:self forKeyPath:@"portraitEffectActive"];
+      if (@available(macOS 12.0, *)) {  // FlyWeb B1d: see above.
+        [_captureDevice removeObserver:self forKeyPath:@"portraitEffectActive"];
+      }
       [_captureSession stopRunning];
       [_captureSession removeInput:_captureDeviceInput];
       _captureDeviceInput = nil;
@@ -477,10 +482,12 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
   [_captureVideoDataOutput setSampleBufferDelegate:self queue:_sampleQueue];
   [_captureSession addOutput:_captureVideoDataOutput];
 
-  [_captureDevice addObserver:self
-                   forKeyPath:@"portraitEffectActive"
-                      options:0
-                      context:(__bridge void*)_captureDevice];
+  if (@available(macOS 12.0, *)) {  // FlyWeb B1d: the key is macOS 12+.
+    [_captureDevice addObserver:self
+                     forKeyPath:@"portraitEffectActive"
+                        options:0
+                        context:(__bridge void*)_captureDevice];
+  }
 
 #if BUILDFLAG(IS_IOS)
   _orientation = [[UIDevice currentDevice] orientation];

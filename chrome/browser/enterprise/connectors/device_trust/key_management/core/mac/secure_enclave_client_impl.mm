@@ -71,15 +71,20 @@ NSDictionary* CreateAttributesForKey() {
 // Creates the query used for querying the keychain for the secure key
 // reference.
 NSDictionary* CreateQueryForKey(SecureEnclaveClient::KeyType type) {
-  return @{
+  NSMutableDictionary* query = [@{
     CFToNSPtrCast(kSecClass) : CFToNSPtrCast(kSecClassKey),
     CFToNSPtrCast(kSecAttrKeyType) :
         CFToNSPtrCast(kSecAttrKeyTypeECSECPrimeRandom),
     CFToNSPtrCast(kSecAttrLabel) :
         base::SysUTF8ToNSString(SecureEnclaveClient::GetLabelFromKeyType(type)),
     CFToNSPtrCast(kSecReturnRef) : @YES,
-    CFToNSPtrCast(kSecUseDataProtectionKeychain) : @YES,
-  };
+  } mutableCopy];
+  // FlyWeb B1d: kSecUseDataProtectionKeychain is macOS 10.15+ (a NULL key on
+  // 10.14 throws when building the dictionary).
+  if (@available(macOS 10.15, *)) {
+    query[CFToNSPtrCast(kSecUseDataProtectionKeychain)] = @YES;
+  }
+  return query;
 }
 
 }  // namespace

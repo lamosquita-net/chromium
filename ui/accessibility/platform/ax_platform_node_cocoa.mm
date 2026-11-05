@@ -2417,6 +2417,12 @@ const ui::CocoaActionList& GetCocoaActionListForTesting() {
   // -accessibilityCustomContent below), so if the description is from ARIA,
   // don't provide it as AXHelp, and return nothing.
   if ([self descriptionIsFromAriaDescription]) {
+    // FlyWeb B1d: AXCustomContent is macOS 11+; on 10.14 the ARIA description
+    // would be lost, so expose it as AXHelp.
+    if (@available(macOS 11.0, *)) {
+    } else {
+      return [self getStringAttribute:ax::mojom::StringAttribute::kDescription];
+    }
     // VoiceOver does not announce AXCustomContent for fieldsets, so we fall
     // back to exposing the ARIA description as AXHelp for them.
     if ([[self getStringAttribute:ax::mojom::StringAttribute::kHtmlTag]

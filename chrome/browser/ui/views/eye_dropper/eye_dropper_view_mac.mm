@@ -55,5 +55,10 @@ std::unique_ptr<content::EyeDropper> ShowEyeDropper(
     return nullptr;
   }
 
-  return std::make_unique<EyeDropperViewMac>(listener);
+  // FlyWeb B1d: NSColorSampler is macOS 10.15+. On 10.14 its handler never
+  // runs and the EyeDropper promise hangs; nullptr makes the chooser cancel.
+  if (@available(macOS 10.15, *)) {
+    return std::make_unique<EyeDropperViewMac>(listener);
+  }
+  return nullptr;
 }

@@ -5,6 +5,7 @@
 #import "content/app_shim_remote_cocoa/web_drag_source_mac.h"
 
 #include <Cocoa/Cocoa.h>
+#include <CoreServices/CoreServices.h>
 #include <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #include <sys/param.h>
 
@@ -63,7 +64,9 @@
   GURL _downloadURL;
 
   // The file type associated with the file drag, if any.
-  UTType* __strong _fileType;
+  // FlyWeb B1d: the file's UTI as a string, so that macOS 10.14 (no UTType)
+  // also gets one.
+  NSString* __strong _fileUTI;
 }
 
 - (instancetype)initWithHost:(remote_cocoa::mojom::WebContentsNSViewHost*)host
@@ -147,13 +150,23 @@
     }
 
     if (!mimeType.empty()) {
-      _fileType = [UTType typeWithMIMEType:base::SysUTF8ToNSString(mimeType)];
+      if (@available(macOS 11.0, *)) {
+        _fileUTI =
+            [UTType typeWithMIMEType:base::SysUTF8ToNSString(mimeType)]
+                .identifier;
+      } else {
+        // FlyWeb B1d: UTType is macOS 11+; use the UTI functions on 10.14.
+        _fileUTI = base::apple::CFToNSOwnershipCast(
+            UTTypeCreatePreferredIdentifierForTag(
+                kUTTagClassMIMEType,
+                base::apple::NSToCFPtrCast(base::SysUTF8ToNSString(mimeType)),
+                nullptr));
+      }
 
       // Promise both the file's contents...
-      // FlyWeb B1d: UTType is macOS 11+; on 10.14 _fileType is nil and adding a
-      // nil identifier threw NSInvalidArgumentException (dragging an image out).
-      if (!_dropData.file_contents.empty() && _fileType.identifier) {
-        [writableTypes addObject:_fileType.identifier];
+      // FlyWeb B1d: never add a nil identifier (NSInvalidArgumentException).
+      if (!_dropData.file_contents.empty() && _fileUTI) {
+        [writableTypes addObject:_fileUTI];
       }
 
       // ... and materialization of the file if requested.
@@ -187,8 +200,9 @@
   // (Blink fills in DropData::file_contents for image drags from the page
   // and for JS-constructed File objects. The MIME type is tested to avoid
   // sending non-image data through the image-specific HTML pasteboard type.)
-  bool hasImageData = !_dropData.file_contents.empty() && _fileType &&
-                      [_fileType conformsToType:UTTypeImage];
+  bool hasImageData =
+      !_dropData.file_contents.empty() && _fileUTI &&
+      UTTypeConformsTo(base::apple::NSToCFPtrCast(_fileUTI), kUTTypeImage);
   if (hasHTMLData) {
     if (hasImageData) {
       [writableTypes addObject:ui::kUTTypeChromiumImageAndHtml];
@@ -272,7 +286,7 @@
   }
 
   // File contents.
-  if ([type isEqualToString:_fileType.identifier]) {
+  if (_fileUTI && [type isEqualToString:_fileUTI]) {
     return [NSData dataWithBytes:_dropData.file_contents.data()
                           length:_dropData.file_contents.size()];
   }
@@ -280,7 +294,7 @@
   // File instantiation promise.
   if ([type isEqualToString:base::apple::CFToNSPtrCast(
                                 kPasteboardTypeFilePromiseContent)]) {
-    return _fileType.identifier;
+    return _fileUTI;
   }
   if ([type isEqualToString:base::apple::CFToNSPtrCast(
                                 kPasteboardTypeFileURLPromise)]) {

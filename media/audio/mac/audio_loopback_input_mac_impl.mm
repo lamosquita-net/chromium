@@ -568,8 +568,13 @@ AudioInputStream* CreateSCKAudioInputStream(
     const std::string& device_id,
     AudioManager::LogCallback log_callback,
     const base::RepeatingCallback<void(AudioInputStream*)> close_callback) {
-  return new SCKAudioInputStream(params, device_id, std::move(log_callback),
-                                 std::move(close_callback));
+  // FlyWeb B1d: ScreenCaptureKit audio is macOS 13.0+ (the test override can
+  // still ask for it on older systems); callers accept nullptr.
+  if (@available(macOS 13.0, *)) {
+    return new SCKAudioInputStream(params, device_id, std::move(log_callback),
+                                   std::move(close_callback));
+  }
+  return nullptr;
 }
 
 }  // namespace media
