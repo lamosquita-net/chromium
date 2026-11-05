@@ -280,9 +280,11 @@ ServiceWatcherImplMac::ServiceWatcherImplMac(
 }
 
 ServiceWatcherImplMac::~ServiceWatcherImplMac() {
-  service_discovery_runner_->PostTask(
-      FROM_HERE, base::BindOnce(&StopServiceBrowser, nw_browser_,
-                                service_discovery_runner_));
+  if (nw_browser_) {  // FlyWeb B1d: nil on macOS 10.14 (no nw_browser).
+    service_discovery_runner_->PostTask(
+        FROM_HERE, base::BindOnce(&StopServiceBrowser, nw_browser_,
+                                  service_discovery_runner_));
+  }
   nw_browser_ = nil;
 
   if (force_enable_legacy_discovery_) {
@@ -305,19 +307,26 @@ void ServiceWatcherImplMac::Start() {
   }
   VLOG(1) << "Listening for service" << service_info.value();
 
-  nw_browse_descriptor_t descriptor =
-      nw_browse_descriptor_create_bonjour_service(
-          service_info->service_type.c_str(), service_info->domain.c_str());
-  nw_parameters_t parameters = nw_parameters_create_secure_tcp(
-      NW_PARAMETERS_DISABLE_PROTOCOL, NW_PARAMETERS_DEFAULT_CONFIGURATION);
-  nw_browser_ = nw_browser_create(descriptor, parameters);
+  // FlyWeb B1d: nw_browser_* (Network.framework browsing) is macOS 10.15+;
+  // on macOS 10.14 the weak symbols are NULL, so use the legacy
+  // NSNetServiceBrowser path instead.
+  if (@available(macOS 10.15, *)) {
+    nw_browse_descriptor_t descriptor =
+        nw_browse_descriptor_create_bonjour_service(
+            service_info->service_type.c_str(), service_info->domain.c_str());
+    nw_parameters_t parameters = nw_parameters_create_secure_tcp(
+        NW_PARAMETERS_DISABLE_PROTOCOL, NW_PARAMETERS_DEFAULT_CONFIGURATION);
+    nw_browser_ = nw_browser_create(descriptor, parameters);
 
-  SetUpServiceBrowser(
-      nw_browser_, base::SingleThreadTaskRunner::GetCurrentDefault(),
-      base::BindRepeating(&ServiceWatcherImplMac::OnServicesUpdate,
-                          weak_factory_.GetWeakPtr()),
-      base::BindRepeating(&ServiceWatcherImplMac::RecordPermissionState,
-                          weak_factory_.GetWeakPtr()));
+    SetUpServiceBrowser(
+        nw_browser_, base::SingleThreadTaskRunner::GetCurrentDefault(),
+        base::BindRepeating(&ServiceWatcherImplMac::OnServicesUpdate,
+                            weak_factory_.GetWeakPtr()),
+        base::BindRepeating(&ServiceWatcherImplMac::RecordPermissionState,
+                            weak_factory_.GetWeakPtr()));
+  } else {
+    force_enable_legacy_discovery_ = true;
+  }
 
   if (force_enable_legacy_discovery_) {
     browser_ = [[NetServiceBrowser alloc]
@@ -333,9 +342,11 @@ void ServiceWatcherImplMac::Start() {
 void ServiceWatcherImplMac::DiscoverNewServices() {
   DCHECK(started_);
   VLOG(1) << "ServiceWatcherImplMac::DiscoverNewServices";
-  service_discovery_runner_->PostTask(
-      FROM_HERE, base::BindOnce(&StartServiceBrowser, nw_browser_,
-                                service_discovery_runner_));
+  if (nw_browser_) {  // FlyWeb B1d: nil on macOS 10.14.
+    service_discovery_runner_->PostTask(
+        FROM_HERE, base::BindOnce(&StartServiceBrowser, nw_browser_,
+                                  service_discovery_runner_));
+  }
 
   if (force_enable_legacy_discovery_) {
     service_discovery_runner_->PostTask(
