@@ -145,6 +145,12 @@ void SetOptionalButton(Gamepad& pad,
 
 GameControllerGamepad::GameControllerGamepad(GCController* controller)
     : controller_(controller) {
+  // FlyWeb B1d: GCController.haptics, GCHapticsLocality* and CoreHaptics are
+  // macOS 11+ (CoreHaptics does not even load on 10.14). No rumble there.
+  if (@available(macOS 11.0, *)) {
+  } else {
+    return;
+  }
   GCDeviceHaptics* haptics = controller_.haptics;
   if (haptics == nil) {
     return;
