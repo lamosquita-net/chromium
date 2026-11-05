@@ -4,6 +4,8 @@
 
 #include "components/persistent_cache/sqlite/sqlite_backend_impl.h"
 
+#include "base/logging.h"  // FlyWeb B1d
+
 #include <stdint.h>
 
 #include <functional>
@@ -339,6 +341,7 @@ base::expected<void, int> SqliteBackendImpl::InsertImpl(
 
 // static
 TransactionError SqliteBackendImpl::TranslateError(int error_code) {
+  LOG(ERROR) << "FlyWeb B1d: persistent cache SQLite error " << error_code;  // FlyWeb B1d
   // Handle extended result codes directly.
   if (error_code == SQLITE_IOERR_LOCK) {
     // Lock abandonment.

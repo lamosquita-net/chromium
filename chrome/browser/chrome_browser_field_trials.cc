@@ -30,6 +30,11 @@
 #include "components/version_info/version_info.h"
 #include "third_party/blink/public/common/features.h"
 
+#if BUILDFLAG(IS_MAC)
+#include "base/environment.h"            // FlyWeb B1d
+#include "gpu/config/gpu_finch_features.h"  // FlyWeb B1d
+#endif
+
 #if BUILDFLAG(IS_ANDROID)
 #include "base/android/background_thread_pool_field_trial.h"
 #include "base/android/bundle_utils.h"
@@ -399,6 +404,18 @@ void ChromeBrowserFieldTrials::RegisterFeatureOverrides(
   // Desktop-first features which are past incubation should either end up here,
   // or to a finch trial that enables it for all form factors.
 #endif  // BUILDFLAG(IS_ANDROID)
+
+#if BUILDFLAG(IS_MAC)
+  // FlyWeb B1d: on macOS 10.14 the SQLite-backed GPU persistent cache fails
+  // with a permanent error and HandlePersistentCacheError() crashes the GPU
+  // process on every start, so Chromium quits with "GPU process isn't usable".
+  // Fall back to the legacy shader disk cache. FLYWEB_GPU_PERSISTENT_CACHE=1
+  // keeps it on (diagnostics).
+  if (features::IsMacOSBelow10_15() &&
+      !base::Environment::Create()->HasVar("FLYWEB_GPU_PERSISTENT_CACHE")) {
+    feature_overrides.DisableFeature(features::kGpuPersistentCache);
+  }
+#endif  // BUILDFLAG(IS_MAC)
 }
 
 void ChromeBrowserFieldTrials::EnableRuntimeMutableFeatures(
