@@ -41,6 +41,10 @@ NSString* GetBundleIdForDefaultAppForScheme(NSString* scheme) {
 // Returns the bundle ID of the default client application for `type`, or nil on
 // failure.
 NSString* GetBundleIdForDefaultAppForUTType(NSString* type) {
+  if (@available(macOS 12.0, *)) {
+  } else {
+    return nil;  // FlyWeb B1d: URLForApplicationToOpenContentType: is 12.0+.
+  }
   UTType* uttype = [UTType typeWithIdentifier:type];
   if (!uttype) {
     return nil;
@@ -53,6 +57,35 @@ NSString* GetBundleIdForDefaultAppForUTType(NSString* type) {
   return [NSBundle bundleWithURL:default_app_url].bundleIdentifier;
 }
 
+// FlyWeb B1d: -[NSWorkspace setDefaultApplicationAtURL:…] and
+// URLsForApplicationsToOpenURL: are macOS 12+. On older systems use the
+// LaunchServices calls they replaced (deprecated but still working).
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+void FlyWebLegacySetDefaultForScheme(NSURL* app_bundle, NSString* scheme) {
+  NSString* bundle_id = [NSBundle bundleWithURL:app_bundle].bundleIdentifier;
+  if (!bundle_id) {
+    return;
+  }
+  LSSetDefaultHandlerForURLScheme((__bridge CFStringRef)scheme,
+                                  (__bridge CFStringRef)bundle_id);
+}
+
+void FlyWebLegacySetDefaultForHTML(NSURL* app_bundle) {
+  NSString* bundle_id = [NSBundle bundleWithURL:app_bundle].bundleIdentifier;
+  if (!bundle_id) {
+    return;
+  }
+  LSSetDefaultRoleHandlerForContentType(CFSTR("public.html"), kLSRolesViewer,
+                                        (__bridge CFStringRef)bundle_id);
+}
+
+NSArray* FlyWebLegacyApplicationURLsForURL(NSURL* url) {
+  return CFBridgingRelease(
+      LSCopyApplicationURLsForURL((__bridge CFURLRef)url, kLSRolesAll));
+}
+#pragma clang diagnostic pop
+
 }  // namespace
 
 bool SetAsDefaultBrowser() {
@@ -61,6 +94,15 @@ bool SetAsDefaultBrowser() {
   NSURL* app_bundle = base::apple::OuterBundleURL();
   if (!app_bundle) {
     return false;
+  }
+
+  if (@available(macOS 12.0, *)) {
+  } else {
+    // FlyWeb B1d: macOS < 12.
+    FlyWebLegacySetDefaultForScheme(app_bundle, @"http");
+    FlyWebLegacySetDefaultForScheme(app_bundle, @"https");
+    FlyWebLegacySetDefaultForHTML(app_bundle);
+    return true;
   }
 
   [NSWorkspace.sharedWorkspace
@@ -130,11 +172,17 @@ bool SetAsDefaultClientForScheme(const std::string& scheme) {
     return false;
   }
 
-  [NSWorkspace.sharedWorkspace
-      setDefaultApplicationAtURL:app_bundle
-            toOpenURLsWithScheme:base::SysUTF8ToNSString(scheme)
-               completionHandler:^(NSError*){
-               }];
+  if (@available(macOS 12.0, *)) {
+    [NSWorkspace.sharedWorkspace
+        setDefaultApplicationAtURL:app_bundle
+              toOpenURLsWithScheme:base::SysUTF8ToNSString(scheme)
+                 completionHandler:^(NSError*){
+                 }];
+  } else {
+    // FlyWeb B1d: macOS < 12.
+    FlyWebLegacySetDefaultForScheme(app_bundle,
+                                    base::SysUTF8ToNSString(scheme));
+  }
 
   // TODO(https://crbug.com/40248220): Passing empty completion handlers,
   // above, is kinda broken, but given that this API is synchronous, nothing
@@ -154,11 +202,14 @@ bool SetAsDefaultHandlerForUTType(const std::string& type) {
   if (!app_bundle) {
     return false;
   }
-  [NSWorkspace.sharedWorkspace setDefaultApplicationAtURL:app_bundle
-                                        toOpenContentType:uttype
-                                        completionHandler:^(NSError*){
-                                        }];
-  return true;
+  if (@available(macOS 12.0, *)) {
+    [NSWorkspace.sharedWorkspace setDefaultApplicationAtURL:app_bundle
+                                          toOpenContentType:uttype
+                                          completionHandler:^(NSError*){
+                                          }];
+    return true;
+  }
+  return false;  // FlyWeb B1d: macOS 11 has UTType but not this selector.
 }
 
 std::u16string GetApplicationNameForScheme(const GURL& url) {
@@ -184,8 +235,12 @@ std::vector<base::FilePath> GetAllApplicationPathsForURL(const GURL& url) {
     return {};
   }
 
-  NSArray* app_urls =
-      [NSWorkspace.sharedWorkspace URLsForApplicationsToOpenURL:ns_url];
+  NSArray* app_urls = nil;
+  if (@available(macOS 12.0, *)) {
+    app_urls = [NSWorkspace.sharedWorkspace URLsForApplicationsToOpenURL:ns_url];
+  } else {
+    app_urls = FlyWebLegacyApplicationURLsForURL(ns_url);  // FlyWeb B1d
+  }
   if (app_urls.count == 0) {
     return {};
   }
