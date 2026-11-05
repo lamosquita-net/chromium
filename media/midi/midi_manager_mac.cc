@@ -39,6 +39,16 @@ namespace midi {
 
 namespace {
 
+// FlyWeb B1d: the UMP API (MIDIInputPortCreateWithProtocol, MIDIEventList*,
+// MIDISendEventList) is macOS 11+; on 10.14 the weak symbols are NULL, so
+// keep the legacy MIDIPacketList path there.
+bool FlyWebUseMidiUmp() {
+  if (__builtin_available(macOS 11.0, *)) {
+    return base::FeatureList::IsEnabled(features::kMidiMacUmp);
+  }
+  return false;
+}
+
 // Maximum buffer size that CoreMIDI can handle for MIDIPacketList.
 const size_t kCoreMIDIMaxPacketListSize = 65536;
 
@@ -187,7 +197,7 @@ void MidiManagerMac::InitializeCoreMIDI() {
   // Create input and output port. These MIDIPortRef references are not needed
   // to be disposed explicitly. CoreMIDI automatically disposes them on the
   // client disposal.
-  if (base::FeatureList::IsEnabled(features::kMidiMacUmp)) {
+  if (FlyWebUseMidiUmp()) {  // FlyWeb B1d
     result = MIDIInputPortCreateWithProtocol(
         client, CFSTR("MIDI Input"), kMIDIProtocol_1_0, &midi_input_,
         ^(const MIDIEventList* event_list, void* src_conn_refcon) {
@@ -376,7 +386,7 @@ void MidiManagerMac::SendMidiData(MidiManagerClient* client,
   MIDITimeStamp coremidi_timestamp = TimeTicksToMIDITimeStamp(timestamp);
   MIDIEndpointRef destination = destinations_[port_index];
 
-  if (base::FeatureList::IsEnabled(features::kMidiMacUmp)) {
+  if (FlyWebUseMidiUmp()) {  // FlyWeb B1d
     // UMP (EventList) path
     base::span<const uint8_t> data_span(data);
     std::vector<uint32_t> ump_words;

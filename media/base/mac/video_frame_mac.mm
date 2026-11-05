@@ -188,6 +188,19 @@ void CvPixelBufferReleaseBytesCallback(void* release_refcon, const void* data) {
 }
 
 bool CvPixelBufferHasColorSpace(CVPixelBufferRef pixel_buffer) {
+  if (@available(macOS 12.0, *)) {
+  } else {
+    // FlyWeb B1d: CVBufferHasAttachment is macOS 12+; use the Get variant.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    return CVBufferGetAttachment(pixel_buffer, kCVImageBufferColorPrimariesKey,
+                                 nullptr) &&
+           CVBufferGetAttachment(pixel_buffer,
+                                 kCVImageBufferTransferFunctionKey, nullptr) &&
+           CVBufferGetAttachment(pixel_buffer, kCVImageBufferYCbCrMatrixKey,
+                                 nullptr);
+#pragma clang diagnostic pop
+  }
   return CVBufferHasAttachment(pixel_buffer, kCVImageBufferColorPrimariesKey) &&
          CVBufferHasAttachment(pixel_buffer,
                                kCVImageBufferTransferFunctionKey) &&

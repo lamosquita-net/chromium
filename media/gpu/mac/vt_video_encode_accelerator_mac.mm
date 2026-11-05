@@ -128,13 +128,15 @@ void ConfigureVtSessionForHdrMetadata(
     }
   }
 
-  if (session_property_setter.IsSupported(
-          kVTCompressionPropertyKey_HDRMetadataInsertionMode) &&
-      !session_property_setter.Set(
-          kVTCompressionPropertyKey_HDRMetadataInsertionMode,
-          kVTHDRMetadataInsertionMode_Auto)) {
-    DLOG(ERROR) << "Failed to set HDRMetadataInsertionMode on "
-                   "VTCompressionSession.";
+  if (@available(macOS 11.0, *)) {  // FlyWeb B1d: NULL constants on 10.14.
+    if (session_property_setter.IsSupported(
+            kVTCompressionPropertyKey_HDRMetadataInsertionMode) &&
+        !session_property_setter.Set(
+            kVTCompressionPropertyKey_HDRMetadataInsertionMode,
+            kVTHDRMetadataInsertionMode_Auto)) {
+      DLOG(ERROR) << "Failed to set HDRMetadataInsertionMode on "
+                     "VTCompressionSession.";
+    }
   }
 }
 
@@ -236,6 +238,13 @@ gfx::Size GetMaxResolution(VideoCodec codec) {
 }
 
 bool IsSVCSupported(VideoCodecProfile profile) {
+  // FlyWeb B1d: low-latency rate control, BaseLayerFrameRateFraction and
+  // BaseFrameQP are macOS 11.3+ (NULL weak constants before). This also
+  // gates IsManualQpSupported() and the low-latency encoder spec.
+  if (@available(macOS 11.3, *)) {
+  } else {
+    return false;
+  }
   const VideoCodec codec = VideoCodecProfileToVideoCodec(profile);
 #if BUILDFLAG(ENABLE_HEVC_PARSER_AND_HW_DECODER) && defined(ARCH_CPU_ARM_FAMILY)
   // macOS 14.0+ support SVC HEVC encoding for Apple Silicon chips only.
@@ -1831,6 +1840,11 @@ bool VTVideoEncodeAccelerator::ConfigureCompressionSession(VideoCodec codec) {
     // with other conditions in the same if statement,
     // see the `unsupported-availability-guard` warning.
     skip_set_reference_buffer_count = (codec == VideoCodec::kH264);
+  }
+  if (@available(macOS 13.0, *)) {
+  } else {
+    // FlyWeb B1d: kVTCompressionPropertyKey_ReferenceBufferCount is 13.0+.
+    skip_set_reference_buffer_count = true;
   }
   if (!skip_set_reference_buffer_count &&
       session_property_setter.IsSupported(
