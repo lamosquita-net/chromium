@@ -331,11 +331,20 @@ void RenderWidgetHostNSViewBridge::ShowSharingServicePicker(
     NSString* ns_title =
         base::SysUTF8ToNSString(title.empty() ? url.spec() : title);
     NSURL* ns_url = net::NSURLWithGURL(url);
-    [items addObject:[[NSPreviewRepresentingActivityItem alloc]
-                         initWithItem:ns_url
-                                title:ns_title
-                                image:nil
-                                 icon:nil]];
+    if (@available(macOS 13.0, *)) {
+      [items addObject:[[NSPreviewRepresentingActivityItem alloc]
+                           initWithItem:ns_url
+                                  title:ns_title
+                                  image:nil
+                                   icon:nil]];
+    } else {
+      // FlyWeb B1d: NSPreviewRepresentingActivityItem is macOS 13+ (nil
+      // before, and addObject:nil throws). Share the title and the URL.
+      [items addObject:ns_title];
+      if (ns_url) {
+        [items addObject:ns_url];
+      }
+    }
   } else if (!title.empty()) {
     [items addObject:base::SysUTF8ToNSString(title)];
   }
