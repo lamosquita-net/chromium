@@ -11,16 +11,15 @@
 #include "ui/base/l10n/l10n_util.h"
 
 // Chromium 150 will be the last mstone to support macOS 12.
-constexpr int kLastMStoneWithSupport = 150;
-constexpr int kMacOSReleaseBeingObsoleted = 12;
+[[maybe_unused]] constexpr int kLastMStoneWithSupport = 150;  // FlyWeb B1d
+[[maybe_unused]] constexpr int kMacOSReleaseBeingObsoleted = 12;  // FlyWeb B1d
 
 namespace ObsoleteSystem {
 
 bool IsObsoleteNowOrSoon() {
-  // Warn for the last three mstones.
-  if (CHROME_VERSION_MAJOR >= kLastMStoneWithSupport - 2) {
-    return base::mac::MacOSMajorVersion() <= kMacOSReleaseBeingObsoleted;
-  }
+  // FlyWeb B1d: FlyWeb supports macOS 10.14 and later, so never show the
+  // "this computer will soon stop receiving updates" infobar or the
+  // IDS_MACOS_OBSOLETE notice in About.
   return false;
 }
 
@@ -29,7 +28,7 @@ std::u16string LocalizedObsoleteString() {
 }
 
 bool IsEndOfTheLine() {
-  return CHROME_VERSION_MAJOR >= kLastMStoneWithSupport;
+  return false;  // FlyWeb B1d (was CHROME_VERSION_MAJOR >= 150)
 }
 
 const char* GetLinkURL() {
