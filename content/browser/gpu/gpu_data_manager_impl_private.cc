@@ -522,10 +522,13 @@ void GpuDataManagerImplPrivate::InitializeGpuModes() {
       // to the GPU process post-initialization.
       const bool early_feature_check =
           !base::FeatureList::IsEnabled(features::kLateGraphiteFeatureCheck);
+      // FlyWeb B1d: never offer a Graphite mode on macOS < 10.15, not even
+      // with --enable-skia-graphite or the late feature check.
       const bool can_use_graphite =
-          early_feature_check
-              ? features::IsSkiaGraphiteEnabled(command_line)
-              : !command_line->HasSwitch(switches::kDisableSkiaGraphite);
+          !features::IsMacOSBelow10_15() &&
+          (early_feature_check
+               ? features::IsSkiaGraphiteEnabled(command_line)
+               : !command_line->HasSwitch(switches::kDisableSkiaGraphite));
       const bool can_use_vulkan = features::IsUsingVulkan();
       if (can_use_graphite) {
         fallback_modes_.push_back(gpu::GpuMode::HARDWARE_GRAPHITE);

@@ -641,6 +641,16 @@ bool IsSkiaGraphiteEnabled(const base::CommandLine* command_line) {
     return false;
   }
 
+  // FlyWeb B1d: Graphite needs Metal 3 features absent on macOS 10.14, so it
+  // stays off there even with --enable-skia-graphite (security rule 17).
+  if (IsMacOSBelow10_15()) {
+    if (command_line->HasSwitch(switches::kEnableSkiaGraphite)) {
+      LOG(WARNING) << "FlyWeb B1d: --enable-skia-graphite ignored on macOS "
+                      "< 10.15";
+    }
+    return false;
+  }
+
   // Force Graphite on if --enable-skia-graphite flag is specified.
   if (command_line->HasSwitch(switches::kEnableSkiaGraphite)) {
     // The flag enable-skia-graphite is for testing purpose, so set the params
