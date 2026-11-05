@@ -707,10 +707,21 @@ void MacNotificationServiceUN::OnGotAuthorizationStatus(
              (void (^)(UNNotificationPresentationOptions options))
                  completionHandler {
   // Receiving a notification when the app is in the foreground.
-  completionHandler(UNNotificationPresentationOptionSound |
-                    UNNotificationPresentationOptionList |
-                    UNNotificationPresentationOptionBanner |
-                    UNNotificationPresentationOptionBadge);
+  if (@available(macOS 11.0, *)) {
+    completionHandler(UNNotificationPresentationOptionSound |
+                      UNNotificationPresentationOptionList |
+                      UNNotificationPresentationOptionBanner |
+                      UNNotificationPresentationOptionBadge);
+  } else {
+    // FlyWeb B1d: List/Banner are macOS 11+; on 10.14 the unknown bits show
+    // nothing, so use Alert (deprecated in 11) to keep the banner.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    completionHandler(UNNotificationPresentationOptionSound |
+                      UNNotificationPresentationOptionAlert |
+                      UNNotificationPresentationOptionBadge);
+#pragma clang diagnostic pop
+  }
 }
 
 - (void)userNotificationCenter:(UNUserNotificationCenter*)center
