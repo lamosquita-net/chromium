@@ -6,6 +6,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include <CoreServices/CoreServices.h>
+
 #include <list>
 #include <string>
 
@@ -48,9 +50,19 @@ std::list<BundleInfoPlist> BundleInfoPlist::SearchForBundlesById(
   std::list<BundleInfoPlist> infos;
 
   // First search using LaunchServices.
-  NSArray* bundle_urls = [NSWorkspace.sharedWorkspace
-      URLsForApplicationsWithBundleIdentifier:base::SysUTF8ToNSString(
-                                                  bundle_id)];
+  NSArray* bundle_urls = nil;
+  if (@available(macOS 12.0, *)) {
+    bundle_urls = [NSWorkspace.sharedWorkspace
+        URLsForApplicationsWithBundleIdentifier:base::SysUTF8ToNSString(
+                                                    bundle_id)];
+  } else {
+    // FlyWeb B1d: -[NSWorkspace URLsForApplicationsWithBundleIdentifier:] is
+    // macOS 12+; use the LaunchServices equivalent (10.10+).
+    bundle_urls = base::apple::CFToNSOwnershipCast(
+        LSCopyApplicationURLsForBundleIdentifier(
+            base::apple::NSToCFPtrCast(base::SysUTF8ToNSString(bundle_id)),
+            nullptr));
+  }
   for (NSURL* url in bundle_urls) {
     base::FilePath bundle_path = base::apple::NSURLToFilePath(url);
     BundleInfoPlist info(bundle_path);

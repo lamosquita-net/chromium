@@ -21,8 +21,17 @@ class VisionAPI : public VisionAPIInterface {
     VNDetectBarcodesRequest* barcodes_request =
         [[VNDetectBarcodesRequest alloc] init];
     NSError* error = nil;
-    NSArray<VNBarcodeSymbology>* symbologies =
-        [barcodes_request supportedSymbologiesAndReturnError:&error];
+    NSArray<VNBarcodeSymbology>* symbologies = nil;
+    if (@available(macOS 12.0, *)) {
+      symbologies =
+          [barcodes_request supportedSymbologiesAndReturnError:&error];
+    } else {
+      // FlyWeb B1d: -supportedSymbologiesAndReturnError: is macOS 12+.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+      symbologies = VNDetectBarcodesRequest.supportedSymbologies;
+#pragma clang diagnostic pop
+    }
     if (error) {
       DLOG(ERROR) << base::SysNSStringToUTF8(error.localizedDescription);
     }

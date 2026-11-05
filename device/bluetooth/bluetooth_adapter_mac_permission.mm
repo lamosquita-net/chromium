@@ -9,6 +9,12 @@
 namespace device {
 
 BluetoothAdapter::PermissionStatus GetMacBluetoothPermissionStatus() {
+  if (@available(macOS 10.15, *)) {
+  } else {
+    // FlyWeb B1d: +[CBManager authorization] is macOS 10.15+; before that
+    // there is no Bluetooth privacy permission.
+    return BluetoothAdapter::PermissionStatus::kAllowed;
+  }
   switch (CBCentralManager.authorization) {
     case CBManagerAuthorizationNotDetermined:
       return BluetoothAdapter::PermissionStatus::kUndetermined;

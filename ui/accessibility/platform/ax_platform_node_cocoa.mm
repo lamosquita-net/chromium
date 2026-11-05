@@ -3929,6 +3929,9 @@ const ui::CocoaActionList& GetCocoaActionListForTesting() {
       [self getStringAttribute:ax::mojom::StringAttribute::kDescription];
   AXCustomContent* contentItem =
       [AXCustomContent customContentWithLabel:@"description" value:description];
+  if (!contentItem) {
+    return nil;  // FlyWeb B1d: AXCustomContent is macOS 11+ (nil class).
+  }
   // A custom content importance of high causes it to be spoken
   // automatically, rather than "More content available".
   contentItem.importance = AXCustomContentImportanceHigh;

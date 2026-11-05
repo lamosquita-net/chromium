@@ -150,7 +150,9 @@
       _fileType = [UTType typeWithMIMEType:base::SysUTF8ToNSString(mimeType)];
 
       // Promise both the file's contents...
-      if (!_dropData.file_contents.empty()) {
+      // FlyWeb B1d: UTType is macOS 11+; on 10.14 _fileType is nil and adding a
+      // nil identifier threw NSInvalidArgumentException (dragging an image out).
+      if (!_dropData.file_contents.empty() && _fileType.identifier) {
         [writableTypes addObject:_fileType.identifier];
       }
 

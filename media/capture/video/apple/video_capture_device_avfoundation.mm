@@ -643,7 +643,8 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
     base::AutoLock lock(_lock);
     _photoOutput = [[AVCapturePhotoOutput alloc] init];
   }
-  if (![_captureSession canAddOutput:_photoOutput]) {
+  // FlyWeb B1d: AVCapturePhotoOutput is macOS 10.15+ (nil class on 10.14).
+  if (!_photoOutput || ![_captureSession canAddOutput:_photoOutput]) {
     {
       base::AutoLock lock(_lock);
       if (_frameReceiver) {
@@ -1252,7 +1253,10 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
   if (_isPortraitEffectSupportedForTesting.has_value()) {
     return _isPortraitEffectSupportedForTesting.value();
   }
-  return _captureDevice.activeFormat.portraitEffectSupported;
+  if (@available(macOS 12.0, *)) {
+    return _captureDevice.activeFormat.portraitEffectSupported;
+  }
+  return false;  // FlyWeb B1d: portraitEffectSupported is macOS 12+.
 }
 
 - (void)setIsPortraitEffectActiveForTesting:
@@ -1273,7 +1277,10 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
   if (_isPortraitEffectActiveForTesting.has_value()) {
     return _isPortraitEffectActiveForTesting.value();
   }
-  return _captureDevice.portraitEffectActive;
+  if (@available(macOS 12.0, *)) {
+    return _captureDevice.portraitEffectActive;
+  }
+  return false;  // FlyWeb B1d: portraitEffectActive is macOS 12+.
 }
 
 - (void)observeValueForKeyPath:(NSString*)keyPath

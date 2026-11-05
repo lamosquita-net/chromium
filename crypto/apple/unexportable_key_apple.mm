@@ -767,6 +767,12 @@ std::unique_ptr<UnexportableKeyProviderApple> GetUnexportableKeyProviderApple(
       << "A keychain access group must be set when using unexportable keys on "
          "Apple platforms";
 #if !BUILDFLAG(IS_IOS)
+  // FlyWeb B1d: kSecUseDataProtectionKeychain is macOS 10.15+ (a null key in
+  // the query dictionaries throws); no unexportable keys before that.
+  if (@available(macOS 10.15, *)) {
+  } else {
+    return nullptr;
+  }
   // Secure Enclave on iOS is available since the iPhone 5s (A7 chip). This
   // redundant check causes crashes because of the synchronous initialization of
   // `TKTokenWatcher` on every call.

@@ -7,6 +7,7 @@
 #import <AppKit/AppKit.h>
 #import <Foundation/Foundation.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+#include <CoreServices/CoreServices.h>
 #include <stddef.h>
 
 #include "base/apple/bridging.h"
@@ -33,15 +34,37 @@ const int kFileTypePopupTag = 1234;
 // Returns whether the Uniform Type system considers `ext` to be a valid file
 // extension.
 bool IsValidExtension(const base::FilePath::StringType& ext) {
+  if (@available(macOS 11.0, *)) {
+  } else {
+    // FlyWeb B1d: UTType is macOS 11+; use the UTI functions on 10.14.
+    base::apple::ScopedCFTypeRef<CFStringRef> uti(
+        UTTypeCreatePreferredIdentifierForTag(
+            kUTTagClassFilenameExtension,
+            base::apple::NSToCFPtrCast(base::SysUTF8ToNSString(ext)), nullptr));
+    return !!uti;
+  }
   UTType* type =
       [UTType typeWithFilenameExtension:base::SysUTF8ToNSString(ext)];
   return !!type;
 }
 
 NSString* GetDescriptionFromExtension(const base::FilePath::StringType& ext) {
-  UTType* type =
-      [UTType typeWithFilenameExtension:base::SysUTF8ToNSString(ext)];
-  NSString* description = type.localizedDescription;
+  NSString* description = nil;
+  if (@available(macOS 11.0, *)) {
+    UTType* type =
+        [UTType typeWithFilenameExtension:base::SysUTF8ToNSString(ext)];
+    description = type.localizedDescription;
+  } else {
+    // FlyWeb B1d: UTType is macOS 11+; use the UTI functions on 10.14.
+    base::apple::ScopedCFTypeRef<CFStringRef> uti(
+        UTTypeCreatePreferredIdentifierForTag(
+            kUTTagClassFilenameExtension,
+            base::apple::NSToCFPtrCast(base::SysUTF8ToNSString(ext)), nullptr));
+    if (uti) {
+      description =
+          base::apple::CFToNSOwnershipCast(UTTypeCopyDescription(uti.get()));
+    }
+  }
 
   if (description.length) {
     return description;

@@ -78,18 +78,23 @@ void CreateShortcutOnUserDesktop(ShortcutMetadata shortcut_metadata,
   // vast majority of cases.
   base::ConcurrentCallbacks<bool> concurrent;
 
-  [NSWorkspace.sharedWorkspace
-      setDefaultApplicationAtURL:base::apple::MainBundleURL()
-                 toOpenFileAtURL:base::apple::FilePathToNSURL(target_path)
-               completionHandler:
-                   base::CallbackToBlock(base::BindPostTaskToCurrentDefault(
-                       base::BindOnce([](NSError* error) {
-                         if (error) {
-                           LOG(ERROR) << "Failed to set default application "
-                                         "for shortcut.";
-                         }
-                         return !error;
-                       }).Then(concurrent.CreateCallback())))];
+  // FlyWeb B1d: -[NSWorkspace setDefaultApplicationAtURL:toOpenFileAtURL:
+  // completionHandler:] is macOS 12+. Before that the shortcut is created
+  // without the per-file default application (non-fatal, see above).
+  if (@available(macOS 12.0, *)) {
+    [NSWorkspace.sharedWorkspace
+        setDefaultApplicationAtURL:base::apple::MainBundleURL()
+                   toOpenFileAtURL:base::apple::FilePathToNSURL(target_path)
+                 completionHandler:
+                     base::CallbackToBlock(base::BindPostTaskToCurrentDefault(
+                         base::BindOnce([](NSError* error) {
+                           if (error) {
+                             LOG(ERROR) << "Failed to set default application "
+                                           "for shortcut.";
+                           }
+                           return !error;
+                         }).Then(concurrent.CreateCallback())))];
+  }
 
   NSImage* icon_image = [[NSImage alloc] init];
   for (const gfx::Image& image : shortcut_metadata.shortcut_images) {

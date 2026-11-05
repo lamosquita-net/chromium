@@ -1967,12 +1967,18 @@ void NativeWidgetNSWindowBridge::ExitFullscreen() {
 void NativeWidgetNSWindowBridge::SetCanAppearInExistingFullscreenSpaces(
     bool can_appear_in_existing_fullscreen_spaces) {
   NSWindowCollectionBehavior collectionBehavior = window_.collectionBehavior;
+  // FlyWeb B1d: NSWindowCollectionBehaviorPrimary is macOS 13+; do not set
+  // an unknown collection behavior bit on older systems.
+  NSWindowCollectionBehavior primary_behavior = 0;
+  if (@available(macOS 13.0, *)) {
+    primary_behavior = NSWindowCollectionBehaviorPrimary;
+  }
   if (can_appear_in_existing_fullscreen_spaces) {
-    collectionBehavior &= ~NSWindowCollectionBehaviorPrimary;
+    collectionBehavior &= ~primary_behavior;
     collectionBehavior |= NSWindowCollectionBehaviorFullScreenAuxiliary;
     collectionBehavior &= ~NSWindowCollectionBehaviorFullScreenPrimary;
   } else {
-    collectionBehavior |= NSWindowCollectionBehaviorPrimary;
+    collectionBehavior |= primary_behavior;
     collectionBehavior |= NSWindowCollectionBehaviorFullScreenPrimary;
     collectionBehavior &= ~NSWindowCollectionBehaviorFullScreenAuxiliary;
   }

@@ -60,8 +60,16 @@
   position.longitude = location.coordinate.longitude;
   position.timestamp = base::Time::FromSecondsSinceUnixEpoch(
       location.timestamp.timeIntervalSince1970);
-  if (base::FeatureList::IsEnabled(features::kEllipsoidalAltitude)) {
-    position.altitude = location.ellipsoidalAltitude;
+  // FlyWeb B1d: -[CLLocation ellipsoidalAltitude] is macOS 12+ (the feature is
+  // enabled by default, so geolocation threw an unrecognized selector on 10.14).
+  bool ellipsoidal = false;
+  if (@available(macOS 12.0, *)) {
+    ellipsoidal = base::FeatureList::IsEnabled(features::kEllipsoidalAltitude);
+  }
+  if (ellipsoidal) {
+    if (@available(macOS 12.0, *)) {
+      position.altitude = location.ellipsoidalAltitude;
+    }
   } else {
     position.altitude = location.altitude;
   }
