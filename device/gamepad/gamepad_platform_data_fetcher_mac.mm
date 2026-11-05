@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "base/mac/mac_util.h"
 #include "base/apple/bridging.h"
 #include "base/apple/foundation_util.h"
 #include "base/feature_list.h"
@@ -361,6 +362,11 @@ void GamepadPlatformDataFetcherMac::ResetVibration(
 bool GamepadPlatformDataFetcherMac::IsSupportedByGameController(
     uint16_t vendor_id,
     uint16_t product_id) {
+  // FlyWeb B1d: no GameController fetcher before macOS 11.3 (see
+  // gamepad_platform_data_fetcher.h), so HID keeps every gamepad.
+  if (base::mac::MacOSVersion() < 11'03'00) {
+    return false;
+  }
   const auto& gamepad_id_list = GamepadIdList::Get();
   GamepadId gamepad_id =
       gamepad_id_list.GetGamepadId("", vendor_id, product_id);

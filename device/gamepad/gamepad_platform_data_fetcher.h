@@ -11,6 +11,10 @@
 #include "base/compiler_specific.h"
 #include "base/task/sequenced_task_runner.h"
 #include "build/build_config.h"
+
+#if BUILDFLAG(IS_MAC)
+#include "base/mac/mac_util.h"
+#endif
 #include "device/gamepad/gamepad_data_fetcher.h"
 #include "device/gamepad/gamepad_data_fetcher_manager.h"
 #include "device/gamepad/public/cpp/gamepad_features.h"
@@ -57,7 +61,17 @@ void AddGamepadPlatformDataFetchers(GamepadDataFetcherManager* manager) {
 
 #elif BUILDFLAG(IS_APPLE)
 
+#if BUILDFLAG(IS_MAC)
+  // FlyWeb B1d: GameControllerDataFetcherMac uses GCController APIs from macOS
+  // 10.15 / 11.3 (productCategory, shouldMonitorBackgroundEvents); on older
+  // macOS the unrecognized selector kills the browser as soon as a page calls
+  // navigator.getGamepads(). There every gamepad goes through the HID fetchers.
+  if (base::mac::MacOSVersion() >= 11'03'00) {
+    manager->AddFactory(new GameControllerDataFetcherMac::Factory());
+  }
+#else
   manager->AddFactory(new GameControllerDataFetcherMac::Factory());
+#endif
 #if BUILDFLAG(IS_MAC)
   manager->AddFactory(new GamepadPlatformDataFetcherMac::Factory());
   manager->AddFactory(new NintendoDataFetcher::Factory());
