@@ -535,8 +535,15 @@ void ClipboardMac::WritePortableAndPlatformRepresentationsInternal(
     // expiration" method used here. However, it is not available on all macOS
     // releases that Chromium supports. When Chromium requires macOS 26+, it
     // might be worthwhile looking into whether that is a better choice.
-    [GetPasteboard()
-        _setExpirationDate:[NSDate dateWithTimeIntervalSinceNow:5 * 60]];
+    // FlyWeb (macOS 10.14/10.15): this SPI is only known to exist on macOS 12+;
+    // calling it unguarded would raise "unrecognized selector" and crash on
+    // every copy from an off-the-record window. Skip it where it is missing.
+    NSPasteboard* pasteboard_for_expiration = GetPasteboard();
+    if ([pasteboard_for_expiration
+            respondsToSelector:@selector(_setExpirationDate:)]) {
+      [pasteboard_for_expiration
+          _setExpirationDate:[NSDate dateWithTimeIntervalSinceNow:5 * 60]];
+    }
   }
 
   if (privacy_types & Clipboard::PrivacyTypes::kNoDisplay) {
