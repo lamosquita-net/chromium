@@ -153,6 +153,10 @@ void LaunchApplication(const base::FilePath& app_bundle_path,
     if (options.create_new_instance) {
       launch_options |= NSWorkspaceLaunchNewInstance;
     }
+    // FlyWeb B1d: as config.promptsUserIfNeeded on 10.15+ (and as in 116).
+    if (options.prompt_user_if_needed) {
+      launch_options |= NSWorkspaceLaunchWithErrorPresentation;
+    }
     if (options.hidden_in_background) {
       launch_options |= NSWorkspaceLaunchAndHide |
                         NSWorkspaceLaunchWithoutAddingToRecents;
