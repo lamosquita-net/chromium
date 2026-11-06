@@ -263,7 +263,9 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
   // in case the color space cannot be correclty determined from the buffer.
   std::optional<gfx::ColorSpace> _colorSpaceAfterTransform;
 
-  AVCapturePhotoOutput* __strong _photoOutput;
+  // FlyWeb B1d (FM.42 a2): AVCapturePhotoOutput on macOS 10.15+; on 10.14 it is an
+  // AVCaptureStillImageOutput, as in 116.
+  id __strong _photoOutput;
 
   // Only accessed on the main thread. The takePhoto() operation is considered
   // pending until we're ready to take another photo, which involves a PostTask
@@ -648,7 +650,13 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
   {
     // `_lock` is needed since `_photoOutput` may be read from non-main thread.
     base::AutoLock lock(_lock);
-    _photoOutput = [[AVCapturePhotoOutput alloc] init];
+    if ([self useLegacyStillImageApi]) {
+      // FlyWeb B1d (FM.42 a2): AVCapturePhotoOutput is macOS 10.15+; the 116
+      // AVCaptureStillImageOutput path (10.7) on 10.14.
+      _photoOutput = [[AVCaptureStillImageOutput alloc] init];
+    } else {
+      _photoOutput = [[AVCapturePhotoOutput alloc] init];
+    }
   }
   // FlyWeb B1d: AVCapturePhotoOutput is macOS 10.15+ (nil class on 10.14).
   if (!_photoOutput || ![_captureSession canAddOutput:_photoOutput]) {
@@ -687,12 +695,87 @@ AVCaptureDeviceFormat* FindBestCaptureFormat(
 
 #pragma mark Private methods
 
+// FlyWeb B1d (FM.42 a2): true on macOS 10.14, where only AVCaptureStillImageOutput
+// exists.
+- (bool)useLegacyStillImageApi {
+#if BUILDFLAG(IS_MAC)
+  if (@available(macOS 10.15, *)) {
+    return false;
+  }
+  return true;
+#else
+  return false;
+#endif
+}
+
 - (void)takePhotoInternal {
   DCHECK(_mainThreadTaskRunner->BelongsToCurrentThread());
   DCHECK(_captureSession.running);
   // takePhotoInternal() can only happen when we have a `_photoOutput` because
   // stopPhotoOutput() cancels in-flight operations by invalidating weak ptrs.
   DCHECK(_photoOutput);
+#if BUILDFLAG(IS_MAC)
+  if ([self useLegacyStillImageApi]) {
+    // FlyWeb B1d (FM.42 a2, from 116): `_photoOutput` is an
+    // AVCaptureStillImageOutput. As in
+    // captureOutput:didFinishProcessingPhoto:error:, a result for an output
+    // that is no longer current is ignored.
+    AVCaptureStillImageOutput* image_output =
+        static_cast<AVCaptureStillImageOutput*>(_photoOutput);
+    __weak VideoCaptureDeviceAVFoundation* weakSelf = self;
+    const auto handler = ^(CMSampleBufferRef sampleBuffer, NSError* error) {
+      VideoCaptureDeviceAVFoundation* sSelf = weakSelf;
+      if (!sSelf) {
+        return;
+      }
+      {
+        base::AutoLock lock(sSelf->_lock);
+        if (image_output != sSelf->_photoOutput) {
+          return;
+        }
+        if (sSelf->_frameReceiver) {
+          // The default output settings are JPEG.
+          std::optional<base::span<const uint8_t>> data;
+          if (!error && sampleBuffer) {
+            data = media::ExtractDataSpan(sampleBuffer);
+          }
+          if (data) {
+            sSelf->_frameReceiver->OnPhotoTaken(data->data(), data->size(),
+                                                "image/jpeg");
+          } else {
+            sSelf->_frameReceiver->OnPhotoError();
+          }
+        }
+      }
+      // Whether we succeeded or failed, we need to resolve the pending
+      // takePhoto() operation.
+      sSelf->_mainThreadTaskRunner->PostTask(
+          FROM_HERE, base::BindOnce(
+                         [](VideoCaptureDeviceAVFoundation* __weak wSelf) {
+                           VideoCaptureDeviceAVFoundation* strongSelf = wSelf;
+                           if (strongSelf) {
+                             [strongSelf takePhotoResolved];
+                           }
+                         },
+                         weakSelf));
+    };
+    AVCaptureConnection* const connection =
+        image_output.connections.firstObject;
+    if (!connection) {
+      {
+        base::AutoLock lock(_lock);
+        if (_frameReceiver) {
+          _frameReceiver->OnPhotoError();
+        }
+      }
+      [self takePhotoResolved];
+      return;
+    }
+    [image_output captureStillImageAsynchronouslyFromConnection:connection
+                                              completionHandler:handler];
+    return;
+  }
+#endif  // BUILDFLAG(IS_MAC)
   @try {
     // Asynchronous success or failure is handled inside
     // captureOutput:didFinishProcessingPhoto:error on an unknown thread.
