@@ -25,6 +25,12 @@ BASE_FEATURE(kWarmScreenCaptureSequoia, base::FEATURE_DISABLED_BY_DEFAULT);
 
 bool ShouldWarmScreenCapture() {
   const int macos_version = base::mac::MacOSVersion();
+  // FlyWeb B1d (FM.42 c2): no Screen Recording permission before 10.15, so
+  // nothing to warm (as in Chromium 116).
+  if (macos_version < 10'15'00) {
+    return false;
+  }
+
   // On macOS < 14, we're using CGWindowListCreateImage to capture a screenshot.
   // Starting in macOS 14, CGWindowListCreateImage causes a "your screen is
   // being captured" chip to show in the menu bar while an app is capturing the
