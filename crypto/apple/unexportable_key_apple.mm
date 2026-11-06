@@ -763,31 +763,20 @@ std::optional<size_t> UnexportableKeyProviderApple::DeleteAllKeysSlowly() {
 
 std::unique_ptr<UnexportableKeyProviderApple> GetUnexportableKeyProviderApple(
     UnexportableKeyProvider::Config config) {
+#if BUILDFLAG(IS_IOS)
   CHECK(!config.keychain_access_group.empty())
       << "A keychain access group must be set when using unexportable keys on "
          "Apple platforms";
-#if !BUILDFLAG(IS_IOS)
-  // FlyWeb B1d: kSecUseDataProtectionKeychain is macOS 10.15+ (a null key in
-  // the query dictionaries throws); no unexportable keys before that.
-  if (@available(macOS 10.15, *)) {
-  } else {
-    return nullptr;
-  }
-  // Secure Enclave on iOS is available since the iPhone 5s (A7 chip). This
-  // redundant check causes crashes because of the synchronous initialization of
-  // `TKTokenWatcher` on every call.
-  if (![KeychainV2::GetInstance().GetTokenIDs()
-          containsObject:CFToNSPtrCast(kSecAttrTokenIDSecureEnclave)]) {
-    return nullptr;
-  }
-  // Inspecting the binary for the entitlement is not available on iOS, assume
-  // it is available.
-  if (!ExecutableHasKeychainAccessGroupEntitlement(
-          config.keychain_access_group)) {
-    return nullptr;
-  }
-#endif  // !BUILDFLAG(IS_IOS)
+  // Secure Enclave on iOS is available since the iPhone 5s (A7 chip).
   return std::make_unique<UnexportableKeyProviderApple>(std::move(config));
+#else
+  // FlyWeb B1d (FM.42 d1): no Secure Enclave on any Mac (27-10-2026), so no
+  // unexportable keys: callers fall back as on a Mac without T2, and nothing
+  // creates and deletes an enclave key at every launch (TPM metrics, FM.42 d2).
+  // This also keeps kSecUseDataProtectionKeychain (macOS 10.15+, a null weak
+  // constant on 10.14) out of reach (LOCAL-8).
+  return nullptr;
+#endif  // BUILDFLAG(IS_IOS)
 }
 
 }  // namespace crypto::apple
