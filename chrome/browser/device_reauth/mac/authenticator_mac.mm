@@ -13,25 +13,10 @@ AuthenticatorMac::AuthenticatorMac() = default;
 AuthenticatorMac::~AuthenticatorMac() = default;
 
 bool AuthenticatorMac::CheckIfBiometricsAvailable() {
-  LAContext* context = [[LAContext alloc] init];
-  // FYI, these two LAPolicy constants are defined to be the same value (4), but
-  // because the new constant has an annotation of macOS 15+ and the old
-  // constant is marked as being deprecated, a runtime switch is forced.
-  if (@available(macOS 15, *)) {
-    return
-        [context canEvaluatePolicy:
-                     LAPolicyDeviceOwnerAuthenticationWithBiometricsOrCompanion
-                             error:nil];
-  } else if (@available(macOS 10.15, *)) {
-    return [context
-        canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometricsOrWatch
-                    error:nil];
-  } else {
-    // FlyWeb B1b: policy 4 is macOS 10.15+; 10.14 throws on it.
-    return [context
-        canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics
-                    error:nil];
-  }
+  // FlyWeb B1d (FM.42 d4): no Touch ID on any Mac (27-10-2026): reauth
+  // always asks for the system password (AuthenticateUserWithNonBiometrics),
+  // as on a Mac without Touch ID.
+  return false;
 }
 
 bool AuthenticatorMac::CheckIfBiometricsOrScreenLockAvailable() {
