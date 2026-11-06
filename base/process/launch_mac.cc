@@ -159,6 +159,9 @@ class PosixSpawnFileActions {
   }
 
 #if BUILDFLAG(IS_MAC)
+  // FlyWeb B1d (LOCAL-8): posix_spawn_file_actions_addchdir_np is macOS 10.15+ (a
+  // null weak symbol on 10.14). As in 116, 10.14 uses the per-thread cwd.
+  __attribute__((availability(macos, introduced = 10.15)))
   void Chdir(const char* path) {
     if (__builtin_available(macOS 26, *)) {
       DPSXCHECK(posix_spawn_file_actions_addchdir(&file_actions_, path));
@@ -177,7 +180,6 @@ class PosixSpawnFileActions {
   posix_spawn_file_actions_t file_actions_;
 };
 
-#if !BUILDFLAG(IS_MAC)
 int ChangeCurrentThreadDirectory(const char* path) {
   return pthread_chdir_np(path);
 }
@@ -187,7 +189,6 @@ int ChangeCurrentThreadDirectory(const char* path) {
 int ResetCurrentThreadDirectory() {
   return pthread_fchdir_np(-1);
 }
-#endif
 
 struct GetAppOutputOptions {
   // Whether to pipe stderr to stdout in |output|.
@@ -358,17 +359,20 @@ Process LaunchProcess(const std::vector<std::string>& argv,
   if (!options.current_directory.empty()) {
     const char* chdir_str = options.current_directory.value().c_str();
 #if BUILDFLAG(IS_MAC)
-    file_actions.Chdir(chdir_str);
-#else
-    // If the chdir posix_spawn_file_actions extension is not available,
-    // change the thread-specific working directory. The new process will
-    // inherit it during posix_spawnp().
-    int rv = ChangeCurrentThreadDirectory(chdir_str);
-    if (rv != 0) {
-      DPLOG(ERROR) << "pthread_chdir_np";
-      return Process();
-    }
+    if (__builtin_available(macOS 10.15, *)) {
+      file_actions.Chdir(chdir_str);
+    } else
 #endif
+    {
+      // If the chdir posix_spawn_file_actions extension is not available,
+      // change the thread-specific working directory. The new process will
+      // inherit it during posix_spawnp().
+      int rv = ChangeCurrentThreadDirectory(chdir_str);
+      if (rv != 0) {
+        DPLOG(ERROR) << "pthread_chdir_np";
+        return Process();
+      }
+    }
   }
 
   int rv;
@@ -438,12 +442,18 @@ Process LaunchProcess(const std::vector<std::string>& argv,
 #endif
   }
 
-#if !BUILDFLAG(IS_MAC)
   // Restore the thread's working directory if it was changed.
   if (!options.current_directory.empty()) {
-    ResetCurrentThreadDirectory();
-  }
+#if BUILDFLAG(IS_MAC)
+    if (__builtin_available(macOS 10.15, *)) {
+      // Nothing to do because no global state was changed, but
+      // __builtin_available is special and cannot be negated.
+    } else
 #endif
+    {
+      ResetCurrentThreadDirectory();
+    }
+  }
 
   if (rv != 0) {
     DLOG(ERROR) << "posix_spawnp(" << executable_path << "): -" << rv << " "
