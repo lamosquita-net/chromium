@@ -136,6 +136,10 @@ class COMPONENT_EXPORT(GEOLOCATION) SystemGeolocationSourceApple
   // Time when position watching started. Used to calculate the time to first
   // position is updated.
   base::TimeTicks watch_start_time_;
+  // FlyWeb B1d (FM.42 b4): on 10.14 the permission is asked by starting location
+  // updates; these keep them running until the user answers.
+  bool watching_position_ = false;
+  bool requesting_permission_ = false;
 #if BUILDFLAG(IS_IOS_TVOS)
   // This timer is used to throttle location requests to mitigate a client
   // control. Once the timer fires, OnRequestLocationThrottleTimerFiring() will

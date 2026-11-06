@@ -68,7 +68,16 @@ void SystemGeolocationSourceApple::RegisterPermissionUpdateCallback(
 }
 
 void SystemGeolocationSourceApple::PermissionUpdated() {
-  permission_update_callback_.Run(GetSystemPermission());
+  const LocationSystemPermissionStatus status = GetSystemPermission();
+  // FlyWeb B1d (FM.42 b4): the 10.14 request below is answered.
+  if (requesting_permission_ &&
+      status != LocationSystemPermissionStatus::kNotDetermined) {
+    requesting_permission_ = false;
+    if (!watching_position_) {
+      [location_manager_ stopUpdatingLocation];
+    }
+  }
+  permission_update_callback_.Run(status);
 }
 
 void SystemGeolocationSourceApple::PositionUpdated(
@@ -125,6 +134,7 @@ void SystemGeolocationSourceApple::StartWatchingPositionInternal(
     // Using kCLLocationAccuracyHundredMeters for consistency with Android.
     location_manager_.desiredAccuracy = kCLLocationAccuracyHundredMeters;
   }
+  watching_position_ = true;
 #if BUILDFLAG(IS_IOS_TVOS)
   // tvOS uses requestLocation for the one-time delivery of the location.
   // Since requestLocation updates location every call,
@@ -154,7 +164,11 @@ void SystemGeolocationSourceApple::StopWatchingPositionInternal() {
   request_throttle_timer_.Stop();
 #endif
   CHECK(main_task_runner_->BelongsToCurrentThread());
-  [location_manager_ stopUpdatingLocation];
+  watching_position_ = false;
+  // FlyWeb B1d (FM.42 b4): keep the 10.14 permission request alive.
+  if (!requesting_permission_) {
+    [location_manager_ stopUpdatingLocation];
+  }
   // If `StopWatchingPosition` is called for any reason, stop the network status
   // event timer (which also cancel the pending fallback).
   if (network_changed_timer_.IsRunning()) {
@@ -214,6 +228,13 @@ void SystemGeolocationSourceApple::RequestPermission() {
   // system asks when location updates start.
   if (@available(macOS 10.15, *)) {
     [location_manager_ requestWhenInUseAuthorization];
+  } else if (GetSystemPermission() ==
+             LocationSystemPermissionStatus::kNotDetermined) {
+    // FlyWeb B1d (FM.42 b4): start the updates so that 10.14 shows its dialog;
+    // otherwise SystemPermissionSettings waits forever for an answer.
+    // PermissionUpdated() stops them once the user decides.
+    requesting_permission_ = true;
+    [location_manager_ startUpdatingLocation];
   }
 #else
   [location_manager_ requestWhenInUseAuthorization];
