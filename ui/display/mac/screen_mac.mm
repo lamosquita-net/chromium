@@ -7,9 +7,12 @@
 #import <AppKit/AppKit.h>
 #import <ApplicationServices/ApplicationServices.h>
 #include <Foundation/Foundation.h>
+#include <IOKit/IOKitLib.h>
+#include <IOKit/graphics/IOGraphicsLib.h>
 #include <QuartzCore/CVDisplayLink.h>
 #include <stdint.h>
 
+#include <algorithm>
 #include <map>
 #include <memory>
 
@@ -22,6 +25,7 @@
 #include "base/i18n/rtl.h"
 #include "base/logging.h"
 #include "base/mac/mac_util.h"
+#include "base/mac/scoped_ioobject.h"
 #include "base/notimplemented.h"
 #include "base/strings/sys_string_conversions.h"
 #include "base/timer/timer.h"
@@ -79,6 +83,99 @@ const std::vector<Display> DisplaysFromDisplaysMac(
   }
 
   return displays;
+}
+
+// FlyWeb B1d (FM.42 b3, from 116): macOS < 10.15 does not have a good way to get
+// the name for a particular display (NSScreen.localizedName is 10.15+). This
+// queries IOService for a display matching the vendor and product ID of the
+// Core Graphics display and returns its IODisplayCreateInfoDictionary, or null.
+// With several identical screens it might return the info of the wrong one.
+base::apple::ScopedCFTypeRef<CFDictionaryRef> GetDisplayInfoFromIOService(
+    CGDirectDisplayID display_id) {
+  const uint32_t cg_vendor_number = CGDisplayVendorNumber(display_id);
+  const uint32_t cg_model_number = CGDisplayModelNumber(display_id);
+
+  // Unknown display, or not connected to a monitor.
+  if (cg_vendor_number == kDisplayVendorIDUnknown ||
+      cg_vendor_number == 0xFFFFFFFF) {
+    return base::apple::ScopedCFTypeRef<CFDictionaryRef>();
+  }
+
+  // IODisplayConnect only exists on Intel Macs, which is all 10.14 runs on.
+  base::mac::ScopedIOObject<io_iterator_t> it;
+  if (IOServiceGetMatchingServices(kIOMasterPortDefault,
+                                   IOServiceMatching("IODisplayConnect"),
+                                   it.InitializeInto()) != KERN_SUCCESS) {
+    // This may happen if a desktop Mac is running headless.
+    return base::apple::ScopedCFTypeRef<CFDictionaryRef>();
+  }
+
+  while (auto service = base::mac::ScopedIOObject<io_service_t>(
+             IOIteratorNext(it.get()))) {
+    base::apple::ScopedCFTypeRef<CFDictionaryRef> info(
+        IODisplayCreateInfoDictionary(service.get(),
+                                      kIODisplayOnlyPreferredName));
+
+    CFNumberRef vendor_id_ref =
+        base::apple::GetValueFromDictionary<CFNumberRef>(
+            info.get(), CFSTR(kDisplayVendorID));
+    CFNumberRef product_id_ref =
+        base::apple::GetValueFromDictionary<CFNumberRef>(
+            info.get(), CFSTR(kDisplayProductID));
+    if (!vendor_id_ref || !product_id_ref) {
+      continue;
+    }
+
+    long long vendor_id, product_id;
+    CFNumberGetValue(vendor_id_ref, kCFNumberLongLongType, &vendor_id);
+    CFNumberGetValue(product_id_ref, kCFNumberLongLongType, &product_id);
+    if (cg_vendor_number == vendor_id && cg_model_number == product_id) {
+      return info;
+    }
+  }
+
+  return base::apple::ScopedCFTypeRef<CFDictionaryRef>();
+}
+
+// FlyWeb B1d (FM.42 b3, from 116): the (localized) name in a dictionary made by
+// IODisplayCreateInfoDictionary, or an empty string. The locale that shares
+// the longest prefix with the configured one wins; otherwise the first entry.
+std::string DisplayNameFromDisplayInfo(
+    base::apple::ScopedCFTypeRef<CFDictionaryRef> info) {
+  if (!info) {
+    return std::string();
+  }
+
+  NSDictionary* names = base::apple::CFToNSPtrCast(
+      base::apple::GetValueFromDictionary<CFDictionaryRef>(
+          info.get(), CFSTR(kDisplayProductName)));
+  if (!names) {
+    return std::string();
+  }
+
+  const std::string configured_locale = base::i18n::GetConfiguredLocale();
+
+  NSString* name = nil;
+  long match_size = -1;
+  for (NSString* key in names) {
+    NSString* value = base::apple::ObjCCast<NSString>(names[key]);
+    if (!value) {
+      continue;
+    }
+    const std::string locale =
+        base::i18n::GetCanonicalLocale(base::SysNSStringToUTF8(key));
+    const long match =
+        std::mismatch(locale.begin(), locale.end(), configured_locale.begin(),
+                      configured_locale.end())
+            .first -
+        locale.begin();
+    if (match > match_size) {
+      name = value;
+      match_size = match;
+    }
+  }
+
+  return name ? base::SysNSStringToUTF8(name) : std::string();
 }
 
 DisplayMac BuildDisplayForScreen(NSScreen* screen) {
@@ -210,6 +307,10 @@ DisplayMac BuildDisplayForScreen(NSScreen* screen) {
 
   if (@available(macOS 10.15, *)) {  // FlyWeb B1b
     display.set_label(base::SysNSStringToUTF8(screen.localizedName));
+  } else {
+    // FlyWeb B1d (FM.42 b3): the 116 path for 10.14.
+    display.set_label(
+        DisplayNameFromDisplayInfo(GetDisplayInfoFromIOService(display_id)));
   }
 
   return DisplayMac{display, screen};
