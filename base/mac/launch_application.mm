@@ -144,8 +144,25 @@ void LaunchApplication(const base::FilePath& app_bundle_path,
 
   // FlyWeb B1d: NSWorkspaceOpenConfiguration and the configuration: launch
   // methods are macOS 10.15+; use the dictionary-based API on macOS 10.14.
+  // The 10.15+ path is inside the @available block so that
+  // -Wunguarded-availability sees it guarded.
   if (@available(macOS 10.15, *)) {
+    NSWorkspaceOpenConfiguration* configuration =
+        GetOpenConfiguration(options, command_line_args);
+
+    if (ns_urls) {
+      [NSWorkspace.sharedWorkspace openURLs:ns_urls
+                       withApplicationAtURL:bundle_url
+                              configuration:configuration
+                          completionHandler:action_block];
+    } else {
+      [NSWorkspace.sharedWorkspace openApplicationAtURL:bundle_url
+                                          configuration:configuration
+                                      completionHandler:action_block];
+    }
   } else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     NSWorkspaceLaunchOptions launch_options = NSWorkspaceLaunchDefault;
     if (!options.activate) {
       launch_options |= NSWorkspaceLaunchWithoutActivation;
@@ -167,8 +184,6 @@ void LaunchApplication(const base::FilePath& app_bundle_path,
     };
     NSError* error = nil;
     NSRunningApplication* app = nil;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     if (ns_urls) {
       app = [NSWorkspace.sharedWorkspace openURLs:ns_urls
                              withApplicationAtURL:bundle_url
@@ -183,21 +198,6 @@ void LaunchApplication(const base::FilePath& app_bundle_path,
     }
 #pragma clang diagnostic pop
     action_block(app, error);
-    return;
-  }
-
-  NSWorkspaceOpenConfiguration* configuration =
-      GetOpenConfiguration(options, command_line_args);
-
-  if (ns_urls) {
-    [NSWorkspace.sharedWorkspace openURLs:ns_urls
-                     withApplicationAtURL:bundle_url
-                            configuration:configuration
-                        completionHandler:action_block];
-  } else {
-    [NSWorkspace.sharedWorkspace openApplicationAtURL:bundle_url
-                                        configuration:configuration
-                                    completionHandler:action_block];
   }
 }
 
