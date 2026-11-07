@@ -28,6 +28,9 @@ source_set("eye_dropper") {
       "//skia",
       "//ui/base:features",
     ]
+
+    # FlyWeb B1d (FM.42 b2): the generic eye dropper is used on macOS 10.14.
+    deps += [ "//components/eye_dropper" ]
   }
 
   if (use_aura) {

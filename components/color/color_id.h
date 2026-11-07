@@ -16,7 +16,9 @@ namespace color {
   E_CPONLY(kFullscreenNotificationOpaqueBackgroundColor) \
   E_CPONLY(kFullscreenNotificationTransparentBackgroundColor) \
 
-#if defined(USE_AURA)
+// FlyWeb B1d (FM.42 b2): macOS 10.14 uses the generic eye dropper, so its colors
+// are also needed on Mac.
+#if defined(USE_AURA) || BUILDFLAG(IS_MAC)
 #define COMPONENTS_COLOR_IDS COMMON_COMPONENTS_COLOR_IDS \
   /* Eyedropper colors. */ \
   E_CPONLY(kColorEyedropperBoundary) \
