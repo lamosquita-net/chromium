@@ -190,7 +190,7 @@ bool CopyPixelsToTexture(
   dest_scoped_access->surface()->writePixels(subset, xoffset, yoffset);
 
   bool success = shared_context_state->FlushWriteAccess(dest_scoped_access);
-  shared_context_state->SubmitIfNecessary(
+  success &= shared_context_state->SubmitIfNecessary(
       std::move(end_semaphores),
       dest_scoped_access->NeedGraphiteContextSubmit());
 
@@ -299,8 +299,8 @@ base::expected<void, GLError> CopySharedImageHelper::CopySharedImage(
   absl::Cleanup cleanup = [&]() {
     bool success =
         shared_context_state_->FlushWriteAccess(dest_scoped_access.get());
-    shared_context_state_->SubmitIfNecessary(std::move(end_semaphores),
-                                             need_graphite_submit);
+    success &= shared_context_state_->SubmitIfNecessary(
+        std::move(end_semaphores), need_graphite_submit);
     if (success && update_cleared_rect) {
       dest_shared_image->SetClearedRect(new_cleared_rect);
     }
@@ -475,8 +475,8 @@ base::expected<void, GLError> CopySharedImageHelper::CopySharedImage(
   bool success =
       shared_context_state_->FlushWriteAccess(dest_scoped_access.get());
   source_scoped_access->ApplyBackendSurfaceEndState();
-  shared_context_state_->SubmitIfNecessary(std::move(end_semaphores),
-                                           need_graphite_submit);
+  success &= shared_context_state_->SubmitIfNecessary(std::move(end_semaphores),
+                                                      need_graphite_submit);
 
   if (success && update_cleared_rect) {
     dest_shared_image->SetClearedRect(new_cleared_rect);
@@ -793,8 +793,8 @@ base::expected<void, GLError> CopySharedImageHelper::WritePixelsYUV(
 
   bool success =
       shared_context_state_->FlushWriteAccess(dest_scoped_access.get());
-  shared_context_state_->SubmitIfNecessary(std::move(end_semaphores),
-                                           need_graphite_submit);
+  success &= shared_context_state_->SubmitIfNecessary(std::move(end_semaphores),
+                                                      need_graphite_submit);
 
   if (success && !dest_shared_image->IsCleared()) {
     if (gl_api) {
