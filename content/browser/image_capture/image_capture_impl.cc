@@ -4,6 +4,7 @@
 
 #include "content/browser/image_capture/image_capture_impl.h"
 
+#include <string>
 #include <utility>
 
 #include "base/functional/bind.h"
@@ -32,11 +33,13 @@ namespace {
 
 void GetPhotoStateOnIOThread(const std::string& source_id,
                              MediaStreamManager* media_stream_manager,
+                             GlobalRenderFrameHostId render_frame_host_id,
                              ImageCaptureImpl::GetPhotoStateCallback callback) {
   CHECK_CURRENTLY_ON(BrowserThread::IO, base::NotFatalUntil::M160);
 
   const base::UnguessableToken session_id =
-      media_stream_manager->VideoDeviceIdToSessionId(source_id);
+      media_stream_manager->VideoDeviceIdToSessionId(source_id,
+                                                     render_frame_host_id);
   if (session_id.is_empty())
     return;
 
@@ -47,12 +50,14 @@ void GetPhotoStateOnIOThread(const std::string& source_id,
 void SetPhotoOptionsOnIOThread(
     const std::string& source_id,
     MediaStreamManager* media_stream_manager,
+    GlobalRenderFrameHostId render_frame_host_id,
     media::mojom::PhotoSettingsPtr settings,
     ImageCaptureImpl::SetPhotoOptionsCallback callback) {
   CHECK_CURRENTLY_ON(BrowserThread::IO, base::NotFatalUntil::M160);
 
   const base::UnguessableToken session_id =
-      media_stream_manager->VideoDeviceIdToSessionId(source_id);
+      media_stream_manager->VideoDeviceIdToSessionId(source_id,
+                                                     render_frame_host_id);
   if (session_id.is_empty())
     return;
   media_stream_manager->video_capture_manager()->SetPhotoOptions(
@@ -61,6 +66,7 @@ void SetPhotoOptionsOnIOThread(
 
 void TakePhotoOnIOThread(const std::string& source_id,
                          MediaStreamManager* media_stream_manager,
+                         GlobalRenderFrameHostId render_frame_host_id,
                          ImageCaptureImpl::TakePhotoCallback callback) {
   CHECK_CURRENTLY_ON(BrowserThread::IO, base::NotFatalUntil::M160);
   TRACE_EVENT_INSTANT0(TRACE_DISABLED_BY_DEFAULT("video_and_image_capture"),
@@ -68,7 +74,8 @@ void TakePhotoOnIOThread(const std::string& source_id,
                        TRACE_EVENT_SCOPE_PROCESS);
 
   const base::UnguessableToken session_id =
-      media_stream_manager->VideoDeviceIdToSessionId(source_id);
+      media_stream_manager->VideoDeviceIdToSessionId(source_id,
+                                                     render_frame_host_id);
   if (session_id.is_empty())
     return;
 
@@ -108,6 +115,7 @@ void ImageCaptureImpl::GetPhotoState(const std::string& source_id,
       FROM_HERE,
       base::BindOnce(&GetPhotoStateOnIOThread, source_id,
                      BrowserMainLoop::GetInstance()->media_stream_manager(),
+                     render_frame_host().GetGlobalId(),
                      std::move(scoped_callback)));
 }
 
@@ -139,6 +147,7 @@ void ImageCaptureImpl::SetPhotoOptions(const std::string& source_id,
       FROM_HERE,
       base::BindOnce(&SetPhotoOptionsOnIOThread, source_id,
                      BrowserMainLoop::GetInstance()->media_stream_manager(),
+                     render_frame_host().GetGlobalId(),
                      std::move(settings), std::move(scoped_callback)));
 }
 
@@ -157,6 +166,7 @@ void ImageCaptureImpl::TakePhoto(const std::string& source_id,
       FROM_HERE,
       base::BindOnce(&TakePhotoOnIOThread, source_id,
                      BrowserMainLoop::GetInstance()->media_stream_manager(),
+                     render_frame_host().GetGlobalId(),
                      std::move(scoped_callback)));
 }
 
