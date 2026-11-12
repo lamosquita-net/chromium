@@ -108,18 +108,74 @@ void CaptureScreenshot() {
 
 }  // namespace
 
+// FlyWeb 3.1.1: CGPreflightScreenCaptureAccess() and
+// CGRequestScreenCaptureAccess() are declared API_AVAILABLE(macos(10.15)) in
+// current SDKs, but CoreGraphics only exports them from macOS 11 (they are not
+// in the 10.15 SDK's CoreGraphics.tbd). The B1b guard used 10.15, so Catalina
+// called a missing symbol from WarmScreenCapture() at startup ("dyld: lazy
+// symbol binding failed: Symbol not found: _CGPreflightScreenCaptureAccess").
+// Guard them with macOS 11 and restore the macOS 10.15 paths of Chromium 116.
 bool IsScreenCaptureAllowed() {
-  if (@available(macOS 10.15, *)) {  // FlyWeb B1b
+  if (@available(macOS 11.0, *)) {
     return CGPreflightScreenCaptureAccess();
+  } else if (@available(macOS 10.15, *)) {
+    // Screen Capture is considered allowed if the name of at least one normal
+    // or dock window running on another process is visible.
+    // See https://crbug.com/993692.
+    NSArray* window_list = base::apple::CFToNSOwnershipCast(
+        CGWindowListCopyWindowInfo(kCGWindowListOptionAll, kCGNullWindowID));
+    int current_pid = NSProcessInfo.processInfo.processIdentifier;
+    for (NSDictionary* window in window_list) {
+      NSNumber* window_pid =
+          [window objectForKey:base::apple::CFToNSPtrCast(kCGWindowOwnerPID)];
+      if (!window_pid || window_pid.integerValue == current_pid) {
+        continue;
+      }
+
+      NSString* window_name =
+          [window objectForKey:base::apple::CFToNSPtrCast(kCGWindowName)];
+      if (!window_name) {
+        continue;
+      }
+
+      NSNumber* layer =
+          [window objectForKey:base::apple::CFToNSPtrCast(kCGWindowLayer)];
+      if (!layer) {
+        continue;
+      }
+
+      NSInteger layer_integer = layer.integerValue;
+      if (layer_integer == CGWindowLevelForKey(kCGNormalWindowLevelKey) ||
+          layer_integer == CGWindowLevelForKey(kCGDockWindowLevelKey)) {
+        return true;
+      }
+    }
+    return false;
   }
   return true;  // macOS 10.14 has no screen capture permission.
 }
 
 bool TryPromptUserForScreenCapture() {
-  if (@available(macOS 10.15, *)) {  // FlyWeb B1b
+  if (@available(macOS 11.0, *)) {
     return CGRequestScreenCaptureAccess();
+  } else if (@available(macOS 10.15, *)) {
+    // On 10.15, macOS shows the Screen Recording prompt if we request to
+    // create a display stream and the application is not yet in the list of
+    // System Preferences. Stream creation fails if the user denies
+    // permission, or if the application is in the list and unchecked
+    // (Chromium 116).
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    base::apple::ScopedCFTypeRef<CGDisplayStreamRef> stream(
+        CGDisplayStreamCreate(
+            CGMainDisplayID(), 1, 1, 'BGRA', nullptr,
+            ^(CGDisplayStreamFrameStatus status, uint64_t display_time,
+              IOSurfaceRef frame_surface, CGDisplayStreamUpdateRef update_ref){
+            }));
+#pragma clang diagnostic pop
+    return stream.get() != nullptr;
   }
-  return true;
+  return true;  // macOS 10.14 has no screen capture permission.
 }
 
 void WarmScreenCapture() {
