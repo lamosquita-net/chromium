@@ -587,8 +587,8 @@ bool NeedThreadSafeAndroidMedia() {
 namespace {
 bool IsSkiaGraphiteSupportedByDevice() {
 #if BUILDFLAG(IS_APPLE)
-  // FlyWeb B1d: Graphite (Skia Metal and Dawn) needs macOS 10.15+.
-  if (IsMacOSBelow10_15()) {
+  // FlyWeb B1d: Graphite (Skia Metal and Dawn) needs macOS 11+ here.
+  if (IsMacOSBelow11()) {
     return false;
   }
   return UsePassthroughCommandDecoder();
@@ -627,9 +627,15 @@ bool IsSkiaGraphiteSupportedByDevice() {
 }  // namespace
 
 // FlyWeb B1d: Graphite and WebGPU are off on macOS 10.14 (Metal 2.1).
-bool IsMacOSBelow10_15() {
+// FlyWeb 3.1.1: also on macOS 10.15. Dawn no longer guards its macOS 11 Metal
+// calls (-[MTLDevice supportsBCTextureCompression], -supportsCounterSampling:,
+// MTLComputePassDescriptor, MTLBlitPassDescriptor), so with the old 10.15
+// threshold Catalina enumerated Dawn adapters and hit unrecognized selectors.
+// Catalina now takes the configuration tested on Mojave: Ganesh over ANGLE
+// Metal, no Graphite, no WebGPU, no Dawn, no GPU persistent cache.
+bool IsMacOSBelow11() {
 #if BUILDFLAG(IS_MAC)
-  return base::mac::MacOSVersion() < 10'15'00;
+  return base::mac::MacOSVersion() < 11'00'00;
 #else
   return false;
 #endif
@@ -643,10 +649,10 @@ bool IsSkiaGraphiteEnabled(const base::CommandLine* command_line) {
 
   // FlyWeb B1d: Graphite needs Metal 3 features absent on macOS 10.14, so it
   // stays off there even with --enable-skia-graphite (security rule 17).
-  if (IsMacOSBelow10_15()) {
+  if (IsMacOSBelow11()) {
     if (command_line->HasSwitch(switches::kEnableSkiaGraphite)) {
       LOG(WARNING) << "FlyWeb B1d: --enable-skia-graphite ignored on macOS "
-                      "< 10.15";
+                      "< 11";
     }
     return false;
   }

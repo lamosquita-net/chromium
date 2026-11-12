@@ -833,8 +833,9 @@ void CollectDawnInfo(const gpu::GpuPreferences& gpu_preferences,
                      std::vector<std::string>* dawn_info_list) {
   TRACE_EVENT("gpu,startup", "gpu_info_collector::CollectDawnInfo");
 #if BUILDFLAG(USE_DAWN)
-  // FlyWeb B1d: Dawn Metal calls macOS 10.15+ selectors; WebGPU is off on 10.14.
-  if (features::IsMacOSBelow10_15()) {
+  // FlyWeb B1d: Dawn Metal calls macOS 11+ selectors unguarded; WebGPU is off
+  // before macOS 11.
+  if (features::IsMacOSBelow11()) {
     return;
   }
   DawnProcTable procs = dawn::native::GetProcs();

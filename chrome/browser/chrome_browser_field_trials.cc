@@ -411,7 +411,7 @@ void ChromeBrowserFieldTrials::RegisterFeatureOverrides(
   // process on every start, so Chromium quits with "GPU process isn't usable".
   // Fall back to the legacy shader disk cache. FLYWEB_GPU_PERSISTENT_CACHE=1
   // keeps it on (diagnostics).
-  if (features::IsMacOSBelow10_15() &&
+  if (features::IsMacOSBelow11() &&
       !base::Environment::Create()->HasVar("FLYWEB_GPU_PERSISTENT_CACHE")) {
     feature_overrides.DisableFeature(features::kGpuPersistentCache);
   }

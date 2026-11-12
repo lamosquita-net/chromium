@@ -439,7 +439,7 @@ GpuDataManagerImplPrivate::GpuDataManagerImplPrivate(GpuDataManagerImpl* owner)
     : owner_(owner),
 #if BUILDFLAG(IS_MAC)
       // FlyWeb B1d: Ganesh/GL over ANGLE Metal on macOS 10.14 (no Graphite).
-      supports_gpu_mode_hardware_gl_(features::IsMacOSBelow10_15()),
+      supports_gpu_mode_hardware_gl_(features::IsMacOSBelow11()),
 #elif BUILDFLAG(IS_ANDROID)
       supports_gpu_mode_hardware_gl_(
           !base::android::device_info::is_desktop() ||
@@ -525,7 +525,7 @@ void GpuDataManagerImplPrivate::InitializeGpuModes() {
       // FlyWeb B1d: never offer a Graphite mode on macOS < 10.15, not even
       // with --enable-skia-graphite or the late feature check.
       const bool can_use_graphite =
-          !features::IsMacOSBelow10_15() &&
+          !features::IsMacOSBelow11() &&
           (early_feature_check
                ? features::IsSkiaGraphiteEnabled(command_line)
                : !command_line->HasSwitch(switches::kDisableSkiaGraphite));
