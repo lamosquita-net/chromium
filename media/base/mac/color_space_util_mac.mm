@@ -35,10 +35,12 @@ GetImageBufferPixelFormatDescription(CVImageBufferRef image_buffer) {
           nullptr, CVPixelBufferGetPixelFormatType(image_buffer)));
 }
 
-// FlyWeb B1d: CVBufferCopyAttachment is macOS 10.15+; use the Get variant
-// (retained) on macOS 10.14.
+// FlyWeb B1d: CVBufferCopyAttachment is macOS 12+ (API_AVAILABLE(macos(12.0));
+// not in the 10.15 or 11 CoreVideo). Use the Get variant (retained) before
+// that. FlyWeb 3.1.1: the guard said 10.15, which crashed Catalina on the
+// first hardware-decoded video frame or camera frame.
 CFTypeRef FlyWebCopyAttachment(CVImageBufferRef image_buffer, CFStringRef key) {
-  if (@available(macOS 10.15, *)) {
+  if (@available(macOS 12.0, *)) {
     return CVBufferCopyAttachment(image_buffer, key, /*attachmentMode=*/nullptr);
   }
 #pragma clang diagnostic push
