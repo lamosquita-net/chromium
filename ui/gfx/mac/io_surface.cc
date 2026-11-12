@@ -449,7 +449,11 @@ bool IOSurfaceSetColorSpace(IOSurfaceRef io_surface,
   // https://crbug.com/1061723: Discussion of issues related to HLG.
   if (color_space.GetPrimaryID() == ColorSpace::PrimaryID::BT2020 &&
       color_space.GetMatrixID() == ColorSpace::MatrixID::BT2020_NCL) {
-    if (__builtin_available(macOS 10.15.4, *)) {  // FlyWeb B1b
+    // FlyWeb 3.1.1: kCGColorSpaceITUR_2100_PQ/HLG are macOS 11+
+    // (API_AVAILABLE(macos(11.0)); missing from the 10.15 CoreGraphics). The B1b
+    // guard said 10.15.4, which read a missing weak constant on Catalina with
+    // BT.2020 PQ/HLG content. Before 11, take the 10.14 path below.
+    if (__builtin_available(macOS 11.0, *)) {  // FlyWeb B1b
       if (color_space.GetTransferID() == ColorSpace::TransferID::PQ) {
         color_space_name = kCGColorSpaceITUR_2100_PQ;
       } else if (color_space.GetTransferID() == ColorSpace::TransferID::HLG) {
