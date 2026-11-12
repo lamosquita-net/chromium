@@ -61,6 +61,10 @@ class WebGLObject : public ScriptWrappable {
   USING_PRE_FINALIZER(WebGLObject, Dispose);
 
  public:
+  // Hot argument of WebGL calls: use the wrapper tag for the bindings type
+  // check (see ToScriptWrappableByWrapperTag in native_value_traits_impl.h).
+  static constexpr bool kWrapperTagTypeCheck = true;
+
   WebGLObject(const WebGLObject&) = delete;
   WebGLObject& operator=(const WebGLObject&) = delete;
 

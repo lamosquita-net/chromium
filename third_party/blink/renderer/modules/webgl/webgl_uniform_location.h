@@ -36,6 +36,10 @@ class WebGLUniformLocation final : public ScriptWrappable {
   DEFINE_WRAPPERTYPEINFO();
 
  public:
+  // Hot argument of WebGL calls: use the wrapper tag for the bindings type
+  // check (see ToScriptWrappableByWrapperTag in native_value_traits_impl.h).
+  static constexpr bool kWrapperTagTypeCheck = true;
+
   WebGLUniformLocation(WebGLProgram*, GLint location);
 
   WebGLProgram* Program() const;

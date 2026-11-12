@@ -1393,6 +1393,51 @@ struct NativeValueTraits<T> : public NativeValueTraitsBase<T> {
   }
 };
 
+namespace bindings::internal {
+
+// Opt-in fast path for the type check of interface arguments, for types that
+// are passed on hot paths (the WebGL object types, through [NoAllocDirectCall]
+// operations such as uniform*()). A class opts in with
+//   static constexpr bool kWrapperTagTypeCheck = true;
+//
+// V8PerIsolateData::HasInstance() looks the WrapperTypeInfo up in a hash map
+// (twice when the value is not an instance) and then calls
+// v8::FunctionTemplate::HasInstance(). For a JS API wrapper object the C++
+// heap pointer slot carries the tag that Blink stored with Wrap(), and
+// ToScriptWrappable<T>() already checks it against T's tag range (which also
+// covers T's subclasses). A non-null result therefore names a wrapper created
+// for T or a subclass, which is what HasInstance() answers. Any other case
+// (not an object, not an API wrapper, never wrapped, other type) returns
+// nullptr here and the caller takes the original path, so errors, null and
+// undefined are handled exactly as before.
+//
+// Only with pointer compression: without it, Unwrap() reads the raw pointer
+// and does not check the tag. Opt-in types must not be global objects (whose
+// proxies HasInstance() treats specially).
+template <typename T>
+concept HasWrapperTagTypeCheck = requires {
+  requires T::kWrapperTagTypeCheck;
+};
+
+template <typename T>
+  requires std::derived_from<T, ScriptWrappable>
+inline T* ToScriptWrappableByWrapperTag(v8::Isolate* isolate,
+                                        v8::Local<v8::Value> value) {
+#if defined(V8_COMPRESS_POINTERS)
+  if constexpr (HasWrapperTagTypeCheck<T>) {
+    if (value->IsObject()) [[likely]] {
+      v8::Local<v8::Object> object = value.As<v8::Object>();
+      if (object->IsApiWrapper()) [[likely]] {
+        return ToScriptWrappable<T>(isolate, object);
+      }
+    }
+  }
+#endif  // defined(V8_COMPRESS_POINTERS)
+  return nullptr;
+}
+
+}  // namespace bindings::internal
+
 // Interface types
 template <typename T>
   requires std::derived_from<T, ScriptWrappable>
@@ -1407,6 +1452,11 @@ struct NativeValueTraits<T> : public NativeValueTraitsBase<T*> {
   static inline T* NativeValue(v8::Isolate* isolate,
                                v8::Local<v8::Value> value,
                                ExceptionState& exception_state) {
+    if (T* wrappable =
+            bindings::internal::ToScriptWrappableByWrapperTag<T>(isolate,
+                                                                 value)) {
+      return wrappable;
+    }
     const WrapperTypeInfo* wrapper_type_info = T::GetStaticWrapperTypeInfo();
     if (V8PerIsolateData::From(isolate)->HasInstance(wrapper_type_info,
                                                      value)) {
@@ -1422,6 +1472,11 @@ struct NativeValueTraits<T> : public NativeValueTraitsBase<T*> {
                                  int argument_index,
                                  v8::Local<v8::Value> value,
                                  ExceptionState& exception_state) {
+    if (T* wrappable =
+            bindings::internal::ToScriptWrappableByWrapperTag<T>(isolate,
+                                                                 value)) {
+      return wrappable;
+    }
     const WrapperTypeInfo* wrapper_type_info = T::GetStaticWrapperTypeInfo();
     if (V8PerIsolateData::From(isolate)->HasInstance(wrapper_type_info,
                                                      value)) {
@@ -1441,6 +1496,11 @@ struct NativeValueTraits<IDLNullable<T>>
   static inline T* NativeValue(v8::Isolate* isolate,
                                v8::Local<v8::Value> value,
                                ExceptionState& exception_state) {
+    if (T* wrappable =
+            bindings::internal::ToScriptWrappableByWrapperTag<T>(isolate,
+                                                                 value)) {
+      return wrappable;
+    }
     const WrapperTypeInfo* wrapper_type_info = T::GetStaticWrapperTypeInfo();
     if (V8PerIsolateData::From(isolate)->HasInstance(wrapper_type_info,
                                                      value)) {
@@ -1459,6 +1519,11 @@ struct NativeValueTraits<IDLNullable<T>>
                                  int argument_index,
                                  v8::Local<v8::Value> value,
                                  ExceptionState& exception_state) {
+    if (T* wrappable =
+            bindings::internal::ToScriptWrappableByWrapperTag<T>(isolate,
+                                                                 value)) {
+      return wrappable;
+    }
     const WrapperTypeInfo* wrapper_type_info = T::GetStaticWrapperTypeInfo();
     if (V8PerIsolateData::From(isolate)->HasInstance(wrapper_type_info,
                                                      value)) {
