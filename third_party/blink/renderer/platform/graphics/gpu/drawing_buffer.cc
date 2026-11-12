@@ -2265,10 +2265,13 @@ void DrawingBuffer::EnsureBuffers() {
 }
 
 void DrawingBuffer::EnsureBackColorBuffer() {
-  const bool may_discard_back_buffer =
-      base::FeatureList::IsEnabled(blink::features::kWebGLDiscardBackBuffer);
-  if (may_discard_back_buffer && back_buffer_discarded_ &&
-      !back_color_buffer_) {
+  // EnsureBuffers() runs on every WebGL draw call (through
+  // ClearIfComposited()). Test the cheap members first so that the common case
+  // (back buffer present) does not query base::FeatureList on each draw.
+  // back_buffer_discarded_ is only set by DiscardBackBuffer(), so the result is
+  // the same as checking the feature first.
+  if (back_buffer_discarded_ && !back_color_buffer_ &&
+      base::FeatureList::IsEnabled(blink::features::kWebGLDiscardBackBuffer)) {
     ScopedStateRestorer scoped_state_restorer(this);
     back_color_buffer_ = CreateOrRecycleColorBuffer();
     // We had a back buffer before, we can't allocate one now. We can't
@@ -2283,13 +2286,16 @@ void DrawingBuffer::EnsureBackColorBuffer() {
 }
 
 void DrawingBuffer::EnsureMSAADepthStencilBuffers() {
-  if (!base::FeatureList::IsEnabled(
-          ::features::kWebGLDeleteBuffersInBackground)) {
-    return;
-  }
+  // Called on every WebGL draw call: look at the members (plain loads, no side
+  // effects) before querying base::FeatureList, which is only needed when a
+  // buffer is actually missing.
   bool need_multisample = WantExplicitResolve() && !multisample_renderbuffer_;
   bool need_depth_stencil = WantDepthOrStencil() && !depth_stencil_buffer_;
   if (!need_multisample && !need_depth_stencil) {
+    return;
+  }
+  if (!base::FeatureList::IsEnabled(
+          ::features::kWebGLDeleteBuffersInBackground)) {
     return;
   }
 
