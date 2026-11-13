@@ -26,6 +26,14 @@ namespace init {
 std::vector<GLImplementationParts> GetAllowedGLImplementations() {
   std::vector<GLImplementationParts> impls;
   impls.emplace_back(gl::ANGLEImplementation::kMetal);
+  // FlyWeb: ANGLE OpenGL as a fallback where ANGLE refuses Metal (machine
+  // model, GPU family 1, NVIDIA). Kept after Metal: the EGL display list tries
+  // Metal first and OpenGL only if the Metal display fails to initialize.
+  // Only before macOS 11, where the hardware GL GPU mode exists
+  // (features::IsMacOSBelow11()); on macOS 11+ nothing changes.
+  if (base::mac::MacOSVersion() < 11'00'00) {
+    impls.emplace_back(gl::ANGLEImplementation::kOpenGL);
+  }
   impls.emplace_back(gl::ANGLEImplementation::kSwiftShader);
   return impls;
 }
