@@ -179,15 +179,28 @@ TEST_F(UrlIndexTest, GetByUrlCacheDisabled) {
   EXPECT_NE(url_data, url_index_->GetByUrl(url, cors, UrlData::kCacheDisabled));
 }
 
-TEST_F(UrlIndexTest, ValidateDataOrigin) {
+TEST_F(UrlIndexTest, CanAcceptDataFrom) {
   KURL url("http://foo.bar.com");
   KURL data_url;
   scoped_refptr<UrlData> a = GetByUrl(url, UrlData::CORS_UNSPECIFIED);
-  EXPECT_TRUE(a->ValidateDataOrigin(data_url));
+  EXPECT_TRUE(a->CanAcceptDataFrom(data_url, /*is_cors_cross_origin=*/false));
+  EXPECT_TRUE(a->CanAcceptDataFrom(url, /*is_cors_cross_origin=*/true));
 
-  // First call assigns the data origin, second call will assert them are the
-  // same.
-  EXPECT_TRUE(a->ValidateDataOrigin(data_url));
+  // Setting the data origin pins the origin.
+  a->SetDataOrigin(data_url, /*is_cors_cross_origin=*/false);
+  EXPECT_TRUE(a->CanAcceptDataFrom(data_url, /*is_cors_cross_origin=*/false));
+  EXPECT_FALSE(a->CanAcceptDataFrom(url, /*is_cors_cross_origin=*/false));
+}
+
+TEST_F(UrlIndexTest, CanAcceptDataFromOpaqueOriginUrls) {
+  // Identical URLs whose origins are opaque must keep matching themselves
+  // after the data origin is set (crbug.com/579225207).
+  KURL url("http://foo.bar.com");
+  KURL blob_url("blob:null/b1d1b1d1-0000-4000-8000-000000000000");
+  scoped_refptr<UrlData> a = GetByUrl(url, UrlData::CORS_UNSPECIFIED);
+  a->SetDataOrigin(blob_url, /*is_cors_cross_origin=*/false);
+  EXPECT_TRUE(a->CanAcceptDataFrom(blob_url, /*is_cors_cross_origin=*/false));
+  EXPECT_FALSE(a->CanAcceptDataFrom(url, /*is_cors_cross_origin=*/false));
 }
 
 TEST_F(UrlIndexTest, DestructionWithOrphanedUrlData) {
@@ -217,7 +230,7 @@ TEST_F(UrlIndexTest, RedirectToPreservesCrossOrigin) {
   EXPECT_FALSE(a->is_cors_cross_origin());
   EXPECT_FALSE(b->is_cors_cross_origin());
 
-  a->set_is_cors_cross_origin(true);
+  a->SetDataOrigin(url1, /*is_cors_cross_origin=*/true);
   a->RedirectTo(b);
 
   EXPECT_TRUE(a->is_cors_cross_origin());
