@@ -337,7 +337,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling Skia
   # and whatever else without interference from each other.
-  'skia_revision': '27c31ca4152b5b5790d54ce1c8273f139f051a8d',
+  'skia_revision': 'd361a1e37122543c2c54fb4136d7232dc49d3ee8',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling V8
   # and whatever else without interference from each other.
@@ -417,7 +417,7 @@ vars = {
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling devtools-frontend
   # and whatever else without interference from each other.
-  'devtools_frontend_revision': '904b77f9fcadfba90bc2d34e370ffeac1e9603d5',
+  'devtools_frontend_revision': '9ec9a3c76ecf1c49cf665d4576e4baba88664be1',
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling libprotobuf-mutator
   # and whatever else without interference from each other.
@@ -2564,7 +2564,7 @@ deps = {
     Var('chromium_git') + '/external/libaddressinput.git' + '@' + '81eb9628382b07d371d8ea0b11badf7de3857fd5',
 
   'src/third_party/libaom/source/libaom':
-    Var('aomedia_git') + '/aom.git' + '@' +  '016144ea8b8b84b9cfa1c3fba56227b2d3471229',
+    Var('aomedia_git') + '/aom.git' + '@' +  '172688efb7f697531888a3184cef24cd0529e7a3',
 
   'src/third_party/crabbyavif/src':
     Var('chromium_git') + '/external/github.com/webmproject/CrabbyAvif.git' + '@' + Var('crabbyavif_revision'),
@@ -2683,7 +2683,7 @@ deps = {
     Var('chromium_git') + '/chromiumos/platform/libva-fake-driver.git' + '@' + '04f902b9ba9f8083b19d22e7b55591bbcaae31c0',
 
   'src/third_party/libvpx/source/libvpx':
-    Var('chromium_git') + '/webm/libvpx.git' + '@' +  'de61454cf81594d5927899da122fc53dcc4a846e',
+    Var('chromium_git') + '/webm/libvpx.git' + '@' +  'a00f6762dbcd39ebbdae546c514c898257f72c09',
 
   'src/third_party/libwebm/source':
     Var('chromium_git') + '/webm/libwebm.git' + '@' + '6184f4484a826724b5293837134ab9492261b941',
@@ -3287,7 +3287,7 @@ deps = {
     Var('chromium_git') + '/webpagereplay.git' + '@' + Var('webpagereplay_revision'),
 
   'src/third_party/webrtc':
-    Var('webrtc_git') + '/src.git' + '@' + '1dc9ab4e8c0c172f82a1908fa97b2a3ace0137ff',
+    Var('webrtc_git') + '/src.git' + '@' + '6a76f7de4c6814d9fb57b70e2957d745e9355e16',
 
   # Wuffs' canonical repository is at github.com/google/wuffs, but we use
   # Skia's mirror of Wuffs, the same as in upstream Skia's DEPS file.
