@@ -1322,7 +1322,7 @@ void FileSystemAccessManagerImpl::DidResolveForSerializeHandle(
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 
   if (!resolved_token || resolved_token->origin().opaque() ||
-      !IsValidTransferToken(resolved_token, storage_key,
+      !IsValidTransferToken(resolved_token, storage_key.origin(),
                             resolved_token->type())) {
     std::move(callback).Run({});
     return;
