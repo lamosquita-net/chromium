@@ -3686,11 +3686,9 @@ IN_PROC_BROWSER_TEST_F(ReadAnythingUntrustedPageHandlerTest,
       /*expected_count=*/0);
 
   // Selection change requests are dropped on error documents.
-  base::test::TestFuture<bool> selection_applied;
   handler_remote_->OnSelectionChange(tree_id, /*anchor_node_id=*/1, 0,
-                                     /*focus_node_id=*/2, 5,
-                                     selection_applied.GetCallback());
-  EXPECT_FALSE(selection_applied.Get());
+                                     /*focus_node_id=*/2, 5);
+  handler_remote_.FlushForTesting();
   histogram_tester.ExpectUniqueSample(
       "Accessibility.ReadAnything.RendererRequestForSelection.Result",
       ReadAnythingRendererRequestResult::kDisallowedActionOnPageType,

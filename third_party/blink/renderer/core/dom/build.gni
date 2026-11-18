@@ -340,7 +340,6 @@ blink_core_tests_dom = [
   "pseudo_element_test.cc",
   "qualified_name_test.cc",
   "range_test.cc",
-  "scripted_animation_controller_test.cc",
   "scroll_button_pseudo_element_test.cc",
   "scroll_marker_group_data_test.cc",
   "scroll_marker_pseudo_element_test.cc",

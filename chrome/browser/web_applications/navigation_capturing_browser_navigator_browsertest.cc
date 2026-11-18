@@ -1198,7 +1198,7 @@ IN_PROC_BROWSER_TEST_F(
                         ui::PAGE_TRANSITION_LINK);
   params.source_contents =
       source_browser->GetTabStripModel()->GetActiveWebContents();
-  params.disposition = WindowOpenDisposition::kNewForegroundTab;
+  params.disposition = WindowOpenDisposition::NEW_FOREGROUND_TAB;
   Navigate(&params);
   content::WebContents* new_tab = new_tab_observer.Wait();
   ASSERT_TRUE(new_tab);
@@ -1234,8 +1234,8 @@ IN_PROC_BROWSER_TEST_F(NavigationCapturingWithRedirectionBrowserNavigatorTest,
   BrowserWindowInterface* pip_browser =
       CreateBrowserWindow(std::move(pip_params));
   ASSERT_TRUE(pip_browser);
-  ASSERT_TRUE(DesktopBrowserWindowCapabilities::IsDocumentPictureInPicture(
-      pip_browser));
+  ASSERT_EQ(pip_browser->GetType(),
+            BrowserWindowInterface::TYPE_PICTURE_IN_PICTURE);
   chrome::AddTabAt(pip_browser, GURL(url::kAboutBlankURL), -1, true);
 
   ui_test_utils::AllBrowserTabAddedWaiter new_tab_observer;
@@ -1243,7 +1243,7 @@ IN_PROC_BROWSER_TEST_F(NavigationCapturingWithRedirectionBrowserNavigatorTest,
                         ui::PAGE_TRANSITION_LINK);
   params.source_contents =
       pip_browser->GetTabStripModel()->GetActiveWebContents();
-  params.disposition = WindowOpenDisposition::kNewForegroundTab;
+  params.disposition = WindowOpenDisposition::NEW_FOREGROUND_TAB;
   Navigate(&params);
   content::WebContents* new_tab = new_tab_observer.Wait();
   ASSERT_TRUE(new_tab);
@@ -1279,7 +1279,7 @@ IN_PROC_BROWSER_TEST_F(NavigationCapturingWithRedirectionBrowserNavigatorTest,
                         ui::PAGE_TRANSITION_LINK);
   params.source_contents =
       popup_browser->GetTabStripModel()->GetActiveWebContents();
-  params.disposition = WindowOpenDisposition::kNewForegroundTab;
+  params.disposition = WindowOpenDisposition::NEW_FOREGROUND_TAB;
   Navigate(&params);
   content::WebContents* new_tab = new_tab_observer.Wait();
   ASSERT_TRUE(new_tab);
@@ -1312,8 +1312,8 @@ IN_PROC_BROWSER_TEST_F(NavigationCapturingBrowserNavigatorBrowserTest,
   BrowserWindowInterface* pip_browser =
       CreateBrowserWindow(std::move(pip_params));
   ASSERT_TRUE(pip_browser);
-  ASSERT_TRUE(DesktopBrowserWindowCapabilities::IsDocumentPictureInPicture(
-      pip_browser));
+  ASSERT_EQ(pip_browser->GetType(),
+            BrowserWindowInterface::TYPE_PICTURE_IN_PICTURE);
   chrome::AddTabAt(pip_browser, GURL(url::kAboutBlankURL), -1, true);
 
   ui_test_utils::AllBrowserTabAddedWaiter new_tab_observer;
@@ -1321,7 +1321,7 @@ IN_PROC_BROWSER_TEST_F(NavigationCapturingBrowserNavigatorBrowserTest,
                         ui::PAGE_TRANSITION_LINK);
   params.source_contents =
       pip_browser->GetTabStripModel()->GetActiveWebContents();
-  params.disposition = WindowOpenDisposition::kNewBackgroundTab;
+  params.disposition = WindowOpenDisposition::NEW_BACKGROUND_TAB;
   Navigate(&params);
   content::WebContents* new_tab = new_tab_observer.Wait();
   ASSERT_TRUE(new_tab);

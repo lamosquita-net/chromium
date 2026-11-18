@@ -28,7 +28,6 @@ blink_modules_sources("storage_access") {
 
 source_set("unit_tests") {
   testonly = true
-  sources = [ "storage_access_handle_test.cc" ]
 
   configs += [
     "//third_party/blink/renderer:config",

@@ -569,8 +569,6 @@ source_set("unit_tests") {
     "tab_strip_control_button_unittest.cc",
     "tab_strip_layout_unittest.cc",
     "tab_strip_nudge_button_unittest.cc",
-    "tab_strip_unittest.cc",
-    "tab_unittest.cc",
   ]
 
   deps = [

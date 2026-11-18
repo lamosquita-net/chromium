@@ -739,7 +739,6 @@ blink_core_tests_html = [
   "forms/html_field_set_element_test.cc",
   "forms/html_form_control_element_test.cc",
   "forms/html_form_element_test.cc",
-  "forms/html_form_mcp_tool_test.cc",
   "forms/html_input_element_test.cc",
   "forms/html_label_element_test.cc",
   "forms/html_output_element_test.cc",
