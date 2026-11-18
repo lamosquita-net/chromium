@@ -7,8 +7,8 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 
-#include "base/compiler_specific.h"
 #include "base/types/optional_ref.h"
 #include "components/autofill/content/renderer/form_autofill_util.h"
 #include "components/autofill/core/common/form_data.h"
@@ -39,7 +39,7 @@ class SynchronousFormCache {
   SynchronousFormCache(SynchronousFormCache&&) = delete;
   // The two constructors below create a singleton cache (or cache with a single
   // form).
-  explicit SynchronousFormCache(const FormData& form LIFETIME_BOUND);
+  explicit SynchronousFormCache(const FormData& form);
   SynchronousFormCache(FormRendererId form_id,
                        base::optional_ref<const FormData> form);
   explicit SynchronousFormCache(
@@ -61,9 +61,13 @@ class SynchronousFormCache {
   // FormElement with the given ID. Note that this could be std::nullopt since
   // extraction might fail, and this would still be useful because knowing that
   // would allow avoiding a future failing attempt at extraction.
+  // FlyWeb (crbug.com/573263397): the cache holds copies, not references.
+  // Autofill and password generation dispatch input and change events while a
+  // cache is alive, and JavaScript can then destroy the FormData objects of the
+  // FormCache that a reference would point to.
   void Insert(FormRendererId form_id, const FormData* form);
 
-  std::map<FormRendererId, base::optional_ref<const FormData>> cache_;
+  std::map<FormRendererId, std::optional<FormData>> cache_;
 };
 
 }  // namespace autofill

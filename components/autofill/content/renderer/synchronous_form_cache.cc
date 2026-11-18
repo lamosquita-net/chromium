@@ -17,8 +17,7 @@
 namespace autofill {
 
 SynchronousFormCache::SynchronousFormCache() = default;
-SynchronousFormCache::SynchronousFormCache(
-    const FormData& form LIFETIME_BOUND) {
+SynchronousFormCache::SynchronousFormCache(const FormData& form) {
   Insert(form.renderer_id(), &form);
 }
 SynchronousFormCache::SynchronousFormCache(
@@ -43,14 +42,14 @@ std::optional<FormData> SynchronousFormCache::GetOrExtractForm(
     const FieldDataManager& field_data_manager,
     const CallTimerState& timer_state,
     form_util::ButtonTitlesCache* button_titles_cache) const {
-  const base::optional_ref<const FormData>* cache_entry =
+  const std::optional<FormData>* cache_entry =
       base::FindOrNull(cache_, form_util::GetFormRendererId(form_element));
 
   // If `cache_entry` is non-null, the value of the `cache_entry` may be a null
   // reference, in case the previous extraction failed. In this case, the form
   // is not extracted again, because it would fail again.
   // TODO(crbug.com/40947729): Try caching forms that were not found.
-  return cache_entry ? cache_entry->CopyAsOptional()
+  return cache_entry ? *cache_entry
                      : form_util::ExtractFormData(
                            document, form_element, field_data_manager,
                            timer_state, button_titles_cache);
@@ -58,7 +57,8 @@ std::optional<FormData> SynchronousFormCache::GetOrExtractForm(
 
 void SynchronousFormCache::Insert(FormRendererId form_id,
                                   const FormData* form) {
-  cache_.emplace(form_id, form);
+  cache_.emplace(form_id,
+                 form ? std::optional<FormData>(*form) : std::nullopt);
 }
 
 }  // namespace autofill
