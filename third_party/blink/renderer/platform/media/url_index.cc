@@ -185,6 +185,12 @@ void UrlData::Fail() {
   }
 }
 
+void UrlData::CrossOriginFail() {
+  DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
+  set_is_cors_cross_origin(true);
+  Fail();
+}
+
 void UrlData::OnRedirect(RedirectCB cb) {
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
   redirect_callbacks_.push_back(std::move(cb));

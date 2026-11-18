@@ -542,8 +542,7 @@ void ResourceMultiBufferDataProvider::DidFail(const WebURLError& error) {
   if (error.reason() == net::ERR_BLOCKED_BY_ORB ||
       error.reason() == net::ERR_BLOCKED_BY_RESPONSE ||
       error.is_web_security_violation()) {
-    url_data_->set_is_cors_cross_origin(true);
-    url_data_->Fail();
+    url_data_->CrossOriginFail();
     return;  // "this" may be deleted now.
   }
 

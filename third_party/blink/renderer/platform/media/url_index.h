@@ -182,6 +182,11 @@ class PLATFORM_EXPORT UrlData : public RefCounted<UrlData> {
   // Fail, tell all clients that a failure has occurred.
   void Fail();
 
+  // Marks this data as CORS cross-origin before calling Fail(). Used when a
+  // request fails due to cross-origin security restrictions (e.g., ORB, CORP,
+  // or CORS violations) before a response is received.
+  void CrossOriginFail();
+
   // Callback for receiving notifications when a redirect occurs.
   using RedirectCB = base::OnceCallback<void(const scoped_refptr<UrlData>&)>;
 
