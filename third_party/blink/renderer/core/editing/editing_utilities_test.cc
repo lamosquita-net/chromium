@@ -72,7 +72,8 @@ class CanvasClipboardTest : public SimTest {
         "overflow:hidden'><canvas id=canvas width=600 "
         "height=600></canvas></div>"
         "<img id=source>");
-    auto* source = To<HTMLImageElement>(GetElementById("source"));
+    auto* source = To<HTMLImageElement>(
+        GetDocument().getElementById(AtomicString("source")));
     if (cors_enabled) {
       source->setAttribute(html_names::kCrossoriginAttr,
                            AtomicString("anonymous"));
@@ -101,7 +102,8 @@ class CanvasClipboardTest : public SimTest {
   }
 
   HTMLCanvasElement& Canvas() {
-    return *To<HTMLCanvasElement>(GetElementById("canvas"));
+    return *To<HTMLCanvasElement>(
+        GetDocument().getElementById(AtomicString("canvas")));
   }
 
   void ExpectCopy(bool should_copy, const HitTestResult* hit_result = nullptr) {

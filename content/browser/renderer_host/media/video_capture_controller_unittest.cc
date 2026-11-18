@@ -1145,11 +1145,11 @@ TEST_F(VideoCaptureControllerTest, StopSessionStopsAllClientsForSession) {
       base::UnguessableToken::Create();
 
   controller_->AddClient(client_a_route_1, {}, client_a_.get(), session_id_1,
-                         session_params);
+                         session_params, std::nullopt);
   controller_->AddClient(client_a_route_2, {}, client_a_.get(), session_id_1,
-                         session_params);
+                         session_params, std::nullopt);
   controller_->AddClient(client_b_route_1, {}, client_b_.get(), session_id_2,
-                         session_params);
+                         session_params, std::nullopt);
   ASSERT_EQ(3u, controller_->GetClientCount());
 
   // Stopping session_id_1 must notify all clients sharing that session.
