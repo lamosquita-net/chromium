@@ -227,18 +227,6 @@ class UnzipFilesystemImpl : public storage::mojom::Directory {
         "Unexpected Directory::GetFileInfo from unzipper");
   }
 
-  void GetDiskSpaceInfo(const base::FilePath& path,
-                        GetDiskSpaceInfoCallback callback) override {
-    receiver_.ReportBadMessage(
-        "Unexpected Directory::GetDiskSpaceInfo from unzipper");
-  }
-
-  void ComputeDirectorySize(const base::FilePath& path,
-                            ComputeDirectorySizeCallback callback) override {
-    receiver_.ReportBadMessage(
-        "Unexpected Directory::ComputeDirectorySize from unzipper");
-  }
-
   void GetPathAccess(const base::FilePath& path,
                      GetPathAccessCallback callback) override {
     receiver_.ReportBadMessage(
